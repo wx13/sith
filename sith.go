@@ -1,20 +1,16 @@
 package main
 
-import "fmt"
-
-
-type TextBuffer struct {
-	lines []string
-}
-
-func (text TextBuffer) print() {
-	for j, line := range(text.lines) {
-		fmt.Println(j, line)
-	}
-}
-
+import "os"
 
 func main() {
-	textBuffer := TextBuffer{[]string{"hello","bye"}}
-	textBuffer.print()
+
+	editor := NewEditor()
+	defer editor.Quit()
+
+	editor.OpenFiles(os.Args[1:])
+
+	editor.Flush()
+	editor.KeepFlushed()
+	editor.Listen()
+
 }
