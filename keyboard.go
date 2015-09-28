@@ -24,10 +24,10 @@ func NewKeyboard() *Keyboard {
 		termbox.KeyPgup:       "pageUp",
 		termbox.KeyPgdn:       "pageDown",
 		termbox.KeyTab:        "tab",
-		termbox.KeyCtrlL:      "arrowRight",
-		termbox.KeyCtrlJ:      "arrowDown",
-		termbox.KeyCtrlK:      "arrowUp",
-		termbox.KeyCtrlO:      "arrowLeft",
+		termbox.KeyCtrlL:      "ctrlL",
+		termbox.KeyCtrlJ:      "ctrlJ",
+		termbox.KeyCtrlK:      "ctrlK",
+		termbox.KeyCtrlO:      "ctrlQ",
 		termbox.KeyCtrlN:      "pageDown",
 		termbox.KeyCtrlB:      "pageUp",
 		termbox.KeyCtrl6:      "ctrl6",
@@ -93,3 +93,4 @@ func (kb *Keyboard) GetKey() (string, rune) {
 	ev := termbox.PollEvent()
 	return kb.GetCmdString(ev)
 }
+

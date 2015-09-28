@@ -186,18 +186,29 @@ loop:
 			prompt.Clear()
 			if histIdx < len(history)-1 {
 				histIdx++
+				prompt.answer = history[histIdx]
 			}
-			prompt.answer = history[histIdx]
 		case "arrowDown":
 			prompt.Clear()
 			if histIdx > 0 {
 				histIdx--
+				prompt.answer = history[histIdx]
 			}
-			prompt.answer = history[histIdx]
 		case "ctrlC":
 			prompt.answer = ""
 			prompt.RestoreCursor()
 			return "", errors.New("Cancel")
+		case "ctrlK":
+			prompt.Clear()
+			prompt.answer = prompt.answer[:prompt.col]
+		case "ctrlU":
+			prompt.Clear()
+			prompt.answer = prompt.answer[prompt.col:]
+			prompt.col = 0
+		case "ctrlL":
+			prompt.Clear()
+			prompt.answer = ""
+			prompt.col = 0
 		case "unknown":
 		case "char":
 			prompt.answer = prompt.answer[:prompt.col] + string(r) + prompt.answer[prompt.col:]
@@ -209,4 +220,5 @@ loop:
 	prompt.RestoreCursor()
 	return prompt.answer, nil
 }
+
 

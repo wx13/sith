@@ -76,13 +76,13 @@ func (editor *Editor) Listen() {
 			editor.file.InsertChar('\t')
 		case "enter":
 			editor.file.Newline()
-		case "arrowLeft":
+		case "arrowLeft", "ctrlO":
 			editor.file.CursorLeft()
-		case "arrowRight":
+		case "arrowRight", "ctrlL":
 			editor.file.CursorRight()
-		case "arrowUp":
+		case "arrowUp", "ctrlK":
 			editor.file.CursorUp(1)
-		case "arrowDown":
+		case "arrowDown", "ctrlJ":
 			editor.file.CursorDown(1)
 		case "ctrlU":
 			editor.file.ScrollUp()
@@ -263,3 +263,4 @@ func (editor *Editor) UpdateStatus() {
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
 }
+
