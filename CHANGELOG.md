@@ -18,6 +18,7 @@ Change Log
  - remove trailing whitespace
  - Is there a way to prevent trailing whitespace on multicursor indent?
  - if search answer is on last few lines, scroll up the screen
+ - Share search history among files/buffers
 
 
 ## [Unreleased]
@@ -33,5 +34,6 @@ Change Log
 Basic text editor functionality is working. Probably many bugs, and an
 occasional crash.  Definitely many, many rough edges.  Starting to use
 sith to write sith, hence the name "bootstrap".
+
 
 

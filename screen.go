@@ -57,6 +57,20 @@ func (screen *Screen) WriteString(row, col int, s string) {
 	screen.WriteStringColor(row, col, s, screen.fg, screen.bg)
 }
 
+func (screen *Screen) Colorize(row int, colors []LineColor) {
+	cells := termbox.CellBuffer()
+	cols, _ := termbox.Size()
+	for _, lc := range colors {
+		for col := lc.start; col < lc.end; col++ {
+			j := row * cols + col
+			if j < 0 || j >= len(cells) {
+				continue
+			}
+			cells[j].Bg, cells[j].Fg = lc.bg, lc.fg
+		}
+	}
+}
+
 func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.Attribute) {
 	for k, c := range s {
 		termbox.SetCell(col+k, row, c, fg, bg)
@@ -220,5 +234,6 @@ loop:
 	prompt.RestoreCursor()
 	return prompt.answer, nil
 }
+
 
 

@@ -5,23 +5,25 @@ import "fmt"
 import "os"
 
 type Editor struct {
-	screen     *Screen
-	file       *File
-	files      []*File
-	fileIdx    int
-	keyboard   *Keyboard
-	flushChan  chan struct{}
-	msg        string
-	copyBuffer Buffer
-	copyContig int
+	screen      *Screen
+	file        *File
+	files       []*File
+	fileIdx     int
+	keyboard    *Keyboard
+	flushChan   chan struct{}
+	msg         string
+	copyBuffer  Buffer
+	copyContig  int
+	syntaxRules SyntaxRules
 }
 
 func NewEditor() *Editor {
 	return &Editor{
-		flushChan:  make(chan struct{}, 1),
-		screen:     NewScreen(),
-		copyBuffer: MakeBuffer([]string{}),
-		copyContig: 0,
+		flushChan:   make(chan struct{}, 1),
+		screen:      NewScreen(),
+		copyBuffer:  MakeBuffer([]string{}),
+		copyContig:  0,
+		syntaxRules: MakeSyntaxRules(""),
 	}
 }
 
@@ -222,6 +224,7 @@ func (editor *Editor) Flush() {
 	editor.screen.Clear()
 	for row, str := range slice {
 		editor.screen.WriteString(row, 0, str)
+		editor.screen.Colorize(row, editor.syntaxRules.Colorize(str))
 	}
 	for row := len(slice); row < rows-1; row++ {
 		editor.screen.WriteString(row, 0, "~")
@@ -263,4 +266,6 @@ func (editor *Editor) UpdateStatus() {
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
 }
+
+
 
