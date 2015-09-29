@@ -20,9 +20,18 @@ Change Log
  - if search answer is on last few lines, scroll up the screen
 
 
+## [Unreleased]
+
+### Bugfixes:
+ - Was crashing in prompt, when navigating empty history
+
+### Features:
+ - Ctrl-L/K/U: cut line, to end-of-line, to start-of-line in prompt.
+
 ## [0.0] "Bootstrap" 2015-09-25
 
 Basic text editor functionality is working. Probably many bugs, and an
 occasional crash.  Definitely many, many rough edges.  Starting to use
 sith to write sith, hence the name "bootstrap".
+
 
