@@ -60,6 +60,7 @@ func NewKeyboard() *Keyboard {
 		"o": "altO",
 		"m": "altM",
 		"g": "altG",
+		"j": "altJ",
 	}
 	return &kb
 }

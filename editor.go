@@ -186,6 +186,8 @@ func (editor *Editor) Listen() {
 			editor.Paste()
 		case "altG":
 			editor.file.GoFmt()
+		case "altJ":
+			editor.file.Justify()
 		case "unknown":
 			editor.msg = "Unknown keypress"
 		case "char":

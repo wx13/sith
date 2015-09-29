@@ -5,17 +5,17 @@ Change Log
 
  - undo/redo should keep cursor on changed line
  - Autoindent (toggle-able)
- - syntax coloring
  - ensure file is writable
  - truncate prompt histories (search/replace)
  - multi-file search (?)
  - check on unicode support
  - row cut/paste
- - justify and linewrap
+ - linewrap
  - remove trailing whitespace
  - Is there a way to prevent trailing whitespace on multicursor indent?
  - if search answer is on last few lines, scroll up the screen
  - Share search history among files/buffers
+ - Restrict search / replace to marked lines
 
 
 ## [Unreleased]
@@ -29,6 +29,8 @@ Change Log
  - Select file window from menu
  - Open new file (with file browser menu)
  - go fmt
+ - syntax coloring
+ - justify
 
 
 ## [0.0] "Bootstrap" 2015-09-25

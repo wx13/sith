@@ -124,19 +124,15 @@ func (file *File) replaceBuffer(newBuffer Buffer){
 }
 
 func (file *File) GoFmt() {
-	fmt.Fprintln(os.Stderr, "GoFmt")
 	contents := file.toString()
 	bytes, err := format.Source([]byte(contents))
 	if err == nil {
 		stringBuf := strings.Split(string(bytes), "\n")
 		newBuffer := MakeBuffer(stringBuf)
 		file.replaceBuffer(newBuffer)
-	fmt.Fprintln(os.Stderr, "    success")
 	}
 	file.Snapshot()
-	fmt.Fprintln(os.Stderr, "    done")
 }
-
 
 func (file *File) IsModified() bool {
 	if len(file.buffer) != len(file.savedBuffer) {
@@ -371,6 +367,37 @@ func (file *File) Slice(nRows, nCols int) []string {
 
 	return slice
 
+}
+
+func (file *File) Justify() {
+	minRow, maxRow := file.multiCursor.MinMaxRow()
+	for row := minRow; row <= maxRow; row++ {
+		if len(file.buffer[row]) > 72 {
+			col := 72
+			for ; col >= 0; col-- {
+				r := file.buffer[row][col]
+				if r == ' ' || r == '\t' {
+					break
+				}
+			}
+			if col > 0 {
+				line := file.buffer[row].Dup()
+				file.buffer[row] = line[:col]
+				for file.buffer[row][0] == ' ' {
+					file.buffer[row] = file.buffer[row][1:]
+				}
+				if row+1 == len(file.buffer) {
+					file.buffer = append(file.buffer, line[col:])
+				} else {
+					rest := append(line[col:], ' ')
+					file.buffer[row+1] = append(rest, file.buffer[row+1].Dup()...)
+					for file.buffer[row+1][0] == ' ' {
+						file.buffer[row+1] = file.buffer[row+1][1:]
+					}
+				}
+			}
+		}
+	}
 }
 
 func (file *File) StartOfLine() {
