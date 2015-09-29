@@ -150,16 +150,18 @@ func (editor *Editor) Listen() {
 			editor.Quit()
 		case "altW":
 			editor.CloseFile()
+		case "altN":
+			editor.NextFile()
+		case "altB":
+			editor.PrevFile()
+		case "altM":
+			editor.SelectFile()
 		case "ctrlX":
 			editor.file.AddCursor()
 		case "altC":
 			editor.file.AddCursorCol()
 		case "altX":
 			editor.file.ClearCursors()
-		case "altN":
-			editor.NextFile()
-		case "altB":
-			editor.PrevFile()
 		case "ctrlZ":
 			editor.Undo()
 		case "ctrlY":
@@ -230,6 +232,18 @@ func (editor *Editor) NextFile() {
 
 func (editor *Editor) PrevFile() {
 	editor.SwitchFile(editor.fileIdx - 1)
+}
+
+func (editor *Editor) SelectFile() {
+	names := []string{}
+	for _, file := range editor.files {
+		names = append(names, file.name)
+	}
+	menu := NewMenu(editor.screen)
+	idx := menu.Choose(names)
+	if idx > 0 {
+		editor.SwitchFile(idx)
+	}
 }
 
 func (editor *Editor) Save() {
