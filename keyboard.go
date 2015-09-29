@@ -28,8 +28,8 @@ func NewKeyboard() *Keyboard {
 		termbox.KeyCtrlJ:      "ctrlJ",
 		termbox.KeyCtrlK:      "ctrlK",
 		termbox.KeyCtrlO:      "ctrlO",
-		termbox.KeyCtrlN:      "pageDown",
-		termbox.KeyCtrlB:      "pageUp",
+		termbox.KeyCtrlN:      "ctrlN",
+		termbox.KeyCtrlB:      "ctrlB",
 		termbox.KeyCtrl6:      "ctrl6",
 		termbox.KeyCtrlX:      "ctrlX",
 		termbox.KeyCtrlZ:      "ctrlZ",
@@ -57,6 +57,7 @@ func NewKeyboard() *Keyboard {
 		"p": "altP",
 		"u": "altU",
 		"l": "altL",
+		"o": "altO",
 	}
 	return &kb
 }

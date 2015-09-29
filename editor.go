@@ -3,6 +3,8 @@ package main
 import "github.com/nsf/termbox-go"
 import "fmt"
 import "os"
+import "io/ioutil"
+import "path/filepath"
 
 type Editor struct {
 	screen      *Screen
@@ -25,11 +27,53 @@ func NewEditor() *Editor {
 	}
 }
 
+func (editor *Editor) OpenNewFile() {
+	dir, _ := os.Getwd()
+	dir += "/"
+	names := []string{}
+	idx := 0
+	files := []os.FileInfo{}
+	for {
+		files, _ = ioutil.ReadDir(dir)
+		dotdot, err := os.Stat("../")
+		if err == nil {
+			files = append([]os.FileInfo{dotdot}, files...)
+		}
+		names = []string{}
+		for _, file := range files {
+			if file.IsDir() {
+				names = append(names, file.Name()+"/")
+			} else {
+				names = append(names, file.Name())
+			}
+		}
+		menu := NewMenu(editor.screen)
+		idx = menu.Choose(names)
+		editor.Flush()
+		if idx < 0 {
+			return
+		}
+		chosenFile := files[idx]
+		if chosenFile.IsDir() {
+			dir = filepath.Clean(dir + chosenFile.Name()) + "/"
+		} else {
+			break
+		}
+	}
+	editor.OpenFile(names[idx])
+	editor.fileIdx = len(editor.files) - 1
+	editor.file = editor.files[editor.fileIdx]
+}
+
+func (editor *Editor) OpenFile(name string) {
+	file := NewFile(name, editor.flushChan, editor.screen)
+	file.syntaxRules = NewSyntaxRules(name)
+	editor.files = append(editor.files, file)
+}
+
 func (editor *Editor) OpenFiles(fileNames []string) {
 	for _, name := range fileNames {
-		file := NewFile(name, editor.flushChan, editor.screen)
-		file.syntaxRules = NewSyntaxRules(name)
-		editor.files = append(editor.files, file)
+		editor.OpenFile(name)
 	}
 	if len(editor.files) == 0 {
 		editor.files = append(editor.files, NewFile("", editor.flushChan, editor.screen))
@@ -94,12 +138,14 @@ func (editor *Editor) Listen() {
 			editor.file.ScrollRight()
 		case "altU":
 			editor.file.ScrollLeft()
-		case "pageDown":
+		case "pageDown", "ctrlN":
 			editor.file.CursorDown(10)
-		case "pageUp":
+		case "pageUp", "ctrlB":
 			editor.file.CursorUp(10)
 		case "altL":
 			editor.file.Refresh()
+		case "altO":
+			editor.OpenNewFile()
 		case "altQ":
 			editor.Quit()
 		case "altW":

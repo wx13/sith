@@ -19,16 +19,17 @@ Change Log
  - Is there a way to prevent trailing whitespace on multicursor indent?
  - if search answer is on last few lines, scroll up the screen
  - Share search history among files/buffers
- - [bug] Sometimes search causes editor to crash.
 
 
 ## [Unreleased]
 
 ### Bugfixes:
  - Was crashing in prompt, when navigating empty history
+ - Search starting at end of line caused crash from slice index out-of-bounds.
 
 ### Features:
  - Ctrl-L/K/U: cut line, to end-of-line, to start-of-line in prompt.
+
 
 ## [0.0] "Bootstrap" 2015-09-25
 
