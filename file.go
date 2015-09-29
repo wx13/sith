@@ -5,6 +5,7 @@ import "strings"
 import "sync"
 import "os"
 import "fmt"
+import "go/format"
 
 type File struct {
 	buffer      Buffer
@@ -109,6 +110,33 @@ func (file *File) Save() string {
 		return ("Saved to: " + file.name)
 	}
 }
+
+func (file *File) replaceBuffer(newBuffer Buffer){
+	for k, line := range newBuffer {
+		if k > len(file.buffer) {
+			file.buffer = append(file.buffer, line)
+		} else {
+			if file.buffer[k].toString() != line.toString() {
+				file.buffer[k] = line
+			}
+		}
+	}
+}
+
+func (file *File) GoFmt() {
+	fmt.Fprintln(os.Stderr, "GoFmt")
+	contents := file.toString()
+	bytes, err := format.Source([]byte(contents))
+	if err == nil {
+		stringBuf := strings.Split(string(bytes), "\n")
+		newBuffer := MakeBuffer(stringBuf)
+		file.replaceBuffer(newBuffer)
+	fmt.Fprintln(os.Stderr, "    success")
+	}
+	file.Snapshot()
+	fmt.Fprintln(os.Stderr, "    done")
+}
+
 
 func (file *File) IsModified() bool {
 	if len(file.buffer) != len(file.savedBuffer) {
@@ -520,3 +548,4 @@ func (file *File) WriteStatus(row, col int) {
 		file.screen.WriteStringColor(row, col, status, fg, bg)
 	}
 }
+

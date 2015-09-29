@@ -184,6 +184,8 @@ func (editor *Editor) Listen() {
 			editor.Cut()
 		case "ctrlV":
 			editor.Paste()
+		case "altG":
+			editor.file.GoFmt()
 		case "unknown":
 			editor.msg = "Unknown keypress"
 		case "char":

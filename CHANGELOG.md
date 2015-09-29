@@ -4,11 +4,8 @@ Change Log
 ## To Do
 
  - undo/redo should keep cursor on changed line
- - Open new file (menu or cmdline?)
  - Autoindent (toggle-able)
  - syntax coloring
- - go fmt
- - window select menu
  - ensure file is writable
  - truncate prompt histories (search/replace)
  - multi-file search (?)
@@ -29,6 +26,9 @@ Change Log
 
 ### Features:
  - Ctrl-L/K/U: cut line, to end-of-line, to start-of-line in prompt.
+ - Select file window from menu
+ - Open new file (with file browser menu)
+ - go fmt
 
 
 ## [0.0] "Bootstrap" 2015-09-25
