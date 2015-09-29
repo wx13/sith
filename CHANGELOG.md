@@ -19,6 +19,7 @@ Change Log
  - Is there a way to prevent trailing whitespace on multicursor indent?
  - if search answer is on last few lines, scroll up the screen
  - Share search history among files/buffers
+ - [bug] Sometimes search causes editor to crash.
 
 
 ## [Unreleased]

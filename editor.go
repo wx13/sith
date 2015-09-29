@@ -14,7 +14,6 @@ type Editor struct {
 	msg         string
 	copyBuffer  Buffer
 	copyContig  int
-	syntaxRules SyntaxRules
 }
 
 func NewEditor() *Editor {
@@ -23,13 +22,14 @@ func NewEditor() *Editor {
 		screen:      NewScreen(),
 		copyBuffer:  MakeBuffer([]string{}),
 		copyContig:  0,
-		syntaxRules: MakeSyntaxRules(""),
 	}
 }
 
 func (editor *Editor) OpenFiles(fileNames []string) {
 	for _, name := range fileNames {
-		editor.files = append(editor.files, NewFile(name, editor.flushChan, editor.screen))
+		file := NewFile(name, editor.flushChan, editor.screen)
+		file.syntaxRules = NewSyntaxRules(name)
+		editor.files = append(editor.files, file)
 	}
 	if len(editor.files) == 0 {
 		editor.files = append(editor.files, NewFile("", editor.flushChan, editor.screen))
@@ -224,7 +224,7 @@ func (editor *Editor) Flush() {
 	editor.screen.Clear()
 	for row, str := range slice {
 		editor.screen.WriteString(row, 0, str)
-		editor.screen.Colorize(row, editor.syntaxRules.Colorize(str))
+		editor.screen.Colorize(row, editor.file.syntaxRules.Colorize(str))
 	}
 	for row := len(slice); row < rows-1; row++ {
 		editor.screen.WriteString(row, 0, "~")

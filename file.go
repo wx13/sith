@@ -17,6 +17,7 @@ type File struct {
 	replaceHist []string
 
 	name      string
+	syntaxRules *SyntaxRules
 	fileMode  os.FileMode
 	rowOffset int
 	colOffset int
@@ -33,6 +34,7 @@ func NewFile(name string, flushChan chan struct{}, screen *Screen) *File {
 		buffMutex:   &sync.Mutex{},
 		multiCursor: MakeMultiCursor(),
 		flushChan:   flushChan,
+		syntaxRules: NewSyntaxRules(""),
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.multiCursor)
 	go file.ReadFile(name)
