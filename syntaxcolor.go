@@ -72,7 +72,7 @@ func (rules *SyntaxRules) AddDoubleQuoteRule(fg termbox.Attribute) {
 }
 
 func (rules SyntaxRules) GetFileType(filename string) string {
-	switch path.Ext(filename){
+	switch path.Ext(filename) {
 	case ".go":
 		return "go"
 	case ".py":
@@ -89,7 +89,7 @@ func (rules SyntaxRules) GetFileType(filename string) string {
 }
 
 type LineColor struct {
-	fg, bg termbox.Attribute
+	fg, bg     termbox.Attribute
 	start, end int
 }
 
@@ -106,7 +106,3 @@ func (rules SyntaxRules) Colorize(str string) []LineColor {
 	}
 	return lc
 }
-
-
-
-

@@ -17,13 +17,13 @@ type File struct {
 	searchHist  []string
 	replaceHist []string
 
-	name      string
+	name        string
 	syntaxRules *SyntaxRules
-	fileMode  os.FileMode
-	rowOffset int
-	colOffset int
-	screen    *Screen
-	flushChan chan struct{}
+	fileMode    os.FileMode
+	rowOffset   int
+	colOffset   int
+	screen      *Screen
+	flushChan   chan struct{}
 }
 
 func NewFile(name string, flushChan chan struct{}, screen *Screen) *File {
@@ -111,7 +111,7 @@ func (file *File) Save() string {
 	}
 }
 
-func (file *File) replaceBuffer(newBuffer Buffer){
+func (file *File) replaceBuffer(newBuffer Buffer) {
 	for k, line := range newBuffer {
 		if k > len(file.buffer) {
 			file.buffer = append(file.buffer, line)
@@ -575,4 +575,3 @@ func (file *File) WriteStatus(row, col int) {
 		file.screen.WriteStringColor(row, col, status, fg, bg)
 	}
 }
-

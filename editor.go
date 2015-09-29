@@ -7,23 +7,23 @@ import "io/ioutil"
 import "path/filepath"
 
 type Editor struct {
-	screen      *Screen
-	file        *File
-	files       []*File
-	fileIdx     int
-	keyboard    *Keyboard
-	flushChan   chan struct{}
-	msg         string
-	copyBuffer  Buffer
-	copyContig  int
+	screen     *Screen
+	file       *File
+	files      []*File
+	fileIdx    int
+	keyboard   *Keyboard
+	flushChan  chan struct{}
+	msg        string
+	copyBuffer Buffer
+	copyContig int
 }
 
 func NewEditor() *Editor {
 	return &Editor{
-		flushChan:   make(chan struct{}, 1),
-		screen:      NewScreen(),
-		copyBuffer:  MakeBuffer([]string{}),
-		copyContig:  0,
+		flushChan:  make(chan struct{}, 1),
+		screen:     NewScreen(),
+		copyBuffer: MakeBuffer([]string{}),
+		copyContig: 0,
 	}
 }
 
@@ -55,7 +55,7 @@ func (editor *Editor) OpenNewFile() {
 		}
 		chosenFile := files[idx]
 		if chosenFile.IsDir() {
-			dir = filepath.Clean(dir + chosenFile.Name()) + "/"
+			dir = filepath.Clean(dir+chosenFile.Name()) + "/"
 		} else {
 			break
 		}
@@ -330,6 +330,3 @@ func (editor *Editor) UpdateStatus() {
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
 }
-
-
-

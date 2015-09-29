@@ -62,7 +62,7 @@ func (screen *Screen) Colorize(row int, colors []LineColor) {
 	cols, _ := termbox.Size()
 	for _, lc := range colors {
 		for col := lc.start; col < lc.end; col++ {
-			j := row * cols + col
+			j := row*cols + col
 			if j < 0 || j >= len(cells) {
 				continue
 			}
@@ -100,18 +100,17 @@ func (screen *Screen) Highlight(row, col int) {
 	cells[j].Bg, cells[j].Fg = cell.Fg, cell.Bg
 }
 
-
 // ------------------------------------
 // Menu
 // ------------------------------------
 
 type Menu struct {
-	cols, rows int
-	col0, row0 int
-	screen     *Screen
-	keyboard   *Keyboard
-	selection  int
-	rowShift   int
+	cols, rows  int
+	col0, row0  int
+	screen      *Screen
+	keyboard    *Keyboard
+	selection   int
+	rowShift    int
 	borderColor termbox.Attribute
 }
 
@@ -136,9 +135,9 @@ func (menu *Menu) Clear() {
 	menu.screen.WriteStringColor(menu.row0-1, menu.col0-2, strings.Repeat(" ", menu.cols+4), borderColor, borderColor)
 	menu.screen.WriteStringColor(menu.row0+menu.rows, menu.col0-2, strings.Repeat(" ", menu.cols+4), borderColor, borderColor)
 	for row := 0; row < menu.rows; row++ {
-		menu.screen.WriteStringColor(menu.row0 + row, menu.col0-2, "  ", borderColor, borderColor)
-		menu.screen.WriteStringColor(menu.row0 + row, menu.col0 + menu.cols, "  ", borderColor, borderColor)
-		menu.screen.WriteString(menu.row0 + row, menu.col0, strings.Repeat(" ", menu.cols))
+		menu.screen.WriteStringColor(menu.row0+row, menu.col0-2, "  ", borderColor, borderColor)
+		menu.screen.WriteStringColor(menu.row0+row, menu.col0+menu.cols, "  ", borderColor, borderColor)
+		menu.screen.WriteString(menu.row0+row, menu.col0, strings.Repeat(" ", menu.cols))
 	}
 }
 
@@ -149,7 +148,7 @@ func (menu *Menu) ShowSearchStr(searchStr string) {
 
 func (menu *Menu) Show(choices []string) {
 	menu.Clear()
-	if menu.selection >= menu.rows - 1 + menu.rowShift {
+	if menu.selection >= menu.rows-1+menu.rowShift {
 		menu.rowShift = menu.selection - menu.rows + 1
 	}
 	if menu.selection < menu.rowShift {
@@ -189,7 +188,7 @@ loop:
 		case "ctrlC":
 			return -1
 		case "arrowDown":
-			if menu.selection < len(choices) - 1 {
+			if menu.selection < len(choices)-1 {
 				menu.selection++
 			}
 		case "arrowUp":
@@ -250,7 +249,6 @@ func (menu *Menu) SearchNext(choices []string, searchStr string) int {
 	}
 	return index
 }
-
 
 // ------------------------------------
 // Prompt
@@ -386,6 +384,3 @@ loop:
 	prompt.RestoreCursor()
 	return prompt.answer, nil
 }
-
-
-
