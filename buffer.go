@@ -18,7 +18,7 @@ func (line Line) toString() string {
 func (line Line) Search(term string, start, end int) (int, int) {
 	if end < 0 || end >= len(line) {
 		end = len(line) + end
-		if end < 0 {
+		if end < 0 || end < start {
 			return -1, -1
 		}
 	}
