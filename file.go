@@ -6,6 +6,7 @@ import "sync"
 import "os"
 import "fmt"
 import "go/format"
+import "github.com/nsf/termbox-go"
 
 type File struct {
 	buffer      Buffer
@@ -50,6 +51,19 @@ func (file *File) Close() bool {
 		}
 	}
 	return true
+}
+
+func (file *File) Flush() {
+	cols, rows := termbox.Size()
+	slice := file.Slice(rows-1, cols)
+	file.screen.Clear()
+	for row, str := range slice {
+		file.screen.WriteString(row, 0, str)
+		file.screen.Colorize(row, file.syntaxRules.Colorize(str))
+	}
+	for row := len(slice); row < rows-1; row++ {
+		file.screen.WriteString(row, 0, "~")
+	}
 }
 
 func (file *File) Refresh() {
@@ -534,14 +548,17 @@ func (file *File) SearchAndReplace() {
 		}
 
 		file.CursorGoTo(row, col)
+		_, screenCol := file.GetCursor(0)
+		startColOffset := screenCol - col
+		file.Flush()
 		var startCol, endCol int
 		startCol, endCol = file.buffer[row].Search(searchTerm, col, -1)
-		for c := startCol; c < endCol; c++ {
-			file.screen.Highlight(row, c)
+		for c := startCol+startColOffset; c < endCol+startColOffset; c++ {
+			file.screen.Highlight(row-file.rowOffset, c)
 		}
 		doReplace, err := file.screen.AskYesNo("Replace this instance?")
 		for c := startCol; c < endCol; c++ {
-			file.screen.Highlight(row, c)
+			file.screen.Highlight(row-file.rowOffset, c)
 		}
 		if err != nil {
 			break
@@ -575,3 +592,4 @@ func (file *File) WriteStatus(row, col int) {
 		file.screen.WriteStringColor(row, col, status, fg, bg)
 	}
 }
+

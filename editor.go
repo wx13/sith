@@ -283,16 +283,7 @@ func (editor *Editor) HighlightCursors() {
 }
 
 func (editor *Editor) Flush() {
-	cols, rows := termbox.Size()
-	slice := editor.file.Slice(rows-1, cols)
-	editor.screen.Clear()
-	for row, str := range slice {
-		editor.screen.WriteString(row, 0, str)
-		editor.screen.Colorize(row, editor.file.syntaxRules.Colorize(str))
-	}
-	for row := len(slice); row < rows-1; row++ {
-		editor.screen.WriteString(row, 0, "~")
-	}
+	editor.file.Flush()
 	editor.HighlightCursors()
 	editor.UpdateStatus()
 	editor.screen.WriteMessage(editor.msg)
@@ -332,5 +323,6 @@ func (editor *Editor) UpdateStatus() {
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
 }
+
 
 
