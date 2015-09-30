@@ -325,7 +325,3 @@ func (editor *Editor) UpdateStatus() {
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
 }
-
-
-
-

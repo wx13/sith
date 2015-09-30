@@ -25,10 +25,10 @@ type File struct {
 	fileMode    os.FileMode
 	autoIndent  bool
 
-	rowOffset   int
-	colOffset   int
-	screen      *Screen
-	flushChan   chan struct{}
+	rowOffset int
+	colOffset int
+	screen    *Screen
+	flushChan chan struct{}
 }
 
 func NewFile(name string, flushChan chan struct{}, screen *Screen) *File {
@@ -601,7 +601,7 @@ func (file *File) SearchAndReplace() {
 		file.Flush()
 		var startCol, endCol int
 		startCol, endCol = file.buffer[row].Search(searchTerm, col, -1)
-		for c := startCol+startColOffset; c < endCol+startColOffset; c++ {
+		for c := startCol + startColOffset; c < endCol+startColOffset; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)
 		}
 		doReplace, err := file.screen.AskYesNo("Replace this instance?")
@@ -651,6 +651,3 @@ func (file *File) WriteStatus(row, col int) {
 	}
 
 }
-
-
-

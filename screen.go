@@ -393,5 +393,3 @@ loop:
 	prompt.RestoreCursor()
 	return prompt.answer, nil
 }
-
-
