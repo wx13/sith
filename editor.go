@@ -327,6 +327,10 @@ func (editor *Editor) UpdateStatus() {
 	)
 	col := cols - len(message)
 	editor.screen.WriteString(rows-1, col, message)
+	editor.screen.WriteString(rows-1, 0, "[ Sith ]")
+	editor.screen.DecorateStatusLine()
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
 }
+
+

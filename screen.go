@@ -53,6 +53,15 @@ func (screen *Screen) Clear() {
 	}
 }
 
+func (screen *Screen) DecorateStatusLine() {
+	cells := termbox.CellBuffer()
+	cols, rows := termbox.Size()
+	for col := 0; col < cols; col++ {
+		j := (rows-1)*cols + col
+		cells[j].Fg = termbox.ColorBlue
+	}
+}
+
 func (screen *Screen) WriteString(row, col int, s string) {
 	screen.WriteStringColor(row, col, s, screen.fg, screen.bg)
 }
@@ -384,3 +393,5 @@ loop:
 	prompt.RestoreCursor()
 	return prompt.answer, nil
 }
+
+
