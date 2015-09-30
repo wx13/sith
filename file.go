@@ -593,3 +593,4 @@ func (file *File) WriteStatus(row, col int) {
 	}
 }
 
+

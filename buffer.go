@@ -195,15 +195,29 @@ func NewBufferHist(buffer Buffer, cursor MultiCursor) *BufferHist {
 
 func (bh *BufferHist) Snapshot(buffer Buffer, mc MultiCursor) {
 
+	var buffers []Buffer
+	var cursors []MultiCursor
+
+	dist := bh.cursors[bh.idx][0].row - mc[0].row
+	if bh.idx < len(bh.buffers) && ( dist < -1 || dist > 1)  {
+		bh.idx = bh.idx + 1
+
+		buffers = append(bh.buffers[:bh.idx], bh.buffers[bh.idx-1].Dup())
+		bh.buffers = append(buffers, bh.buffers[bh.idx:]...)
+
+		cursors = append(bh.cursors[:bh.idx], mc.Dup())
+		bh.cursors = append(cursors, bh.cursors[bh.idx:]...)
+	}
+
 	bh.idx = bh.idx + 1
 
-	buffers := append(bh.buffers[:bh.idx], buffer.Dup())
+	buffers = append(bh.buffers[:bh.idx], buffer.Dup())
 	bh.buffers = append(buffers, bh.buffers[bh.idx:]...)
 
-	cursors := append(bh.cursors[:bh.idx], mc.Dup())
+	cursors = append(bh.cursors[:bh.idx], mc.Dup())
 	bh.cursors = append(cursors, bh.cursors[bh.idx:]...)
 
-	bh.Trim(100)
+	bh.Trim(200)
 
 }
 
@@ -241,3 +255,4 @@ func (bh *BufferHist) Increment(n int) (Buffer, MultiCursor) {
 	}
 	return bh.Current()
 }
+
