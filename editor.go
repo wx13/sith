@@ -188,6 +188,8 @@ func (editor *Editor) Listen() {
 			editor.file.GoFmt()
 		case "altJ":
 			editor.file.Justify()
+		case "altI":
+			editor.file.ToggleAutoIndent()
 		case "unknown":
 			editor.msg = "Unknown keypress"
 		case "char":
@@ -323,6 +325,7 @@ func (editor *Editor) UpdateStatus() {
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
 }
+
 
 
 

@@ -7,6 +7,8 @@ import "os"
 import "fmt"
 import "go/format"
 import "github.com/nsf/termbox-go"
+import "path"
+import "regexp"
 
 type File struct {
 	buffer      Buffer
@@ -21,6 +23,8 @@ type File struct {
 	name        string
 	syntaxRules *SyntaxRules
 	fileMode    os.FileMode
+	autoIndent  bool
+
 	rowOffset   int
 	colOffset   int
 	screen      *Screen
@@ -37,9 +41,14 @@ func NewFile(name string, flushChan chan struct{}, screen *Screen) *File {
 		multiCursor: MakeMultiCursor(),
 		flushChan:   flushChan,
 		syntaxRules: NewSyntaxRules(""),
+		autoIndent:  true,
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.multiCursor)
 	go file.ReadFile(name)
+	switch path.Ext(name) {
+	case ".md", ".txt", ".csv", ".C":
+		file.autoIndent = false
+	}
 	return file
 }
 
@@ -51,6 +60,10 @@ func (file *File) Close() bool {
 		}
 	}
 	return true
+}
+
+func (file *File) ToggleAutoIndent() {
+	file.autoIndent = file.autoIndent != true
 }
 
 func (file *File) Flush() {
@@ -296,8 +309,26 @@ func (file *File) Newline() {
 		file.buffer[row+1] = lineEnd
 		file.multiCursor[idx].row = row + 1
 		file.multiCursor[idx].col = 0
+		file.DoAutoIndent(idx)
 	}
 	file.Snapshot()
+}
+
+func (file *File) DoAutoIndent(cursorIdx int) {
+	row := file.multiCursor[cursorIdx].row
+	if row == 0 {
+		return
+	}
+	re, _ := regexp.Compile("^[ \t]+")
+	ws := re.FindString(file.buffer[row-1].toString())
+	if ws != "" {
+		wsLine := Line(ws)
+		file.buffer[row] = append(wsLine, file.buffer[row]...)
+		file.multiCursor[cursorIdx].col += len(wsLine)
+		if len(file.buffer[row-1]) == len(wsLine) {
+			file.buffer[row-1] = Line("")
+		}
+	}
 }
 
 func (file *File) GetCursor(idx int) (int, int) {
@@ -570,7 +601,7 @@ func (file *File) SearchAndReplace() {
 	}
 }
 
-func (file *File) Status() string {
+func (file *File) ModStatus() string {
 	if file.IsModified() {
 		return "Modified"
 	} else {
@@ -579,18 +610,30 @@ func (file *File) Status() string {
 }
 
 func (file *File) WriteStatus(row, col int) {
-	status := file.Status()
+
+	status := file.ModStatus()
 	col -= len(status) + 2
-	fg := file.screen.colors["yellow"]
-	bg := file.screen.colors["black"]
+	fg := termbox.ColorYellow
+	bg := termbox.ColorBlack
 	file.screen.WriteStringColor(row, col, status, fg, bg)
+
 	if len(file.multiCursor) > 1 {
 		status = fmt.Sprintf("%dC", len(file.multiCursor))
 		col -= len(status) + 2
-		fg := file.screen.colors["white"]
-		bg := file.screen.colors["red"]
+		fg := termbox.ColorBlack
+		bg := termbox.ColorRed
 		file.screen.WriteStringColor(row, col, status, fg, bg)
 	}
+
+	if file.autoIndent {
+		status = "->"
+		col -= len(status) + 2
+		fg := termbox.ColorRed | termbox.AttrBold
+		bg := termbox.ColorBlack
+		file.screen.WriteStringColor(row, col, status, fg, bg)
+	}
+
 }
+
 
 

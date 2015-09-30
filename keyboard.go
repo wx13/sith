@@ -61,6 +61,7 @@ func NewKeyboard() *Keyboard {
 		"m": "altM",
 		"g": "altG",
 		"j": "altJ",
+		"i": "altI",
 	}
 	return &kb
 }
@@ -97,3 +98,4 @@ func (kb *Keyboard) GetKey() (string, rune) {
 	ev := termbox.PollEvent()
 	return kb.GetCmdString(ev)
 }
+
