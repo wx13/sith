@@ -245,7 +245,7 @@ func (editor *Editor) SelectFile() {
 	}
 	menu := NewMenu(editor.screen)
 	idx := menu.Choose(names)
-	if idx > 0 {
+	if idx >= 0 {
 		editor.SwitchFile(idx)
 	}
 }
