@@ -89,7 +89,7 @@ func (buffer Buffer) ToString() string {
 	for _, line := range buffer {
 		str += string(line) + "\n"
 	}
-	return str
+	return str[:len(str)-1]
 }
 
 func (buffer Buffer) Search(searchTerm string, cursor Cursor) (int, int, error) {
