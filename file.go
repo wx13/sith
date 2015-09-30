@@ -315,20 +315,37 @@ func (file *File) Newline() {
 }
 
 func (file *File) DoAutoIndent(cursorIdx int) {
+
 	row := file.multiCursor[cursorIdx].row
 	if row == 0 {
 		return
 	}
+
+	origLine := file.buffer[row].Dup()
+
+	// Whitespace-only indent.
 	re, _ := regexp.Compile("^[ \t]+")
-	ws := re.FindString(file.buffer[row-1].toString())
-	if ws != "" {
-		wsLine := Line(ws)
-		file.buffer[row] = append(wsLine, file.buffer[row]...)
-		file.multiCursor[cursorIdx].col += len(wsLine)
-		if len(file.buffer[row-1]) == len(wsLine) {
+	ws := Line(re.FindString(file.buffer[row-1].toString()))
+	if len(ws) > 0 {
+		file.buffer[row] = append(ws, file.buffer[row]...)
+		file.multiCursor[cursorIdx].col += len(ws)
+		if len(file.buffer[row-1]) == len(ws) {
 			file.buffer[row-1] = Line("")
 		}
 	}
+
+	if row < 2 {
+		return
+	}
+
+	// Non-whitespace indent.
+	indent := file.buffer[row-1].CommonStart(file.buffer[row-2])
+	if len(indent) > len(ws) {
+		file.Snapshot()
+		file.buffer[row] = append(indent, origLine...)
+		file.multiCursor[cursorIdx].col += len(indent) - len(ws)
+	}
+
 }
 
 func (file *File) GetCursor(idx int) (int, int) {

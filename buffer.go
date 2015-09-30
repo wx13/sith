@@ -15,6 +15,15 @@ func (line Line) toString() string {
 	return string(line)
 }
 
+func (line Line) CommonStart(other Line) Line {
+	for k, r := range line {
+		if k >= len(other) || other[k] != r {
+			return line[:k].Dup()
+		}
+	}
+	return line.Dup()
+}
+
 func (line Line) Search(term string, start, end int) (int, int) {
 	if end < 0 || end >= len(line) {
 		end = len(line) + end
@@ -255,4 +264,5 @@ func (bh *BufferHist) Increment(n int) (Buffer, MultiCursor) {
 	}
 	return bh.Current()
 }
+
 
