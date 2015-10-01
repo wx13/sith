@@ -16,8 +16,14 @@ Change Log
  - Restrict search / replace to marked lines
  - Revert to last saved copy
    - also should be able to reload from file
+ - Refresh doesn't remove terminal messages
 
-## [Unreleased]
+
+## [0.1] "Almost Usable" 2015-09-30
+
+I am have been using sith to edit sith, most of the time. I'm starting
+to consider using it as my main editor. Almost. This release fixes a few
+bugs and introduces a bunch of new features.
 
 ### Bugfixes:
  - Was crashing in prompt, when navigating empty history
@@ -33,6 +39,7 @@ Change Log
  - justify
  - Autoindent (toggle-able)
  - undo/redo should keep cursor on changed line
+
 
 
 ## [0.0] "Bootstrap" 2015-09-25
