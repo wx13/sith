@@ -28,11 +28,7 @@ func NewSyntaxRules(filename string) *SyntaxRules {
 		rules.AddSingleQuoteRule(termbox.ColorRed)
 		rules.AddDoubleQuoteRule(termbox.ColorYellow)
 		rules.AddLineCommentRule("//", termbox.ColorCyan)
-	case "python":
-		rules.AddSingleQuoteRule(termbox.ColorYellow)
-		rules.AddDoubleQuoteRule(termbox.ColorYellow)
-		rules.AddLineCommentRule("#", termbox.ColorCyan)
-	case "ruby":
+	case "ruby", "shell", "python", "yaml":
 		rules.AddSingleQuoteRule(termbox.ColorYellow)
 		rules.AddDoubleQuoteRule(termbox.ColorYellow)
 		rules.AddLineCommentRule("#", termbox.ColorCyan)
@@ -83,6 +79,10 @@ func (rules SyntaxRules) GetFileType(filename string) string {
 		return "ruby"
 	case ".md":
 		return "markdown"
+	case ".yaml":
+		return "yaml"
+	case ".sh", ".csh":
+		return "shell"
 	default:
 		return ""
 	}
