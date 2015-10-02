@@ -8,16 +8,17 @@ import "path/filepath"
 import "syscall"
 import "github.com/wx13/sith/syntaxcolor"
 import "github.com/wx13/sith/terminal"
+import "github.com/wx13/sith/file"
 
 type Editor struct {
 	screen     *terminal.Screen
-	file       *File
-	files      []*File
+	file       *file.File
+	files      []*file.File
 	fileIdx    int
 	keyboard   *terminal.Keyboard
 	flushChan  chan struct{}
 	msg        string
-	copyBuffer Buffer
+	copyBuffer file.Buffer
 	copyContig int
 }
 
@@ -25,7 +26,7 @@ func NewEditor() *Editor {
 	return &Editor{
 		flushChan:  make(chan struct{}, 1),
 		screen:     terminal.NewScreen(),
-		copyBuffer: MakeBuffer([]string{}),
+		copyBuffer: file.MakeBuffer([]string{}),
 		copyContig: 0,
 	}
 }
@@ -69,8 +70,8 @@ func (editor *Editor) OpenNewFile() {
 }
 
 func (editor *Editor) OpenFile(name string) {
-	file := NewFile(name, editor.flushChan, editor.screen)
-	file.syntaxRules = syntaxcolor.NewSyntaxRules(name)
+	file := file.NewFile(name, editor.flushChan, editor.screen)
+	file.SyntaxRules = syntaxcolor.NewSyntaxRules(name)
 	editor.files = append(editor.files, file)
 }
 
@@ -79,7 +80,7 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 		editor.OpenFile(name)
 	}
 	if len(editor.files) == 0 {
-		editor.files = append(editor.files, NewFile("", editor.flushChan, editor.screen))
+		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen))
 	}
 	editor.fileIdx = 0
 	editor.file = editor.files[0]
@@ -256,7 +257,7 @@ func (editor *Editor) PrevFile() {
 func (editor *Editor) SelectFile() {
 	names := []string{}
 	for _, file := range editor.files {
-		names = append(names, file.name)
+		names = append(names, file.Name)
 	}
 	menu := terminal.NewMenu(editor.screen)
 	idx := menu.Choose(names)
@@ -286,7 +287,7 @@ func (editor *Editor) SwitchFile(n int) {
 func (editor *Editor) HighlightCursors() {
 	cells := termbox.CellBuffer()
 	cols, _ := termbox.Size()
-	for k, _ := range editor.file.multiCursor[1:] {
+	for k, _ := range editor.file.MultiCursor[1:] {
 		r, c := editor.file.GetCursor(k + 1)
 		j := r*cols + c
 		if j < 0 || j >= len(cells) {
@@ -324,12 +325,12 @@ func (editor *Editor) RequestFlush() {
 func (editor *Editor) UpdateStatus() {
 	cols, rows := termbox.Size()
 	message := fmt.Sprintf("%s (%d/%d)   %d/%d,%d",
-		editor.file.name,
+		editor.file.Name,
 		editor.fileIdx,
 		len(editor.files),
-		editor.file.multiCursor[0].row,
-		len(editor.file.buffer)-1,
-		editor.file.multiCursor[0].col,
+		editor.file.MultiCursor[0].Row(),
+		len(editor.file.Buffer)-1,
+		editor.file.MultiCursor[0].Col(),
 	)
 	col := cols - len(message)
 	editor.screen.WriteString(rows-1, col, message)

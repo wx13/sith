@@ -1,4 +1,4 @@
-package main
+package file
 
 import "io/ioutil"
 import "strings"
@@ -13,17 +13,17 @@ import "github.com/wx13/sith/syntaxcolor"
 import "github.com/wx13/sith/terminal"
 
 type File struct {
-	buffer      Buffer
+	Buffer      Buffer
 	buffMutex   *sync.Mutex
-	multiCursor MultiCursor
+	MultiCursor MultiCursor
 	savedBuffer Buffer
 
 	buffHist    *BufferHist
 	searchHist  []string
 	replaceHist []string
 
-	name        string
-	syntaxRules *syntaxcolor.SyntaxRules
+	Name        string
+	SyntaxRules *syntaxcolor.SyntaxRules
 	fileMode    os.FileMode
 	autoIndent  bool
 
@@ -35,17 +35,17 @@ type File struct {
 
 func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *File {
 	file := &File{
-		name:        name,
+		Name:        name,
 		screen:      screen,
 		fileMode:    os.FileMode(int(0644)),
-		buffer:      MakeBuffer([]string{""}),
+		Buffer:      MakeBuffer([]string{""}),
 		buffMutex:   &sync.Mutex{},
-		multiCursor: MakeMultiCursor(),
+		MultiCursor: MakeMultiCursor(),
 		flushChan:   flushChan,
-		syntaxRules: syntaxcolor.NewSyntaxRules(""),
+		SyntaxRules: syntaxcolor.NewSyntaxRules(""),
 		autoIndent:  true,
 	}
-	file.buffHist = NewBufferHist(file.buffer, file.multiCursor)
+	file.buffHist = NewBufferHist(file.Buffer, file.MultiCursor)
 	go file.ReadFile(name)
 	switch path.Ext(name) {
 	case ".md", ".txt", ".csv", ".C":
@@ -74,7 +74,7 @@ func (file *File) Flush() {
 	file.screen.Clear()
 	for row, str := range slice {
 		file.screen.WriteString(row, 0, str)
-		file.screen.Colorize(row, file.syntaxRules.Colorize(str))
+		file.screen.Colorize(row, file.SyntaxRules.Colorize(str))
 	}
 	for row := len(slice); row < rows-1; row++ {
 		file.screen.WriteString(row, 0, "~")
@@ -87,15 +87,15 @@ func (file *File) Refresh() {
 }
 
 func (file *File) ClearCursors() {
-	file.multiCursor = file.multiCursor.Clear()
+	file.MultiCursor = file.MultiCursor.Clear()
 }
 
 func (file *File) AddCursor() {
-	file.multiCursor = file.multiCursor.Add()
+	file.MultiCursor = file.MultiCursor.Add()
 }
 
 func (file *File) AddCursorCol() {
-	file.multiCursor = file.multiCursor.SetColumn()
+	file.MultiCursor = file.MultiCursor.SetColumn()
 }
 
 // ReadFile reads in a file (if it exists).
@@ -103,7 +103,7 @@ func (file *File) ReadFile(name string) {
 
 	fileInfo, err := os.Stat(name)
 	if err != nil {
-		file.buffer = MakeBuffer([]string{""})
+		file.Buffer = MakeBuffer([]string{""})
 		return
 	}
 	file.fileMode = fileInfo.Mode()
@@ -114,9 +114,9 @@ func (file *File) ReadFile(name string) {
 		stringBuf = strings.Split(string(byteBuf), "\n")
 	}
 
-	file.buffer = MakeBuffer(stringBuf)
+	file.Buffer = MakeBuffer(stringBuf)
 	file.Snapshot()
-	file.savedBuffer = file.buffer.DeepDup()
+	file.savedBuffer = file.Buffer.DeepDup()
 
 	select {
 	case file.flushChan <- struct{}{}:
@@ -126,27 +126,27 @@ func (file *File) ReadFile(name string) {
 }
 
 func (file *File) toString() string {
-	return file.buffer.ToString()
+	return file.Buffer.ToString()
 }
 
 func (file *File) Save() string {
 	contents := file.toString()
-	err := ioutil.WriteFile(file.name, []byte(contents), file.fileMode)
+	err := ioutil.WriteFile(file.Name, []byte(contents), file.fileMode)
 	if err != nil {
-		return ("Could not save to file: " + file.name)
+		return ("Could not save to file: " + file.Name)
 	} else {
-		file.savedBuffer = file.buffer.DeepDup()
-		return ("Saved to: " + file.name)
+		file.savedBuffer = file.Buffer.DeepDup()
+		return ("Saved to: " + file.Name)
 	}
 }
 
 func (file *File) replaceBuffer(newBuffer Buffer) {
 	for k, line := range newBuffer {
-		if k > len(file.buffer) {
-			file.buffer = append(file.buffer, line)
+		if k > len(file.Buffer) {
+			file.Buffer = append(file.Buffer, line)
 		} else {
-			if file.buffer[k].toString() != line.toString() {
-				file.buffer[k] = line
+			if file.Buffer[k].toString() != line.toString() {
+				file.Buffer[k] = line
 			}
 		}
 	}
@@ -164,11 +164,11 @@ func (file *File) GoFmt() {
 }
 
 func (file *File) IsModified() bool {
-	if len(file.buffer) != len(file.savedBuffer) {
+	if len(file.Buffer) != len(file.savedBuffer) {
 		return true
 	}
-	for row, _ := range file.buffer {
-		if file.buffer[row].toString() != file.savedBuffer[row].toString() {
+	for row, _ := range file.Buffer {
+		if file.Buffer[row].toString() != file.savedBuffer[row].toString() {
 			return true
 		}
 	}
@@ -177,40 +177,40 @@ func (file *File) IsModified() bool {
 
 // AddChar inserts a character at the current cursor position.
 func (file *File) InsertChar(ch rune) {
-	for idx, cursor := range file.multiCursor {
+	for idx, cursor := range file.MultiCursor {
 		col, row := cursor.col, cursor.row
-		line := file.buffer[row]
-		file.buffer[row] = Line(string(line[0:col]) + string(ch) + string(line[col:]))
-		file.multiCursor[idx].col += 1
-		file.multiCursor[idx].colwant = file.multiCursor[idx].col
+		line := file.Buffer[row]
+		file.Buffer[row] = Line(string(line[0:col]) + string(ch) + string(line[col:]))
+		file.MultiCursor[idx].col += 1
+		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 	file.Snapshot()
 }
 
 func (file *File) Backspace() {
-	for idx, cursor := range file.multiCursor {
+	for idx, cursor := range file.MultiCursor {
 		col, row := cursor.col, cursor.row
 		if col == 0 {
 			if row == 0 {
 				return
 			}
 			row -= 1
-			if row+1 >= len(file.buffer) {
+			if row+1 >= len(file.Buffer) {
 				return
 			}
-			col = len(file.buffer[row])
-			file.buffer[row] = append(file.buffer[row], file.buffer[row+1]...)
-			file.buffer = append(file.buffer[0:row+1], file.buffer[row+2:]...)
-			file.multiCursor[idx].col = col
-			file.multiCursor[idx].row = row
+			col = len(file.Buffer[row])
+			file.Buffer[row] = append(file.Buffer[row], file.Buffer[row+1]...)
+			file.Buffer = append(file.Buffer[0:row+1], file.Buffer[row+2:]...)
+			file.MultiCursor[idx].col = col
+			file.MultiCursor[idx].row = row
 		} else {
-			line := file.buffer[row]
+			line := file.Buffer[row]
 			if col > len(line) {
 				continue
 			}
-			file.buffer[row] = Line(string(line[0:col-1]) + string(line[col:]))
-			file.multiCursor[idx].col = col - 1
-			file.multiCursor[idx].row = row
+			file.Buffer[row] = Line(string(line[0:col-1]) + string(line[col:]))
+			file.MultiCursor[idx].col = col - 1
+			file.MultiCursor[idx].row = row
 		}
 	}
 	file.EnforceRowBounds()
@@ -224,93 +224,93 @@ func (file *File) Delete() {
 }
 
 func (file *File) EnforceColBounds() {
-	for idx, cursor := range file.multiCursor {
-		if cursor.col > len(file.buffer[cursor.row]) {
-			file.multiCursor[idx].col = len(file.buffer[cursor.row])
+	for idx, cursor := range file.MultiCursor {
+		if cursor.col > len(file.Buffer[cursor.row]) {
+			file.MultiCursor[idx].col = len(file.Buffer[cursor.row])
 		}
 		if cursor.col < 0 {
-			file.multiCursor[idx].col = 0
+			file.MultiCursor[idx].col = 0
 		}
 	}
 }
 
 func (file *File) EnforceRowBounds() {
-	for idx, cursor := range file.multiCursor {
-		if cursor.row >= len(file.buffer) {
-			file.multiCursor[idx].row = len(file.buffer) - 1
+	for idx, cursor := range file.MultiCursor {
+		if cursor.row >= len(file.Buffer) {
+			file.MultiCursor[idx].row = len(file.Buffer) - 1
 		}
 		if cursor.row < 0 {
-			file.multiCursor[idx].row = 0
+			file.MultiCursor[idx].row = 0
 		}
 	}
 }
 
 func (file *File) CursorGoTo(row, col int) {
-	file.multiCursor[0].row = row
-	file.multiCursor[0].col = col
+	file.MultiCursor[0].row = row
+	file.MultiCursor[0].col = col
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
 }
 
 func (file *File) CursorUp(n int) {
-	file.multiCursor[0].row -= n
-	if file.multiCursor[0].row < 0 {
-		file.multiCursor[0].row = 0
+	file.MultiCursor[0].row -= n
+	if file.MultiCursor[0].row < 0 {
+		file.MultiCursor[0].row = 0
 	}
-	file.multiCursor[0].col = file.multiCursor[0].colwant
+	file.MultiCursor[0].col = file.MultiCursor[0].colwant
 	file.EnforceColBounds()
 }
 
 func (file *File) CursorDown(n int) {
-	file.multiCursor[0].row += n
-	if file.multiCursor[0].row >= len(file.buffer) {
-		file.multiCursor[0].row = len(file.buffer) - 1
+	file.MultiCursor[0].row += n
+	if file.MultiCursor[0].row >= len(file.Buffer) {
+		file.MultiCursor[0].row = len(file.Buffer) - 1
 	}
-	file.multiCursor[0].col = file.multiCursor[0].colwant
+	file.MultiCursor[0].col = file.MultiCursor[0].colwant
 	file.EnforceColBounds()
 }
 
 func (file *File) CursorRight() {
-	for idx, cursor := range file.multiCursor {
-		if cursor.col < len(file.buffer[cursor.row]) {
-			file.multiCursor[idx].col += 1
+	for idx, cursor := range file.MultiCursor {
+		if cursor.col < len(file.Buffer[cursor.row]) {
+			file.MultiCursor[idx].col += 1
 		} else {
-			if cursor.row < len(file.buffer)-1 {
-				file.multiCursor[idx].row += 1
-				file.multiCursor[idx].col = 0
+			if cursor.row < len(file.Buffer)-1 {
+				file.MultiCursor[idx].row += 1
+				file.MultiCursor[idx].col = 0
 			}
 		}
-		file.multiCursor[idx].colwant = file.multiCursor[idx].col
+		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
 }
 
 func (file *File) CursorLeft() {
-	for idx, cursor := range file.multiCursor {
+	for idx, cursor := range file.MultiCursor {
 		if cursor.col > 0 {
-			file.multiCursor[idx].col -= 1
+			file.MultiCursor[idx].col -= 1
 		} else {
 			if cursor.row > 0 {
-				file.multiCursor[idx].row -= 1
-				file.multiCursor[idx].col = len(file.buffer[file.multiCursor[idx].row])
+				file.MultiCursor[idx].row -= 1
+				file.MultiCursor[idx].col = len(file.Buffer[file.MultiCursor[idx].row])
 			}
 		}
-		file.multiCursor[idx].colwant = file.multiCursor[idx].col
+		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 }
 
 func (file *File) Newline() {
-	for idx, cursor := range file.multiCursor {
+	for idx, cursor := range file.MultiCursor {
 		col, row := cursor.col, cursor.row
-		lineStart := file.buffer[row][0:col]
-		lineEnd := file.buffer[row][col:]
-		file.buffer[row] = lineStart
-		file.buffer = append(file.buffer, Line(""))
-		copy(file.buffer[row+2:], file.buffer[row+1:])
-		file.buffer[row+1] = lineEnd
-		file.multiCursor[idx].row = row + 1
-		file.multiCursor[idx].col = 0
+		lineStart := file.Buffer[row][0:col]
+		lineEnd := file.Buffer[row][col:]
+		file.Buffer[row] = lineStart
+		file.Buffer = append(file.Buffer, Line(""))
+		copy(file.Buffer[row+2:], file.Buffer[row+1:])
+		file.Buffer[row+1] = lineEnd
+		file.MultiCursor[idx].row = row + 1
+		file.MultiCursor[idx].col = 0
 		file.DoAutoIndent(idx)
 	}
 	file.Snapshot()
@@ -318,21 +318,21 @@ func (file *File) Newline() {
 
 func (file *File) DoAutoIndent(cursorIdx int) {
 
-	row := file.multiCursor[cursorIdx].row
+	row := file.MultiCursor[cursorIdx].row
 	if row == 0 {
 		return
 	}
 
-	origLine := file.buffer[row].Dup()
+	origLine := file.Buffer[row].Dup()
 
 	// Whitespace-only indent.
 	re, _ := regexp.Compile("^[ \t]+")
-	ws := Line(re.FindString(file.buffer[row-1].toString()))
+	ws := Line(re.FindString(file.Buffer[row-1].toString()))
 	if len(ws) > 0 {
-		file.buffer[row] = append(ws, file.buffer[row]...)
-		file.multiCursor[cursorIdx].col += len(ws)
-		if len(file.buffer[row-1]) == len(ws) {
-			file.buffer[row-1] = Line("")
+		file.Buffer[row] = append(ws, file.Buffer[row]...)
+		file.MultiCursor[cursorIdx].col += len(ws)
+		if len(file.Buffer[row-1]) == len(ws) {
+			file.Buffer[row-1] = Line("")
 		}
 	}
 
@@ -341,11 +341,11 @@ func (file *File) DoAutoIndent(cursorIdx int) {
 	}
 
 	// Non-whitespace indent.
-	indent := file.buffer[row-1].CommonStart(file.buffer[row-2])
+	indent := file.Buffer[row-1].CommonStart(file.Buffer[row-2])
 	if len(indent) > len(ws) {
 		file.Snapshot()
-		file.buffer[row] = append(indent, origLine...)
-		file.multiCursor[cursorIdx].col += len(indent) - len(ws)
+		file.Buffer[row] = append(indent, origLine...)
+		file.MultiCursor[cursorIdx].col += len(indent) - len(ws)
 	}
 
 }
@@ -353,10 +353,10 @@ func (file *File) DoAutoIndent(cursorIdx int) {
 func (file *File) GetCursor(idx int) (int, int) {
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
-	line := file.buffer[file.multiCursor[idx].row][0:file.multiCursor[idx].col]
+	line := file.Buffer[file.MultiCursor[idx].row][0:file.MultiCursor[idx].col]
 	strLine := string(line)
 	strLine = strings.Replace(strLine, "\t", "    ", -1)
-	return file.multiCursor[idx].row - file.rowOffset, len(strLine) - file.colOffset
+	return file.MultiCursor[idx].row - file.rowOffset, len(strLine) - file.colOffset
 }
 
 func (file *File) ScrollLeft() {
@@ -370,7 +370,7 @@ func (file *File) ScrollRight() {
 }
 
 func (file *File) ScrollUp() {
-	if file.rowOffset < len(file.buffer)-1 {
+	if file.rowOffset < len(file.Buffer)-1 {
 		file.rowOffset += 1
 	}
 }
@@ -390,26 +390,26 @@ func tabs2spaces(line Line) Line {
 // Slice returns a 2D slice of the buffer.
 func (file *File) Slice(nRows, nCols int) []string {
 
-	if file.multiCursor[0].row < file.rowOffset {
-		file.rowOffset = file.multiCursor[0].row
+	if file.MultiCursor[0].row < file.rowOffset {
+		file.rowOffset = file.MultiCursor[0].row
 	}
-	if file.multiCursor[0].row >= file.rowOffset+nRows-1 {
-		file.rowOffset = file.multiCursor[0].row - nRows + 1
+	if file.MultiCursor[0].row >= file.rowOffset+nRows-1 {
+		file.rowOffset = file.MultiCursor[0].row - nRows + 1
 	}
 
-	if file.multiCursor[0].col < file.colOffset {
-		file.colOffset = file.multiCursor[0].col
+	if file.MultiCursor[0].col < file.colOffset {
+		file.colOffset = file.MultiCursor[0].col
 	}
-	if file.multiCursor[0].col >= file.colOffset+nCols-1 {
-		file.colOffset = file.multiCursor[0].col - nCols + 1
+	if file.MultiCursor[0].col >= file.colOffset+nCols-1 {
+		file.colOffset = file.MultiCursor[0].col - nCols + 1
 	}
 
 	startRow := file.rowOffset
 	endRow := nRows + file.rowOffset
 	startCol := file.colOffset
 	endCol := nCols + file.colOffset
-	if endRow > len(file.buffer) {
-		endRow = len(file.buffer)
+	if endRow > len(file.Buffer) {
+		endRow = len(file.Buffer)
 	}
 	if endRow <= startRow {
 		return []string{}
@@ -417,7 +417,7 @@ func (file *File) Slice(nRows, nCols int) []string {
 
 	slice := make([]string, endRow-startRow)
 	for row := startRow; row < endRow; row++ {
-		line := tabs2spaces(file.buffer[row])
+		line := tabs2spaces(file.Buffer[row])
 		rowEndCol := endCol
 		if rowEndCol > len(line) {
 			rowEndCol = len(line)
@@ -434,29 +434,29 @@ func (file *File) Slice(nRows, nCols int) []string {
 }
 
 func (file *File) Justify() {
-	minRow, maxRow := file.multiCursor.MinMaxRow()
+	minRow, maxRow := file.MultiCursor.MinMaxRow()
 	for row := minRow; row <= maxRow; row++ {
-		if len(file.buffer[row]) > 72 {
+		if len(file.Buffer[row]) > 72 {
 			col := 72
 			for ; col >= 0; col-- {
-				r := file.buffer[row][col]
+				r := file.Buffer[row][col]
 				if r == ' ' || r == '\t' {
 					break
 				}
 			}
 			if col > 0 {
-				line := file.buffer[row].Dup()
-				file.buffer[row] = line[:col]
-				for file.buffer[row][0] == ' ' {
-					file.buffer[row] = file.buffer[row][1:]
+				line := file.Buffer[row].Dup()
+				file.Buffer[row] = line[:col]
+				for file.Buffer[row][0] == ' ' {
+					file.Buffer[row] = file.Buffer[row][1:]
 				}
-				if row+1 == len(file.buffer) {
-					file.buffer = append(file.buffer, line[col:])
+				if row+1 == len(file.Buffer) {
+					file.Buffer = append(file.Buffer, line[col:])
 				} else {
 					rest := append(line[col:], ' ')
-					file.buffer[row+1] = append(rest, file.buffer[row+1].Dup()...)
-					for file.buffer[row+1][0] == ' ' {
-						file.buffer[row+1] = file.buffer[row+1][1:]
+					file.Buffer[row+1] = append(rest, file.Buffer[row+1].Dup()...)
+					for file.Buffer[row+1][0] == ' ' {
+						file.Buffer[row+1] = file.Buffer[row+1][1:]
 					}
 				}
 			}
@@ -465,22 +465,22 @@ func (file *File) Justify() {
 }
 
 func (file *File) StartOfLine() {
-	for idx, _ := range file.multiCursor {
-		file.multiCursor[idx].col = 0
+	for idx, _ := range file.MultiCursor {
+		file.MultiCursor[idx].col = 0
 	}
 }
 
 func (file *File) EndOfLine() {
-	for idx, _ := range file.multiCursor {
-		row := file.multiCursor[idx].row
-		file.multiCursor[idx].col = len(file.buffer[row])
+	for idx, _ := range file.MultiCursor {
+		row := file.MultiCursor[idx].row
+		file.MultiCursor[idx].col = len(file.Buffer[row])
 	}
 }
 
 func (file *File) NextWord() {
-	for idx, cursor := range file.multiCursor {
+	for idx, cursor := range file.MultiCursor {
 		row := cursor.row
-		line := file.buffer[row]
+		line := file.Buffer[row]
 		col := cursor.col
 		for col < len(line)-1 {
 			col++
@@ -489,14 +489,14 @@ func (file *File) NextWord() {
 				break
 			}
 		}
-		file.multiCursor[idx].col = col
+		file.MultiCursor[idx].col = col
 	}
 }
 
 func (file *File) PrevWord() {
-	for idx, cursor := range file.multiCursor {
+	for idx, cursor := range file.MultiCursor {
 		row := cursor.row
-		line := file.buffer[row]
+		line := file.Buffer[row]
 		col := cursor.col
 		for col > 0 {
 			col--
@@ -505,21 +505,21 @@ func (file *File) PrevWord() {
 				break
 			}
 		}
-		file.multiCursor[idx].col = col
+		file.MultiCursor[idx].col = col
 	}
 }
 
 func (file *File) Cut() Buffer {
-	row := file.multiCursor[0].row
-	cutBuffer := file.buffer[row : row+1].Dup()
-	if len(file.buffer) == 1 {
-		file.buffer = MakeBuffer([]string{""})
+	row := file.MultiCursor[0].row
+	cutBuffer := file.Buffer[row : row+1].Dup()
+	if len(file.Buffer) == 1 {
+		file.Buffer = MakeBuffer([]string{""})
 	} else if row == 0 {
-		file.buffer = file.buffer[1:]
-	} else if row < len(file.buffer)-1 {
-		file.buffer = append(file.buffer[:row], file.buffer[row+1:]...)
+		file.Buffer = file.Buffer[1:]
+	} else if row < len(file.Buffer)-1 {
+		file.Buffer = append(file.Buffer[:row], file.Buffer[row+1:]...)
 	} else {
-		file.buffer = file.buffer[:row]
+		file.Buffer = file.Buffer[:row]
 	}
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
@@ -528,12 +528,12 @@ func (file *File) Cut() Buffer {
 }
 
 func (file *File) Paste(buffer Buffer) {
-	row := file.multiCursor[0].row
-	newBuffer := file.buffer[:row].Dup()
+	row := file.MultiCursor[0].row
+	newBuffer := file.Buffer[:row].Dup()
 	for _, line := range buffer {
 		newBuffer = append(newBuffer, line.Dup())
 	}
-	file.buffer = append(newBuffer, file.buffer[row:].Dup()...)
+	file.Buffer = append(newBuffer, file.Buffer[row:].Dup()...)
 	file.CursorDown(len(buffer))
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
@@ -541,15 +541,15 @@ func (file *File) Paste(buffer Buffer) {
 }
 
 func (file *File) Snapshot() {
-	file.buffHist.Snapshot(file.buffer, file.multiCursor)
+	file.buffHist.Snapshot(file.Buffer, file.MultiCursor)
 }
 
 func (file *File) Undo() {
-	file.buffer, file.multiCursor = file.buffHist.Prev()
+	file.Buffer, file.MultiCursor = file.buffHist.Prev()
 }
 
 func (file *File) Redo() {
-	file.buffer, file.multiCursor = file.buffHist.Next()
+	file.Buffer, file.MultiCursor = file.buffHist.Next()
 }
 
 func (file *File) GetPromptAnswer(question string, history *[]string) string {
@@ -573,7 +573,7 @@ func (file *File) Search() {
 	if searchTerm == "" {
 		return
 	}
-	row, col, err := file.buffer.Search(searchTerm, file.multiCursor[0])
+	row, col, err := file.Buffer.Search(searchTerm, file.MultiCursor[0])
 	if err == nil {
 		file.CursorGoTo(row, col)
 	}
@@ -592,7 +592,7 @@ func (file *File) SearchAndReplace() {
 	}
 
 	for {
-		row, col, err := file.buffer.Search(searchTerm, file.multiCursor[0])
+		row, col, err := file.Buffer.Search(searchTerm, file.MultiCursor[0])
 		if err != nil {
 			break
 		}
@@ -602,7 +602,7 @@ func (file *File) SearchAndReplace() {
 		startColOffset := screenCol - col
 		file.Flush()
 		var startCol, endCol int
-		startCol, endCol = file.buffer[row].Search(searchTerm, col, -1)
+		startCol, endCol = file.Buffer[row].Search(searchTerm, col, -1)
 		for c := startCol + startColOffset; c < endCol+startColOffset; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)
 		}
@@ -614,8 +614,8 @@ func (file *File) SearchAndReplace() {
 			break
 		}
 		if doReplace {
-			file.buffer.Replace(searchTerm, replaceTerm, row, col)
-			file.screen.WriteString(row, 0, file.buffer[row].toString())
+			file.Buffer.Replace(searchTerm, replaceTerm, row, col)
+			file.screen.WriteString(row, 0, file.Buffer[row].toString())
 		}
 	}
 }
@@ -636,8 +636,8 @@ func (file *File) WriteStatus(row, col int) {
 	bg := termbox.ColorBlack
 	file.screen.WriteStringColor(row, col, status, fg, bg)
 
-	if len(file.multiCursor) > 1 {
-		status = fmt.Sprintf("%dC", len(file.multiCursor))
+	if len(file.MultiCursor) > 1 {
+		status = fmt.Sprintf("%dC", len(file.MultiCursor))
 		col -= len(status) + 2
 		fg := termbox.ColorBlack
 		bg := termbox.ColorRed

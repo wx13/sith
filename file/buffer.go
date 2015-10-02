@@ -1,4 +1,4 @@
-package main
+package file
 
 import "strings"
 import "errors"
@@ -134,6 +134,14 @@ func (cursor Cursor) Dup() Cursor {
 		col:     cursor.col,
 		colwant: cursor.colwant,
 	}
+}
+
+func (cursor Cursor) Row() int {
+	return cursor.row
+}
+
+func (cursor Cursor) Col() int {
+	return cursor.col
 }
 
 type MultiCursor []Cursor
