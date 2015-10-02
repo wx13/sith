@@ -9,6 +9,7 @@ import "go/format"
 import "github.com/nsf/termbox-go"
 import "path"
 import "regexp"
+import "github.com/wx13/sith/syntaxcolor"
 
 type File struct {
 	buffer      Buffer
@@ -21,7 +22,7 @@ type File struct {
 	replaceHist []string
 
 	name        string
-	syntaxRules *SyntaxRules
+	syntaxRules *syntaxcolor.SyntaxRules
 	fileMode    os.FileMode
 	autoIndent  bool
 
@@ -40,7 +41,7 @@ func NewFile(name string, flushChan chan struct{}, screen *Screen) *File {
 		buffMutex:   &sync.Mutex{},
 		multiCursor: MakeMultiCursor(),
 		flushChan:   flushChan,
-		syntaxRules: NewSyntaxRules(""),
+		syntaxRules: syntaxcolor.NewSyntaxRules(""),
 		autoIndent:  true,
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.multiCursor)

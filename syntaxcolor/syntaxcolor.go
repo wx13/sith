@@ -1,4 +1,4 @@
-package main
+package syntaxcolor
 
 import "regexp"
 import "github.com/nsf/termbox-go"
@@ -89,8 +89,8 @@ func (rules SyntaxRules) GetFileType(filename string) string {
 }
 
 type LineColor struct {
-	fg, bg     termbox.Attribute
-	start, end int
+	Fg, Bg     termbox.Attribute
+	Start, End int
 }
 
 func (rules SyntaxRules) Colorize(str string) []LineColor {
@@ -101,7 +101,7 @@ func (rules SyntaxRules) Colorize(str string) []LineColor {
 			continue
 		}
 		for _, startEnd := range matches {
-			lc = append(lc, LineColor{fg: rule.color.fg, bg: rule.color.bg, start: startEnd[0], end: startEnd[1]})
+			lc = append(lc, LineColor{Fg: rule.color.fg, Bg: rule.color.bg, Start: startEnd[0], End: startEnd[1]})
 		}
 	}
 	return lc

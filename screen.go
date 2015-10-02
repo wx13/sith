@@ -3,6 +3,7 @@ package main
 import "errors"
 import "github.com/nsf/termbox-go"
 import "strings"
+import "github.com/wx13/sith/syntaxcolor"
 
 type Screen struct {
 	row, col int
@@ -72,16 +73,16 @@ func (screen *Screen) WriteString(row, col int, s string) {
 	screen.WriteStringColor(row, col, s, screen.fg, screen.bg)
 }
 
-func (screen *Screen) Colorize(row int, colors []LineColor) {
+func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor) {
 	cells := termbox.CellBuffer()
 	cols, _ := termbox.Size()
 	for _, lc := range colors {
-		for col := lc.start; col < lc.end; col++ {
+		for col := lc.Start; col < lc.End; col++ {
 			j := row*cols + col
 			if j < 0 || j >= len(cells) {
 				continue
 			}
-			cells[j].Bg, cells[j].Fg = lc.bg, lc.fg
+			cells[j].Bg, cells[j].Fg = lc.Bg, lc.Fg
 		}
 	}
 }

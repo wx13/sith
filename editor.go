@@ -6,6 +6,7 @@ import "os"
 import "io/ioutil"
 import "path/filepath"
 import "syscall"
+import "github.com/wx13/sith/syntaxcolor"
 
 type Editor struct {
 	screen     *Screen
@@ -68,7 +69,7 @@ func (editor *Editor) OpenNewFile() {
 
 func (editor *Editor) OpenFile(name string) {
 	file := NewFile(name, editor.flushChan, editor.screen)
-	file.syntaxRules = NewSyntaxRules(name)
+	file.syntaxRules = syntaxcolor.NewSyntaxRules(name)
 	editor.files = append(editor.files, file)
 }
 
