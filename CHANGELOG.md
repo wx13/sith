@@ -22,7 +22,6 @@ features:
 bugs:
  - Refresh doesn't remove terminal messages
  - suspend still sometimes causes problems with keyboard
- - Prevent stray characters from entering buffer.
 
 
 ## [unreleased]
@@ -35,6 +34,8 @@ bugs:
    blank lines.
  - Allow alternate alt-keys.  Some terminals don't make alt keys equal to esc.
    If the character code is in the right range, use c-128 as the alt key code.
+ - Wasn't able to open new files (from menu) in a subdirectory.  I wasn't prepending
+   the directory path to the file name.
 
 
 ## [0.1] "Almost Usable" 2015-09-30

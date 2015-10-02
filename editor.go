@@ -64,7 +64,7 @@ func (editor *Editor) OpenNewFile() {
 			break
 		}
 	}
-	editor.OpenFile(names[idx])
+	editor.OpenFile(dir + names[idx])
 	editor.fileIdx = len(editor.files) - 1
 	editor.file = editor.files[editor.fileIdx]
 }
