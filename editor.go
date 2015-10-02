@@ -5,6 +5,7 @@ import "fmt"
 import "os"
 import "io/ioutil"
 import "path/filepath"
+import "syscall"
 
 type Editor struct {
 	screen     *Screen
@@ -90,6 +91,13 @@ func (editor *Editor) Quit() {
 	}
 }
 
+func (editor *Editor) Suspend() {
+	editor.screen.Close()
+	pid := syscall.Getpid()
+	syscall.Kill(pid, syscall.SIGSTOP)
+	editor.screen.Open()
+}
+
 func (editor *Editor) CloseFile() bool {
 	editor.Flush()
 	idx := editor.fileIdx
@@ -150,6 +158,9 @@ func (editor *Editor) Listen() {
 			editor.Quit()
 		case "altW":
 			editor.CloseFile()
+		case "altZ":
+			editor.Suspend()
+			keyboard = NewKeyboard()
 		case "altN":
 			editor.NextFile()
 		case "altB":

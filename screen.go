@@ -32,7 +32,13 @@ func NewScreen() *Screen {
 }
 
 func (screen *Screen) Close() {
+	screen.Clear()
+	termbox.Flush()
 	termbox.Close()
+}
+
+func (screen *Screen) Open() {
+	termbox.Init()
 }
 
 func (screen *Screen) Flush() {
