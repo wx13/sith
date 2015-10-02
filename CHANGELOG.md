@@ -3,9 +3,10 @@ Change Log
 
 ## To Do
 
+features:
  - ensure file is writable
  - truncate prompt histories (search/replace)
- - multi-file search (?)
+ - multi-file search or at least shared search history
  - check on unicode support
  - row cut/paste
  - linewrap
@@ -16,7 +17,17 @@ Change Log
  - Restrict search / replace to marked lines
  - Revert to last saved copy
    - also should be able to reload from file
+
+bugs:
  - Refresh doesn't remove terminal messages
+ - suspend still sometimes causes problems with keyboard
+
+
+## [unreleased]
+
+### Bugfixes:
+ - Multicursor should not delete newlines, otherwise weird stuff happens when
+   trying to delete indents
 
 
 ## [0.1] "Almost Usable" 2015-09-30

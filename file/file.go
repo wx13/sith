@@ -191,6 +191,9 @@ func (file *File) Backspace() {
 	for idx, cursor := range file.MultiCursor {
 		col, row := cursor.col, cursor.row
 		if col == 0 {
+			if len(file.MultiCursor) > 1 {
+				continue
+			}
 			if row == 0 {
 				return
 			}
@@ -275,6 +278,9 @@ func (file *File) CursorRight() {
 		if cursor.col < len(file.Buffer[cursor.row]) {
 			file.MultiCursor[idx].col += 1
 		} else {
+			if len(file.MultiCursor) > 1 {
+				continue
+			}
 			if cursor.row < len(file.Buffer)-1 {
 				file.MultiCursor[idx].row += 1
 				file.MultiCursor[idx].col = 0
@@ -291,6 +297,9 @@ func (file *File) CursorLeft() {
 		if cursor.col > 0 {
 			file.MultiCursor[idx].col -= 1
 		} else {
+			if len(file.MultiCursor) > 1 {
+				continue
+			}
 			if cursor.row > 0 {
 				file.MultiCursor[idx].row -= 1
 				file.MultiCursor[idx].col = len(file.Buffer[file.MultiCursor[idx].row])
