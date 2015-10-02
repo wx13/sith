@@ -17,10 +17,12 @@ features:
  - Restrict search / replace to marked lines
  - Revert to last saved copy
    - also should be able to reload from file
+ - go-to line number
 
 bugs:
  - Refresh doesn't remove terminal messages
  - suspend still sometimes causes problems with keyboard
+ - Prevent stray characters from entering buffer.
 
 
 ## [unreleased]
@@ -31,6 +33,8 @@ bugs:
  - Multicursor won't insert characters in the first column, if other rows are
    at col > 0.  This way we can indent multiple blocks of code separated by
    blank lines.
+ - Allow alternate alt-keys.  Some terminals don't make alt keys equal to esc.
+   If the character code is in the right range, use c-128 as the alt key code.
 
 
 ## [0.1] "Almost Usable" 2015-09-30

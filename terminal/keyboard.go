@@ -83,7 +83,14 @@ func (kb *Keyboard) GetCmdString(ev termbox.Event) (string, rune) {
 			} else {
 				return "unknown", 0
 			}
-		} else if ev.Ch != 0 {
+		} else if ev.Ch > 160 && ev.Ch < 256 {
+			cmd, ok := kb.AltKeyMap[string(ev.Ch-128)]
+			if ok {
+				return cmd, 0
+			} else {
+				return "unknown", 0
+			}
+		} else if ev.Ch >= 32 && ev.Ch < 128 {
 			// Handle regular characters.
 			return "char", ev.Ch
 		} else {
