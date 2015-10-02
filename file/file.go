@@ -177,8 +177,17 @@ func (file *File) IsModified() bool {
 
 // AddChar inserts a character at the current cursor position.
 func (file *File) InsertChar(ch rune) {
+	maxCol := 0
+	for _, cursor := range file.MultiCursor {
+		if cursor.col > maxCol {
+			maxCol = cursor.col
+		}
+	}
 	for idx, cursor := range file.MultiCursor {
 		col, row := cursor.col, cursor.row
+		if maxCol > 0 && col == 0 {
+			continue
+		}
 		line := file.Buffer[row]
 		file.Buffer[row] = Line(string(line[0:col]) + string(ch) + string(line[col:]))
 		file.MultiCursor[idx].col += 1

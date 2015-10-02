@@ -28,6 +28,9 @@ bugs:
 ### Bugfixes:
  - Multicursor should not delete newlines, otherwise weird stuff happens when
    trying to delete indents
+ - Multicursor won't insert characters in the first column, if other rows are
+   at col > 0.  This way we can indent multiple blocks of code separated by
+   blank lines.
 
 
 ## [0.1] "Almost Usable" 2015-09-30
