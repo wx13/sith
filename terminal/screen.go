@@ -1,4 +1,4 @@
-package main
+package terminal
 
 import "errors"
 import "github.com/nsf/termbox-go"

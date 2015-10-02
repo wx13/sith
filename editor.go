@@ -7,13 +7,14 @@ import "io/ioutil"
 import "path/filepath"
 import "syscall"
 import "github.com/wx13/sith/syntaxcolor"
+import "github.com/wx13/sith/terminal"
 
 type Editor struct {
-	screen     *Screen
+	screen     *terminal.Screen
 	file       *File
 	files      []*File
 	fileIdx    int
-	keyboard   *Keyboard
+	keyboard   *terminal.Keyboard
 	flushChan  chan struct{}
 	msg        string
 	copyBuffer Buffer
@@ -23,7 +24,7 @@ type Editor struct {
 func NewEditor() *Editor {
 	return &Editor{
 		flushChan:  make(chan struct{}, 1),
-		screen:     NewScreen(),
+		screen:     terminal.NewScreen(),
 		copyBuffer: MakeBuffer([]string{}),
 		copyContig: 0,
 	}
@@ -49,7 +50,7 @@ func (editor *Editor) OpenNewFile() {
 				names = append(names, file.Name())
 			}
 		}
-		menu := NewMenu(editor.screen)
+		menu := terminal.NewMenu(editor.screen)
 		idx = menu.Choose(names)
 		editor.Flush()
 		if idx < 0 {
@@ -116,7 +117,7 @@ func (editor *Editor) CloseFile() bool {
 
 func (editor *Editor) Listen() {
 
-	keyboard := NewKeyboard()
+	keyboard := terminal.NewKeyboard()
 	for {
 		cmd, r := keyboard.GetKey()
 		editor.msg = ""
@@ -161,7 +162,7 @@ func (editor *Editor) Listen() {
 			editor.CloseFile()
 		case "altZ":
 			editor.Suspend()
-			keyboard = NewKeyboard()
+			keyboard = terminal.NewKeyboard()
 		case "altN":
 			editor.NextFile()
 		case "altB":
@@ -257,7 +258,7 @@ func (editor *Editor) SelectFile() {
 	for _, file := range editor.files {
 		names = append(names, file.name)
 	}
-	menu := NewMenu(editor.screen)
+	menu := terminal.NewMenu(editor.screen)
 	idx := menu.Choose(names)
 	if idx >= 0 {
 		editor.SwitchFile(idx)

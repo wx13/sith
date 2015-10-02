@@ -10,6 +10,7 @@ import "github.com/nsf/termbox-go"
 import "path"
 import "regexp"
 import "github.com/wx13/sith/syntaxcolor"
+import "github.com/wx13/sith/terminal"
 
 type File struct {
 	buffer      Buffer
@@ -28,11 +29,11 @@ type File struct {
 
 	rowOffset int
 	colOffset int
-	screen    *Screen
+	screen    *terminal.Screen
 	flushChan chan struct{}
 }
 
-func NewFile(name string, flushChan chan struct{}, screen *Screen) *File {
+func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *File {
 	file := &File{
 		name:        name,
 		screen:      screen,
