@@ -82,8 +82,7 @@ func (file *File) Flush() {
 }
 
 func (file *File) Refresh() {
-	file.screen.Clear()
-	file.screen.Flush()
+	file.screen.ReallyClear()
 }
 
 func (file *File) ClearCursors() {

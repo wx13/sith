@@ -46,6 +46,8 @@ bugs:
    it will add whitespace to blank line only if all lines are blank.
  - When selecting a file from the file selection menu, we should open the file
    by relative path, not absolute.
+ - Perhaps screen refresh will work now.  I now write garbage to the screen, then
+   write spaces to the screen.  This should clear it completely...
 
 
 ## [0.1] "Almost Usable" 2015-09-30

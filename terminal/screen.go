@@ -59,6 +59,18 @@ func (screen *Screen) Clear() {
 	}
 }
 
+func (screen *Screen) ReallyClear() {
+	cols, rows := termbox.Size()
+	for row := 0; row < rows; row++ {
+		screen.WriteString(row, 0, strings.Repeat(".", cols))
+	}
+	screen.Flush()
+	for row := 0; row < rows; row++ {
+		screen.WriteString(row, 0, strings.Repeat(" ", cols))
+	}
+	screen.Flush()
+}
+
 func (screen *Screen) DecorateStatusLine() {
 	cells := termbox.CellBuffer()
 	cols, rows := termbox.Size()
