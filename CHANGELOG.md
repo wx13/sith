@@ -25,8 +25,7 @@ bugs:
  - syntax coloring works on viewed lines, but should include parts off the edge
    of the screen too.
  - menus should expand to include long lines.  Horizontal scroll?
- - When selecting a file from the file selection menu, we should open the file
-   by relative path, not absolute.
+ - Sometimes thinks the file has been modified when it hasn't (undo/redo)
 
 
 ## [unreleased]
@@ -45,6 +44,8 @@ bugs:
    except the actually turning off of autoindent...
  - multicursor in first column should not add whitespace to blank lines.  Now
    it will add whitespace to blank line only if all lines are blank.
+ - When selecting a file from the file selection menu, we should open the file
+   by relative path, not absolute.
 
 
 ## [0.1] "Almost Usable" 2015-09-30
