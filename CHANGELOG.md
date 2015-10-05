@@ -25,6 +25,8 @@ bugs:
  - syntax coloring works on viewed lines, but should include parts off the edge
    of the screen too.
  - menus should expand to include long lines.  Horizontal scroll?
+ - When selecting a file from the file selection menu, we should open the file
+   by relative path, not absolute.
 
 
 ## [unreleased]
@@ -39,7 +41,8 @@ bugs:
    If the character code is in the right range, use c-128 as the alt key code.
  - Wasn't able to open new files (from menu) in a subdirectory.  I wasn't prepending
    the directory path to the file name.
-
+ - Toggling off auto indent now toggles off autoindent...  I had done everything
+   except the actually turning off of autoindent...
 
 ## [0.1] "Almost Usable" 2015-09-30
 

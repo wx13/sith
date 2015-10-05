@@ -329,7 +329,9 @@ func (file *File) Newline() {
 		file.Buffer[row+1] = lineEnd
 		file.MultiCursor[idx].row = row + 1
 		file.MultiCursor[idx].col = 0
-		file.DoAutoIndent(idx)
+		if file.autoIndent {
+			file.DoAutoIndent(idx)
+		}
 	}
 	file.Snapshot()
 }
