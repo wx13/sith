@@ -20,8 +20,11 @@ features:
  - go-to line number
 
 bugs:
- - Refresh doesn't remove terminal messages
- - suspend still sometimes causes problems with keyboard
+ - Refresh doesn't remove terminal messages (might be fixed...)
+ - suspend still sometimes causes problems with keyboard (hard to reproduce)
+ - syntax coloring works on viewed lines, but should include parts off the edge
+   of the screen too.
+ - menus should expand to include long lines.  Horizontal scroll?
 
 
 ## [unreleased]
