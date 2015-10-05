@@ -43,6 +43,9 @@ bugs:
    the directory path to the file name.
  - Toggling off auto indent now toggles off autoindent...  I had done everything
    except the actually turning off of autoindent...
+ - multicursor in first column should not add whitespace to blank lines.  Now
+   it will add whitespace to blank line only if all lines are blank.
+
 
 ## [0.1] "Almost Usable" 2015-09-30
 
