@@ -9,6 +9,7 @@ type Color struct {
 	fg, bg termbox.Attribute
 }
 
+// SyntaxRule simply maps a regexp to a color.
 type SyntaxRule struct {
 	re    *regexp.Regexp
 	color Color
@@ -20,54 +21,54 @@ func NewSyntaxRules(filename string) *SyntaxRules {
 
 	rules := SyntaxRules{}
 
-	filetype := rules.GetFileType(filename)
+	filetype := rules.getFileType(filename)
 
 	// Filetype specific rules
 	switch filetype {
 	case "go":
-		rules.AddSingleQuoteRule(termbox.ColorRed)
-		rules.AddDoubleQuoteRule(termbox.ColorYellow)
-		rules.AddLineCommentRule("//", termbox.ColorCyan)
+		rules.addSingleQuoteRule(termbox.ColorRed)
+		rules.addDoubleQuoteRule(termbox.ColorYellow)
+		rules.addLineCommentRule("//", termbox.ColorCyan)
 	case "ruby", "shell", "python", "yaml":
-		rules.AddSingleQuoteRule(termbox.ColorYellow)
-		rules.AddDoubleQuoteRule(termbox.ColorYellow)
-		rules.AddLineCommentRule("#", termbox.ColorCyan)
+		rules.addSingleQuoteRule(termbox.ColorYellow)
+		rules.addDoubleQuoteRule(termbox.ColorYellow)
+		rules.addLineCommentRule("#", termbox.ColorCyan)
 	case "c":
-		rules.AddSingleQuoteRule(termbox.ColorYellow)
-		rules.AddDoubleQuoteRule(termbox.ColorYellow)
-		rules.AddLineCommentRule("//", termbox.ColorCyan)
+		rules.addSingleQuoteRule(termbox.ColorYellow)
+		rules.addDoubleQuoteRule(termbox.ColorYellow)
+		rules.addLineCommentRule("//", termbox.ColorCyan)
 	case "markdown":
-		rules.AddRule("^#+.*$", Color{fg: termbox.ColorGreen})
-		rules.AddRule("^===*$", Color{fg: termbox.ColorGreen})
-		rules.AddRule("^---*$", Color{fg: termbox.ColorGreen})
+		rules.addRule("^#+.*$", Color{fg: termbox.ColorGreen})
+		rules.addRule("^===*$", Color{fg: termbox.ColorGreen})
+		rules.addRule("^---*$", Color{fg: termbox.ColorGreen})
 	}
 
 	// Trailing whitespace
-	rules.AddRule("[ \t]+$", Color{bg: termbox.ColorYellow})
+	rules.addRule("[ \t]+$", Color{bg: termbox.ColorYellow})
 
 	return &rules
 
 }
 
-func (rules *SyntaxRules) AddRule(reStr string, color Color) {
+func (rules *SyntaxRules) addRule(reStr string, color Color) {
 	re, _ := regexp.Compile(reStr)
 	*rules = append(*rules, SyntaxRule{re, color})
 }
 
-func (rules *SyntaxRules) AddLineCommentRule(commStr string, fg termbox.Attribute) {
+func (rules *SyntaxRules) addLineCommentRule(commStr string, fg termbox.Attribute) {
 	reStr := fmt.Sprintf("%s.*$", commStr)
-	rules.AddRule(reStr, Color{fg: fg})
+	rules.addRule(reStr, Color{fg: fg})
 }
 
-func (rules *SyntaxRules) AddSingleQuoteRule(fg termbox.Attribute) {
-	rules.AddRule("'.*?'", Color{fg: fg})
+func (rules *SyntaxRules) addSingleQuoteRule(fg termbox.Attribute) {
+	rules.addRule("'.*?'", Color{fg: fg})
 }
 
-func (rules *SyntaxRules) AddDoubleQuoteRule(fg termbox.Attribute) {
-	rules.AddRule("\".*?\"", Color{fg: fg})
+func (rules *SyntaxRules) addDoubleQuoteRule(fg termbox.Attribute) {
+	rules.addRule("\".*?\"", Color{fg: fg})
 }
 
-func (rules SyntaxRules) GetFileType(filename string) string {
+func (rules SyntaxRules) getFileType(filename string) string {
 	switch path.Ext(filename) {
 	case ".go":
 		return "go"
@@ -93,6 +94,9 @@ type LineColor struct {
 	Start, End int
 }
 
+// Colorize takes in a string and outputs an array of LineColor objects.
+// A linecolor object maps a color pair (bg, fg) with start/end indices
+// within the string.
 func (rules SyntaxRules) Colorize(str string) []LineColor {
 	lc := []LineColor{}
 	for _, rule := range rules {
