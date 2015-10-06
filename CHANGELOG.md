@@ -25,28 +25,28 @@ bugs:
  - Sometimes thinks the file has been modified when it hasn't (undo/redo)
 
 
-## [unreleased]
+## [0.1.1] 2015-10-06
 
 ### Bugfixes:
- - Multicursor should not delete newlines, otherwise weird stuff happens when
-   trying to delete indents
- - Multicursor won't insert characters in the first column, if other rows are
-   at col > 0.  This way we can indent multiple blocks of code separated by
+ - Don't allow multicursor delete of newlines, otherwise weird stuff happens when
+   trying to delete indents.
+ - Don't let multicursor insert characters in the first column if other rows are
+   at col > 0. This way we can indent multiple blocks of code separated by
    blank lines.
  - Allow alternate alt-keys.  Some terminals don't make alt keys equal to esc.
    If the character code is in the right range, use c-128 as the alt key code.
- - Wasn't able to open new files (from menu) in a subdirectory.  I wasn't prepending
+ - Fix opening of subdirectory files in menu selector.  I wasn't prepending
    the directory path to the file name.
  - Toggling off auto indent now toggles off autoindent...  I had done everything
    except the actually turning off of autoindent...
- - multicursor in first column should not add whitespace to blank lines.  Now
+ - Multicursor in first column does not add whitespace to blank lines.  Now
    it will add whitespace to blank line only if all lines are blank.
- - When selecting a file from the file selection menu, we should open the file
-   by relative path, not absolute.
- - Perhaps screen refresh will work now.  I now write garbage to the screen, then
+ - When selecting a file from the file selection menu, open the file by relative path,
+   not absolute.
+ - Screen refresh will work now.  I now write garbage to the screen, then
    write spaces to the screen.  This should clear it completely...
- - syntax coloring works on viewed lines, but should include parts off the edge
-   of the screen too.
+ - Make syntax coloring work on full line, not just the part of the line in the
+   current view.
 
 
 ## [0.1] "Almost Usable" 2015-09-30
