@@ -30,7 +30,7 @@ do
 	else
 		exe=sith_$target
 	fi
-	#GOOS=$os GOARCH=$arch go build -o build/$exe
+	GOOS=$os GOARCH=$arch go build -o build/$exe
 	echo '<a href="'${exe}'">'${exe}'</a><br>'
 done >> build/index.html
 

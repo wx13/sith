@@ -5,7 +5,6 @@ import "fmt"
 import "os"
 import "io/ioutil"
 import "path/filepath"
-import "syscall"
 import "github.com/wx13/sith/syntaxcolor"
 import "github.com/wx13/sith/terminal"
 import "github.com/wx13/sith/file"
@@ -94,13 +93,6 @@ func (editor *Editor) Quit() {
 			editor.NextFile()
 		}
 	}
-}
-
-func (editor *Editor) Suspend() {
-	editor.screen.Close()
-	pid := syscall.Getpid()
-	syscall.Kill(pid, syscall.SIGSTOP)
-	editor.screen.Open()
 }
 
 func (editor *Editor) CloseFile() bool {
