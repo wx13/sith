@@ -7,6 +7,8 @@ type Keyboard struct {
 	AltKeyMap map[string]string
 }
 
+// NewKeyboard defines a map from termbox key to a
+// string representation.
 func NewKeyboard() *Keyboard {
 	termbox.SetInputMode(termbox.InputAlt)
 	kb := Keyboard{}
@@ -67,6 +69,8 @@ func NewKeyboard() *Keyboard {
 	return &kb
 }
 
+// GetCmdString turns termbox keyboard input into a string representation
+// of the keypress.  If the result is "char", then it also returns the rune.
 func (kb *Keyboard) GetCmdString(ev termbox.Event) (string, rune) {
 	// handle a keypress event
 	if ev.Type == termbox.EventKey {
@@ -84,6 +88,8 @@ func (kb *Keyboard) GetCmdString(ev termbox.Event) (string, rune) {
 				return "unknown", 0
 			}
 		} else if ev.Ch > 160 && ev.Ch < 256 {
+			// Allow for alternate alt keys which are off by 128
+			// on some computers.
 			cmd, ok := kb.AltKeyMap[string(ev.Ch-128)]
 			if ok {
 				return cmd, 0
