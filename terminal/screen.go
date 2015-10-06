@@ -16,16 +16,6 @@ func NewScreen() *Screen {
 		col: 0,
 		bg:  termbox.ColorBlack,
 		fg:  termbox.ColorWhite,
-		colors: map[string]termbox.Attribute{
-			"yellow":  termbox.ColorYellow,
-			"black":   termbox.ColorBlack,
-			"blue":    termbox.ColorBlue,
-			"green":   termbox.ColorGreen,
-			"magenta": termbox.ColorMagenta,
-			"white":   termbox.ColorWhite,
-			"red":     termbox.ColorRed,
-			"cyan":    termbox.ColorCyan,
-		},
 	}
 	termbox.Init()
 	return &screen
