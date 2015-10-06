@@ -84,12 +84,12 @@ func (screen *Screen) WriteString(row, col int, s string) {
 	screen.WriteStringColor(row, col, s, screen.fg, screen.bg)
 }
 
-func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor) {
+func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset int) {
 	cells := termbox.CellBuffer()
 	cols, _ := termbox.Size()
 	for _, lc := range colors {
 		for col := lc.Start; col < lc.End; col++ {
-			j := row*cols + col
+			j := row*cols + (col-offset)
 			if j < 0 || j >= len(cells) {
 				continue
 			}

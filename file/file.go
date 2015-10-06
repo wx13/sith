@@ -74,7 +74,8 @@ func (file *File) Flush() {
 	file.screen.Clear()
 	for row, str := range slice {
 		file.screen.WriteString(row, 0, str)
-		file.screen.Colorize(row, file.SyntaxRules.Colorize(str))
+		strLine := tabs2spaces(file.Buffer[row+file.rowOffset]).toString()
+		file.screen.Colorize(row, file.SyntaxRules.Colorize(strLine), file.colOffset)
 	}
 	for row := len(slice); row < rows-1; row++ {
 		file.screen.WriteString(row, 0, "~")
@@ -412,8 +413,7 @@ func tabs2spaces(line Line) Line {
 	return Line(strLine)
 }
 
-// Slice returns a 2D slice of the buffer.
-func (file *File) Slice(nRows, nCols int) []string {
+func (file *File) UpdateOffsets(nRows, nCols int) {
 
 	if file.MultiCursor[0].row < file.rowOffset {
 		file.rowOffset = file.MultiCursor[0].row
@@ -428,6 +428,13 @@ func (file *File) Slice(nRows, nCols int) []string {
 	if file.MultiCursor[0].col >= file.colOffset+nCols-1 {
 		file.colOffset = file.MultiCursor[0].col - nCols + 1
 	}
+
+}
+
+// Slice returns a 2D slice of the buffer.
+func (file *File) Slice(nRows, nCols int) []string {
+
+	file.UpdateOffsets(nRows, nCols)
 
 	startRow := file.rowOffset
 	endRow := nRows + file.rowOffset

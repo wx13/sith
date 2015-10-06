@@ -20,10 +20,7 @@ features:
  - go-to line number
 
 bugs:
- - Refresh doesn't remove terminal messages (might be fixed...)
  - suspend still sometimes causes problems with keyboard (hard to reproduce)
- - syntax coloring works on viewed lines, but should include parts off the edge
-   of the screen too.
  - menus should expand to include long lines.  Horizontal scroll?
  - Sometimes thinks the file has been modified when it hasn't (undo/redo)
 
@@ -48,6 +45,8 @@ bugs:
    by relative path, not absolute.
  - Perhaps screen refresh will work now.  I now write garbage to the screen, then
    write spaces to the screen.  This should clear it completely...
+ - syntax coloring works on viewed lines, but should include parts off the edge
+   of the screen too.
 
 
 ## [0.1] "Almost Usable" 2015-09-30
