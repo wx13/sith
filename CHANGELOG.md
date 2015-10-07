@@ -25,6 +25,12 @@ bugs:
  - Sometimes thinks the file has been modified when it hasn't (undo/redo)
 
 
+## [0.1.2] 2015-10-07
+
+### Bugfixes:
+ - Conditional build for windows, because suspend doesn't work.
+
+
 ## [0.1.1] 2015-10-06
 
 ### Bugfixes:
