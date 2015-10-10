@@ -25,22 +25,28 @@ func NewSyntaxRules(filename string) *SyntaxRules {
 
 	// Filetype specific rules
 	switch filetype {
+	case "sh", "py", "yaml", "js", "c", "coffee", "html", "rb":
+		rules.addSingleQuoteRule(termbox.ColorYellow)
+		rules.addDoubleQuoteRule(termbox.ColorYellow)
 	case "go":
 		rules.addSingleQuoteRule(termbox.ColorRed)
 		rules.addDoubleQuoteRule(termbox.ColorYellow)
+	}
+	switch filetype {
+	case "go":
 		rules.addLineCommentRule("//", termbox.ColorCyan)
-	case "ruby", "shell", "python", "yaml":
-		rules.addSingleQuoteRule(termbox.ColorYellow)
-		rules.addDoubleQuoteRule(termbox.ColorYellow)
+	case "rb", "sh", "py", "yaml", "coffee":
 		rules.addLineCommentRule("#", termbox.ColorCyan)
 	case "c":
-		rules.addSingleQuoteRule(termbox.ColorYellow)
-		rules.addDoubleQuoteRule(termbox.ColorYellow)
 		rules.addLineCommentRule("//", termbox.ColorCyan)
-	case "markdown":
+	case "md":
 		rules.addRule("^#+.*$", Color{fg: termbox.ColorGreen})
 		rules.addRule("^===*$", Color{fg: termbox.ColorGreen})
 		rules.addRule("^---*$", Color{fg: termbox.ColorGreen})
+	case "js":
+		rules.addLineCommentRule("//", termbox.ColorCyan)
+	case "html":
+		rules.addRule("<!--.*?-->", Color{fg: termbox.ColorCyan})
 	}
 
 	// Trailing whitespace
@@ -69,23 +75,20 @@ func (rules *SyntaxRules) addDoubleQuoteRule(fg termbox.Attribute) {
 }
 
 func (rules SyntaxRules) getFileType(filename string) string {
-	switch path.Ext(filename) {
-	case ".go":
-		return "go"
-	case ".py":
-		return "python"
+	ext := path.Ext(filename)
+	if len(ext) == 0 {
+		return ""
+	}
+	ext = ext[1:]
+	switch ext {
 	case ".c", ".C", ".cpp", ".c++":
 		return "c"
-	case ".rb":
-		return "ruby"
-	case ".md":
-		return "markdown"
-	case ".yaml":
-		return "yaml"
 	case ".sh", ".csh":
-		return "shell"
-	default:
+		return "sh"
+	case "":
 		return ""
+	default:
+		return ext
 	}
 }
 
