@@ -11,6 +11,7 @@ import "path"
 import "regexp"
 import "github.com/wx13/sith/syntaxcolor"
 import "github.com/wx13/sith/terminal"
+import "strconv"
 
 type File struct {
 	Buffer      Buffer
@@ -21,6 +22,7 @@ type File struct {
 	buffHist    *BufferHist
 	searchHist  []string
 	replaceHist []string
+	gotoHist    []string
 
 	Name        string
 	SyntaxRules *syntaxcolor.SyntaxRules
@@ -598,6 +600,17 @@ func (file *File) GetPromptAnswer(question string, history *[]string) string {
 		*history = append([]string{answer}, *history...)
 	}
 	return answer
+}
+
+func (file *File) GoToLine() {
+	lineNo := file.GetPromptAnswer("goto:", &file.gotoHist)
+	if lineNo == "" {
+		return
+	}
+	row, err := strconv.Atoi(lineNo)
+	if err == nil {
+		file.CursorGoTo(row,0)
+	}
 }
 
 func (file *File) Search() {

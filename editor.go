@@ -147,6 +147,8 @@ func (editor *Editor) Listen() {
 			editor.file.CursorDown(10)
 		case "pageUp", "ctrlB":
 			editor.file.CursorUp(10)
+		case "ctrlG":
+			editor.file.GoToLine()
 		case "altL":
 			editor.file.Refresh()
 		case "altO":

@@ -17,12 +17,20 @@ features:
  - Restrict search / replace to marked lines
  - Revert to last saved copy
    - also should be able to reload from file
- - go-to line number
 
 bugs:
  - suspend still sometimes causes problems with keyboard (hard to reproduce)
  - menus should expand to include long lines.  Horizontal scroll?
  - Sometimes thinks the file has been modified when it hasn't (undo/redo)
+
+
+## [unreleased]
+
+### Bugfixes
+
+### Features
+ - Added syntax colors for html, javascript, coffeescript
+ - go-to line number
 
 
 ## [0.1.2] 2015-10-07

@@ -46,6 +46,7 @@ func NewKeyboard() *Keyboard {
 		termbox.KeyCtrlF:      "ctrlF",
 		termbox.KeyCtrlP:      "ctrlP",
 		termbox.KeyCtrlU:      "ctrlU",
+		termbox.KeyCtrlG:      "ctrlG",
 	}
 	kb.AltKeyMap = map[string]string{
 		"q": "altQ",
