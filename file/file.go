@@ -526,9 +526,27 @@ func (file *File) Justify() {
 }
 
 func (file *File) StartOfLine() {
-	for idx, _ := range file.MultiCursor {
-		file.MultiCursor[idx].col = 0
-		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
+	allAtZero := true
+	for _, cursor := range file.MultiCursor {
+		if cursor.col != 0 {
+			allAtZero = false
+			break
+		}
+	}
+	if allAtZero {
+		re := regexp.MustCompile("^[ \t]*")
+		for idx, cursor := range file.MultiCursor {
+			row := cursor.row
+			line := file.Buffer[row]
+			match := re.FindStringIndex(line.toString())
+			file.MultiCursor[idx].col = match[1]
+			file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
+		}
+	} else {
+		for idx, _ := range file.MultiCursor {
+			file.MultiCursor[idx].col = 0
+			file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
+		}
 	}
 }
 

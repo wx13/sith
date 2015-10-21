@@ -13,7 +13,6 @@ features:
  - Restrict search / replace to marked lines
  - Revert to last saved copy
    - also should be able to reload from file
- - "smart" start of line
 
 bugs:
  - justify
@@ -38,6 +37,7 @@ bugs:
  - Added syntax colors for html, javascript, coffeescript
  - go-to line number
  - if search answer is past last line, scroll up more than the offset
+ - "smart" start of line
 
 
 ## [0.1.2] 2015-10-07
