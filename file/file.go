@@ -273,6 +273,16 @@ func (file *File) CursorGoTo(row, col int) {
 	file.EnforceColBounds()
 }
 
+func (file *File) PageDown() {
+	_, rows := termbox.Size()
+	file.CursorDown(rows/2-1)
+}
+
+func (file *File) PageUp() {
+	_, rows := termbox.Size()
+	file.CursorUp(rows/2-1)
+}
+
 func (file *File) CursorUp(n int) {
 	file.MultiCursor[0].row -= n
 	if file.MultiCursor[0].row < 0 {

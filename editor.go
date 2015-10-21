@@ -144,9 +144,9 @@ func (editor *Editor) Listen() {
 		case "altU":
 			editor.file.ScrollLeft()
 		case "pageDown", "ctrlN":
-			editor.file.CursorDown(10)
+			editor.file.PageDown()
 		case "pageUp", "ctrlB":
-			editor.file.CursorUp(10)
+			editor.file.PageUp()
 		case "ctrlG":
 			editor.file.GoToLine()
 		case "altL":
