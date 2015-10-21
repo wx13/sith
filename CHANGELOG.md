@@ -7,21 +7,30 @@ features:
  - ensure file is writable
  - truncate prompt histories (search/replace)
  - multi-file search or at least shared search history
- - check on unicode support
  - row cut/paste
  - linewrap
- - remove trailing whitespace
- - Is there a way to prevent trailing whitespace on multicursor indent?
  - if search answer is on last few lines, scroll up the screen
  - Share search history among files/buffers
  - Restrict search / replace to marked lines
  - Revert to last saved copy
    - also should be able to reload from file
+ - "smart" start of line
 
 bugs:
- - suspend still sometimes causes problems with keyboard (hard to reproduce)
+ - justify
+   + remove trailing whitespace
+   + maintain blank line after justified text
+   + turn off multicursor when done
+ - navigation
+   + desired column is wrong
+   + longer jump for page-up/down
+   + forward/back word should jump over multiple whitespace and
+     generally suck less
+ - clear bottom line on prompt
+ - only do gofmt on go files
  - menus should expand to include long lines.  Horizontal scroll?
  - Sometimes thinks the file has been modified when it hasn't (undo/redo)
+ - Don't report new file as modified
 
 
 ## [unreleased]
