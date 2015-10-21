@@ -79,7 +79,7 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 	cols, _ := termbox.Size()
 	for _, lc := range colors {
 		for col := lc.Start; col < lc.End; col++ {
-			j := row*cols + (col-offset)
+			j := row*cols + (col - offset)
 			if j < 0 || j >= len(cells) {
 				continue
 			}
@@ -96,7 +96,7 @@ func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.At
 
 func (screen *Screen) WriteMessage(msg string) {
 	_, rows := termbox.Size()
-	screen.WriteString(rows-1, 0, msg + "  ")
+	screen.WriteString(rows-1, 0, msg+"  ")
 }
 
 func (screen *Screen) AskYesNo(question string) (bool, error) {
@@ -116,4 +116,3 @@ func (screen *Screen) Highlight(row, col int) {
 	cell := cells[j]
 	cells[j].Bg, cells[j].Fg = cell.Fg, cell.Bg
 }
-

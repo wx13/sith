@@ -67,4 +67,3 @@ func (buffer *Buffer) Replace(searchTerm, replaceTerm string, row, col int) {
 	newStrLine := strLine[:startCol] + replaceTerm + strLine[endCol:]
 	(*buffer)[row] = Line(newStrLine)
 }
-

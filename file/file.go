@@ -281,12 +281,12 @@ func (file *File) CursorGoTo(row, col int) {
 
 func (file *File) PageDown() {
 	_, rows := termbox.Size()
-	file.CursorDown(rows/2-1)
+	file.CursorDown(rows/2 - 1)
 }
 
 func (file *File) PageUp() {
 	_, rows := termbox.Size()
-	file.CursorUp(rows/2-1)
+	file.CursorUp(rows/2 - 1)
 }
 
 func (file *File) CursorUp(n int) {
@@ -540,7 +540,7 @@ func (file *File) NextWord() {
 		if offset == nil {
 			col = len(line)
 		} else {
-			col += offset[0]+1
+			col += offset[0] + 1
 		}
 		file.MultiCursor[idx].col = col
 		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
@@ -631,7 +631,7 @@ func (file *File) GoToLine() {
 	}
 	row, err := strconv.Atoi(lineNo)
 	if err == nil {
-		file.CursorGoTo(row,0)
+		file.CursorGoTo(row, 0)
 	}
 }
 

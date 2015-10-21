@@ -56,4 +56,3 @@ func (line Line) Search(term string, start, end int) (int, int) {
 		return startCol + start, endCol + start
 	}
 }
-

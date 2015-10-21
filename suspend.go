@@ -10,4 +10,3 @@ func (editor *Editor) Suspend() {
 	syscall.Kill(pid, syscall.SIGSTOP)
 	editor.screen.Open()
 }
-

@@ -72,4 +72,3 @@ func (mc MultiCursor) SetColumn() MultiCursor {
 	}
 	return mc
 }
-

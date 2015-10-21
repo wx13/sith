@@ -148,4 +148,3 @@ func (menu *Menu) SearchNext(choices []string, searchStr string) int {
 	}
 	return index
 }
-
