@@ -23,19 +23,18 @@ bugs:
    + turn off multicursor when done
  - navigation
    + desired column is wrong
-   + longer jump for page-up/down
-   + forward/back word should jump over multiple whitespace and
-     generally suck less
- - clear bottom line on prompt
  - only do gofmt on go files
  - menus should expand to include long lines.  Horizontal scroll?
  - Sometimes thinks the file has been modified when it hasn't (undo/redo)
- - Don't report new file as modified
 
 
 ## [unreleased]
 
 ### Bugfixes
+ - Page up/down now does half a screen
+ - Next/prev word now functions more like you would expect it to
+ - Prompt now clears two spaces beyond writing
+ - Don't report new file as modified
 
 ### Features
  - Added syntax colors for html, javascript, coffeescript
