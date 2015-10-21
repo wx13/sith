@@ -233,6 +233,7 @@ func (file *File) Backspace() {
 			file.MultiCursor[idx].col = col - 1
 			file.MultiCursor[idx].row = row
 		}
+		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
@@ -512,6 +513,7 @@ func (file *File) Justify() {
 func (file *File) StartOfLine() {
 	for idx, _ := range file.MultiCursor {
 		file.MultiCursor[idx].col = 0
+		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 }
 
@@ -519,6 +521,7 @@ func (file *File) EndOfLine() {
 	for idx, _ := range file.MultiCursor {
 		row := file.MultiCursor[idx].row
 		file.MultiCursor[idx].col = len(file.Buffer[row])
+		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 }
 
@@ -535,6 +538,7 @@ func (file *File) NextWord() {
 			col += offset[0]+1
 		}
 		file.MultiCursor[idx].col = col
+		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 }
 
@@ -552,6 +556,7 @@ func (file *File) PrevWord() {
 			col = offset[0] + 1
 		}
 		file.MultiCursor[idx].col = col
+		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 }
 
