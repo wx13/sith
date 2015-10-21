@@ -67,3 +67,20 @@ func (buffer *Buffer) Replace(searchTerm, replaceTerm string, row, col int) {
 	newStrLine := strLine[:startCol] + replaceTerm + strLine[endCol:]
 	(*buffer)[row] = Line(newStrLine)
 }
+
+func (buffer Buffer) slice(startRow, endRow, startCol, endCol int) []string {
+	slice := make([]string, endRow-startRow)
+	for row := startRow; row < endRow; row++ {
+		line := buffer[row].tabs2spaces()
+		rowEndCol := endCol
+		if rowEndCol > len(line) {
+			rowEndCol = len(line)
+		}
+		if rowEndCol <= startCol {
+			slice[row-startRow] = ""
+		} else {
+			slice[row-startRow] = string(line[startCol:rowEndCol])
+		}
+	}
+	return slice
+}

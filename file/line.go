@@ -56,3 +56,9 @@ func (line Line) Search(term string, start, end int) (int, int) {
 		return startCol + start, endCol + start
 	}
 }
+
+func (line Line) tabs2spaces() Line {
+	strLine := string(line)
+	strLine = strings.Replace(strLine, "\t", "    ", -1)
+	return Line(strLine)
+}
