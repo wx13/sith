@@ -155,7 +155,11 @@ func (file *File) replaceBuffer(newBuffer Buffer) {
 	}
 }
 
-func (file *File) GoFmt() {
+func (file *File) GoFmt() string {
+	filetype := file.SyntaxRules.GetFileType(file.Name)
+	if filetype != "go" {
+		return "Will not gofmt a non-go file."
+	}
 	contents := file.toString()
 	bytes, err := format.Source([]byte(contents))
 	if err == nil {
@@ -164,6 +168,7 @@ func (file *File) GoFmt() {
 		file.replaceBuffer(newBuffer)
 	}
 	file.Snapshot()
+	return "Gofmt done."
 }
 
 func (file *File) IsModified() bool {

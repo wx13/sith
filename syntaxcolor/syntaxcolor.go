@@ -21,7 +21,7 @@ func NewSyntaxRules(filename string) *SyntaxRules {
 
 	rules := SyntaxRules{}
 
-	filetype := rules.getFileType(filename)
+	filetype := rules.GetFileType(filename)
 
 	// Filetype specific rules
 	switch filetype {
@@ -74,7 +74,7 @@ func (rules *SyntaxRules) addDoubleQuoteRule(fg termbox.Attribute) {
 	rules.addRule("\".*?\"", Color{fg: fg})
 }
 
-func (rules SyntaxRules) getFileType(filename string) string {
+func (rules SyntaxRules) GetFileType(filename string) string {
 	ext := path.Ext(filename)
 	if len(ext) == 0 {
 		basename := path.Base(filename)

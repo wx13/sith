@@ -195,7 +195,7 @@ func (editor *Editor) Listen() {
 		case "ctrlV":
 			editor.Paste()
 		case "altG":
-			editor.file.GoFmt()
+			editor.GoFmt()
 		case "altJ":
 			editor.file.Justify()
 		case "altI":
@@ -264,6 +264,10 @@ func (editor *Editor) SelectFile() {
 
 func (editor *Editor) Save() {
 	editor.msg = editor.file.Save()
+}
+
+func (editor *Editor) GoFmt() {
+	editor.msg = editor.file.GoFmt()
 }
 
 func intMod(a, n int) int {

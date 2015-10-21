@@ -21,7 +21,6 @@ bugs:
    + remove trailing whitespace
    + maintain blank line after justified text
    + turn off multicursor when done
- - only do gofmt on go files
  - menus should expand to include long lines.  Horizontal scroll?
  - Sometimes thinks the file has been modified when it hasn't (undo/redo)
 
@@ -34,6 +33,7 @@ bugs:
  - Prompt now clears two spaces beyond writing
  - Don't report new file as modified
  - Desired column changes for end-of-line, next word, etc.
+ - only do gofmt on go files
 
 ### Features
  - Added syntax colors for html, javascript, coffeescript
