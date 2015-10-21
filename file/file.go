@@ -106,17 +106,18 @@ func (file *File) ReadFile(name string) {
 	fileInfo, err := os.Stat(name)
 	if err != nil {
 		file.Buffer = MakeBuffer([]string{""})
-		return
-	}
-	file.fileMode = fileInfo.Mode()
+	} else {
+		file.fileMode = fileInfo.Mode()
 
-	byteBuf, err := ioutil.ReadFile(name)
-	stringBuf := []string{""}
-	if err == nil {
-		stringBuf = strings.Split(string(byteBuf), "\n")
+		byteBuf, err := ioutil.ReadFile(name)
+		stringBuf := []string{""}
+		if err == nil {
+			stringBuf = strings.Split(string(byteBuf), "\n")
+		}
+
+		file.Buffer = MakeBuffer(stringBuf)
 	}
 
-	file.Buffer = MakeBuffer(stringBuf)
 	file.Snapshot()
 	file.savedBuffer = file.Buffer.DeepDup()
 
