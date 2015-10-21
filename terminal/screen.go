@@ -96,7 +96,7 @@ func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.At
 
 func (screen *Screen) WriteMessage(msg string) {
 	_, rows := termbox.Size()
-	screen.WriteString(rows-1, 0, msg)
+	screen.WriteString(rows-1, 0, msg + "  ")
 }
 
 func (screen *Screen) AskYesNo(question string) (bool, error) {
