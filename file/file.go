@@ -272,11 +272,21 @@ func (file *File) EnforceRowBounds() {
 	}
 }
 
+func (file *File) MakeCursorNotAtTopBottom() {
+	row := file.MultiCursor[0].row
+	_, rows := termbox.Size()
+	bottom := file.rowOffset + rows - 1
+	if row >= bottom {
+		file.rowOffset += (row - bottom) + rows/8
+	}
+}
+
 func (file *File) CursorGoTo(row, col int) {
 	file.MultiCursor[0].row = row
 	file.MultiCursor[0].col = col
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
+	file.MakeCursorNotAtTopBottom()
 }
 
 func (file *File) PageDown() {

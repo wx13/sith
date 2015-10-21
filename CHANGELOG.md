@@ -9,7 +9,6 @@ features:
  - multi-file search or at least shared search history
  - row cut/paste
  - linewrap
- - if search answer is on last few lines, scroll up the screen
  - Share search history among files/buffers
  - Restrict search / replace to marked lines
  - Revert to last saved copy
@@ -38,6 +37,7 @@ bugs:
 ### Features
  - Added syntax colors for html, javascript, coffeescript
  - go-to line number
+ - if search answer is past last line, scroll up more than the offset
 
 
 ## [0.1.2] 2015-10-07
