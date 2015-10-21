@@ -517,12 +517,12 @@ func (file *File) NextWord() {
 		row := cursor.row
 		line := file.Buffer[row]
 		col := cursor.col
-		for col < len(line)-1 {
-			col++
-			s := string(line[col])
-			if s == " " || s == "\t" {
-				break
-			}
+		re := regexp.MustCompile("[\t ][^\t ]")
+		offset := re.FindStringIndex(line[col:].toString())
+		if offset == nil {
+			col = len(line)
+		} else {
+			col += offset[0]+1
 		}
 		file.MultiCursor[idx].col = col
 	}
@@ -533,12 +533,13 @@ func (file *File) PrevWord() {
 		row := cursor.row
 		line := file.Buffer[row]
 		col := cursor.col
-		for col > 0 {
-			col--
-			s := string(line[col])
-			if s == " " || s == "\t" {
-				break
-			}
+		re := regexp.MustCompile("[\t ][^\t ]")
+		offsets := re.FindAllStringIndex(line[:col].toString(), -1)
+		if offsets == nil {
+			col = 0
+		} else {
+			offset := offsets[len(offsets)-1]
+			col = offset[0] + 1
 		}
 		file.MultiCursor[idx].col = col
 	}
