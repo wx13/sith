@@ -35,7 +35,7 @@ func NewSyntaxRules(filename string) *SyntaxRules {
 	switch filetype {
 	case "go":
 		rules.addLineCommentRule("//", termbox.ColorCyan)
-	case "rb", "sh", "py", "yaml", "coffee":
+	case "rb", "sh", "py", "yaml", "coffee", "git":
 		rules.addLineCommentRule("#", termbox.ColorCyan)
 	case "c":
 		rules.addLineCommentRule("//", termbox.ColorCyan)
@@ -77,6 +77,10 @@ func (rules *SyntaxRules) addDoubleQuoteRule(fg termbox.Attribute) {
 func (rules SyntaxRules) getFileType(filename string) string {
 	ext := path.Ext(filename)
 	if len(ext) == 0 {
+		basename := path.Base(filename)
+		if basename == "COMMIT_EDITMSG" {
+			return "git"
+		}
 		return ""
 	}
 	ext = ext[1:]
