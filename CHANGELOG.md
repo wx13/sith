@@ -4,26 +4,23 @@ Change Log
 ## To Do
 
 features:
- - ensure file is writable
- - truncate prompt histories (search/replace)
- - multi-file search or at least shared search history
- - row cut/paste
- - linewrap
- - Share search history among files/buffers
+ - Multi-file search or at least shared search history
+ - Cut/paste a substring from current row
+ - Linewrap (dynamic justify)
  - Restrict search / replace to marked lines
  - Revert to last saved copy
-   - also should be able to reload from file
+ - Reload from file
 
 bugs:
- - justify
+ - Truncate prompt histories (search/replace)
+ - Justify
    + remove trailing whitespace
    + maintain blank line after justified text
    + turn off multicursor when done
- - menus should expand to include long lines.  Horizontal scroll?
- - Sometimes thinks the file has been modified when it hasn't (undo/redo)
+ - Menus should expand to include long lines.  Horizontal scroll?
 
 
-## [unreleased]
+## [0.2] "Editorish" 2015-10-21
 
 ### Bugfixes
  - Page up/down now does half a screen

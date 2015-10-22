@@ -95,6 +95,9 @@ func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.At
 }
 
 func (screen *Screen) WriteMessage(msg string) {
+	if len(msg) == 0 {
+		return
+	}
 	_, rows := termbox.Size()
 	screen.WriteString(rows-1, 0, msg+"  ")
 }
