@@ -18,6 +18,16 @@ bugs:
    + maintain blank line after justified text
    + turn off multicursor when done
  - Menus should expand to include long lines.  Horizontal scroll?
+ - Indentation autodetect should never get 0s as answer.
+
+
+## [Unreleased]
+
+### Bugfixes
+
+### Features
+ - Use terminal default colors
+ - Autodetect indentation, supported by 'tab' and backspace.
 
 
 ## [0.2] "Editorish" 2015-10-21

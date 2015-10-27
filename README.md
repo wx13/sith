@@ -1,7 +1,7 @@
 Sith
 ====
 
-Sith is a text editor written in go.
+Sith is a text editor written in go.  MIT license.
 
 Build
 -----
@@ -39,12 +39,20 @@ Commands
 | ctrl-V   | Paste           | Insert the copy buffer above the current line
 | alt-J    | Justify         | Justify (72 cols) all lines from lowest to highest cursor
 | alt-G    | go fmt          | Run go formatter on code.
+| alt-D    | delete
 | **Navigation**
 | ctrl-A   | Start of line   | Go to the first column in the current line (all cursors)
 | ctrl-E   | End of line     | go to the last column of the current line (all cursors)
 | ctrl-W   | Next word       | move to the next whitespace character in the current line
 | ctrl-Q   | Previous workd  | move to the previous whitespace character in the current line
+| ctrl-U   | Scroll Up       | Scroll the entire screen up by one line
+| ctrl-P   | Scroll Down     | Scroll the entire screen down by one line
+| ctrl-J/K/L/O   | Cursor Up/Down/Right/Left  | Same as arrow keys
+| ctrl-N/B | Page down/up    | PageDn / PageUp also supported
+| **Misc**
 | ctrl-F   | Search
 | alt-F    | Search and replace
-
-
+| alt-L    | Refresh screen  | Redraw all pixels on screen.
+| **Toggles**
+| alt-I    | Toggle auto-indent
+| alt-T    | Toogle auto-tab | Toggle auto-detection of indentation string.
