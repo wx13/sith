@@ -14,8 +14,8 @@ func NewScreen() *Screen {
 	screen := Screen{
 		row: 0,
 		col: 0,
-		bg:  termbox.ColorBlack,
-		fg:  termbox.ColorWhite,
+		bg:  termbox.ColorDefault,
+		fg:  termbox.ColorDefault,
 	}
 	termbox.Init()
 	return &screen
@@ -116,6 +116,6 @@ func (screen *Screen) Highlight(row, col int) {
 	cells := termbox.CellBuffer()
 	cols, _ := termbox.Size()
 	j := row*cols + col
-	cell := cells[j]
-	cells[j].Bg, cells[j].Fg = cell.Fg, cell.Bg
+	cells[j].Bg |= termbox.AttrReverse
+	cells[j].Fg |= termbox.AttrReverse
 }

@@ -28,7 +28,7 @@ func (file *File) WriteStatus(row, col int) {
 	status := file.ModStatus()
 	col -= len(status) + 2
 	fg := termbox.ColorYellow
-	bg := termbox.ColorBlack
+	bg := termbox.ColorDefault
 	file.screen.WriteStringColor(row, col, status, fg, bg)
 
 	if len(file.MultiCursor) > 1 {
@@ -43,7 +43,7 @@ func (file *File) WriteStatus(row, col int) {
 		status = "->"
 		col -= len(status) + 2
 		fg := termbox.ColorRed | termbox.AttrBold
-		bg := termbox.ColorBlack
+		bg := termbox.ColorDefault
 		file.screen.WriteStringColor(row, col, status, fg, bg)
 	}
 
@@ -55,7 +55,7 @@ func (file *File) WriteStatus(row, col int) {
 		}
 		col -= len(status) + 2
 		fg := termbox.ColorGreen
-		bg := termbox.ColorBlack
+		bg := termbox.ColorDefault
 		file.screen.WriteStringColor(row, col, status, fg, bg)
 	}
 
@@ -63,7 +63,7 @@ func (file *File) WriteStatus(row, col int) {
 		status = "MixedIndent"
 		col -= len(status) + 2
 		fg := termbox.ColorRed
-		bg := termbox.ColorBlack
+		bg := termbox.ColorDefault
 		file.screen.WriteStringColor(row, col, status, fg, bg)
 	}
 
