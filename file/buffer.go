@@ -1,6 +1,8 @@
 package file
 
 import "errors"
+import "strings"
+import "regexp"
 
 type Buffer []Line
 
@@ -83,4 +85,53 @@ func (buffer Buffer) slice(startRow, endRow, startCol, endCol int) []string {
 		}
 	}
 	return slice
+}
+
+
+func (buffer Buffer) GetIndent() (string, bool) {
+	spaceHisto := buffer.countLeadingSpacesAndTabs()
+	tabCount := spaceHisto[0]
+	nSpaces, spaceCount := buffer.scoreIndents(spaceHisto)
+	clean := true
+	if tabCount > 0 && spaceCount > 0 {
+		clean = false
+	}
+	if tabCount > spaceCount {
+		return "\t", clean
+	} else {
+		return strings.Repeat(" ", nSpaces), clean
+	}
+}
+
+func (buffer Buffer) countLeadingSpacesAndTabs() []int {
+	spaceHisto := make([]int, 33)
+	re := regexp.MustCompile("^[ \t]*")
+	for _, line := range buffer {
+		indentStr := re.FindString(line.toString())
+		nSpaces := strings.Count(indentStr, " ")
+		nTabs := strings.Count(indentStr, "\t")
+		if nSpaces > 0 && nSpaces <= 32 {
+			spaceHisto[nSpaces]++
+		}
+		if nTabs > 0 {
+			spaceHisto[0]++
+		}
+	}
+	return spaceHisto
+}
+
+func (buffer Buffer) scoreIndents(spaceHisto []int) (int, int) {
+	count := 0
+	nSpaces := 0
+	for indentSize := 1; indentSize < 9; indentSize++ {
+		score := 0
+		for n := 1; n <= 4; n++ {
+			score += spaceHisto[n*indentSize]
+		}
+		if score > count && spaceHisto[indentSize] > 0 {
+			nSpaces = indentSize
+			count = score
+		}
+	}
+	return nSpaces, count
 }

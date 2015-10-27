@@ -47,4 +47,24 @@ func (file *File) WriteStatus(row, col int) {
 		file.screen.WriteStringColor(row, col, status, fg, bg)
 	}
 
+	if file.autoTab {
+		if file.tabString == "\t" {
+			status = "1t"
+		} else {
+			status = fmt.Sprintf("%ds", len(file.tabString))
+		}
+		col -= len(status) + 2
+		fg := termbox.ColorGreen
+		bg := termbox.ColorBlack
+		file.screen.WriteStringColor(row, col, status, fg, bg)
+	}
+
+	if ! file.tabHealth {
+		status = "MixedIndent"
+		col -= len(status) + 2
+		fg := termbox.ColorRed
+		bg := termbox.ColorBlack
+		file.screen.WriteStringColor(row, col, status, fg, bg)
+	}
+
 }

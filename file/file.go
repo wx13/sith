@@ -22,6 +22,10 @@ type File struct {
 	fileMode    os.FileMode
 	autoIndent  bool
 
+	autoTab   bool
+	tabString string
+	tabHealth bool
+
 	rowOffset int
 	colOffset int
 	screen    *terminal.Screen
@@ -39,6 +43,9 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		flushChan:   flushChan,
 		SyntaxRules: syntaxcolor.NewSyntaxRules(""),
 		autoIndent:  true,
+		autoTab:     true,
+		tabString:   "\t",
+		tabHealth:   true,
 	}
 	file.buffHist = NewBufferHist(file.Buffer, file.MultiCursor)
 	go file.ReadFile(name)
@@ -61,6 +68,16 @@ func (file *File) Close() bool {
 
 func (file *File) ToggleAutoIndent() {
 	file.autoIndent = file.autoIndent != true
+}
+
+func (file *File) ToggleAutoTab() {
+	file.autoTab = file.autoTab != true
+}
+
+func (file *File) ComputeIndent() {
+	if file.autoTab {
+		file.tabString, file.tabHealth = file.Buffer.GetIndent()
+	}
 }
 
 func (file *File) Refresh() {

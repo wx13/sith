@@ -62,3 +62,4 @@ func (line Line) tabs2spaces() Line {
 	strLine = strings.Replace(strLine, "\t", "    ", -1)
 	return Line(strLine)
 }
+

@@ -200,6 +200,8 @@ func (editor *Editor) Listen() {
 			editor.file.Justify()
 		case "altI":
 			editor.file.ToggleAutoIndent()
+		case "altT":
+			editor.file.ToggleAutoTab()
 		case "unknown":
 			editor.msg = "Unknown keypress"
 		case "char":
@@ -208,6 +210,7 @@ func (editor *Editor) Listen() {
 			editor.msg = "Unknown keypress"
 		}
 		editor.copyContig--
+		editor.file.ComputeIndent()
 		editor.RequestFlush()
 	}
 

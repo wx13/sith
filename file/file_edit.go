@@ -52,8 +52,12 @@ func (file *File) InsertChar(ch rune) {
 		if (ch == ' ' || ch == '\t') && col == 0 && len(line) == 0 && maxLineLen > 0 {
 			continue
 		}
-		file.Buffer[row] = Line(string(line[0:col]) + string(ch) + string(line[col:]))
-		file.MultiCursor[idx].col += 1
+		insertStr := string(ch)
+		if ch == '\t' && file.autoTab && file.tabString != "\t" {
+			insertStr = file.tabString
+		}
+		file.Buffer[row] = Line(string(line[0:col]) + insertStr + string(line[col:]))
+		file.MultiCursor[idx].col += len(insertStr)
 		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 	file.Snapshot()
@@ -83,8 +87,20 @@ func (file *File) Backspace() {
 			if col > len(line) {
 				continue
 			}
-			file.Buffer[row] = Line(string(line[0:col-1]) + string(line[col:]))
-			file.MultiCursor[idx].col = col - 1
+
+			// Handle multi-char indents.
+			nDel := 1
+			if file.autoTab && len(file.tabString) > 0 {
+				if string(line[0:col]) == strings.Repeat(" ", col) {
+					n := len(file.tabString)
+					if n*(col/n) == col {
+						nDel = n
+					}
+				}
+			}
+
+			file.Buffer[row] = Line(string(line[0:col-nDel]) + string(line[col:]))
+			file.MultiCursor[idx].col = col - nDel
 			file.MultiCursor[idx].row = row
 		}
 		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
