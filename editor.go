@@ -195,11 +195,11 @@ func (editor *Editor) Listen() {
 		case "ctrlQ":
 			editor.file.PrevWord()
 		case "ctrlF":
-			editor.Search()
+			editor.MultiFileSearch(false)
 		case "ctrlR":
 			editor.SearchAndReplace()
 		case "altF":
-			editor.MultiFileSearch()
+			editor.MultiFileSearch(true)
 		case "altR":
 			editor.MultiFileSearchAndReplace()
 		case "ctrlC":
@@ -237,13 +237,14 @@ func (editor *Editor) Cut() {
 }
 
 func (editor *Editor) Search() {
-	err := editor.file.Search(&editor.searchHist)
-	if err != nil {
-		editor.msg = err.Error()
-	}
+	editor.MultiFileSearch(false)
+	//err := editor.file.Search(&editor.searchHist)
+	//if err != nil {
+	//	editor.msg = err.Error()
+	//}
 }
 
-func (editor *Editor) MultiFileSearch() {
+func (editor *Editor) MultiFileSearch(multi bool) {
 
 	// Get the search term.
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
@@ -260,16 +261,18 @@ func (editor *Editor) MultiFileSearch() {
 	}
 
 	// Search other files.
-	for idx := editor.fileIdx + 1; idx != editor.fileIdx; idx++ {
-		if idx >= len(editor.files) {
-			idx = 0
-		}
-		theFile := editor.files[idx]
-		row, col, err := theFile.Buffer.Search(searchTerm, file.Cursor{}, false)
-		if err == nil {
-			editor.SwitchFile(idx)
-			editor.file.CursorGoTo(row, col)
-			return
+	if multi {
+		for idx := editor.fileIdx + 1; idx != editor.fileIdx; idx++ {
+			if idx >= len(editor.files) {
+				idx = 0
+			}
+			theFile := editor.files[idx]
+			row, col, err := theFile.Buffer.Search(searchTerm, file.Cursor{}, false)
+			if err == nil {
+				editor.SwitchFile(idx)
+				editor.file.CursorGoTo(row, col)
+				return
+			}
 		}
 	}
 
