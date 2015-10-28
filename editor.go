@@ -195,13 +195,13 @@ func (editor *Editor) Listen() {
 		case "ctrlQ":
 			editor.file.PrevWord()
 		case "ctrlF":
-			editor.MultiFileSearch(false)
-		case "ctrlR":
-			editor.SearchAndReplace()
+			editor.Search(false)
 		case "altF":
-			editor.MultiFileSearch(true)
+			editor.SearchAndReplace(false)
+		case "ctrlR":
+			editor.Search(true)
 		case "altR":
-			editor.MultiFileSearchAndReplace()
+			editor.SearchAndReplace(true)
 		case "ctrlC":
 			editor.Cut()
 		case "ctrlV":
@@ -236,54 +236,109 @@ func (editor *Editor) Cut() {
 	editor.copyContig = 2
 }
 
-func (editor *Editor) MultiFileSearch(multi bool) {
+func (editor *Editor) Search(multiFile bool) {
+	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	if searchTerm == "" {
+		editor.msg = "Cancelled"
+		return
+	}
+	editor.MultiFileSearch(searchTerm, multiFile)
+}
 
-	// Get the search term.
+func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, int, error) {
+
+	// Search remainder of current file.
+	row, col, err := editor.file.Buffer.Search(searchTerm, editor.file.MultiCursor[0], false)
+	if err == nil {
+		editor.file.CursorGoTo(row, col)
+		return row, col, err
+	}
+
+	// Search other files.
+	if multiFile {
+		for idx := editor.fileIdx + 1; idx != editor.fileIdx; idx++ {
+			if idx >= len(editor.files) {
+				idx = 0
+			}
+			theFile := editor.files[idx]
+			row, col, err := theFile.Buffer.Search(searchTerm, file.MakeCursor(0,-1), false)
+			if err == nil {
+				editor.SwitchFile(idx)
+				editor.file.CursorGoTo(row, col)
+				return row, col, err
+			}
+		}
+	}
+
+	// Search start of current file.
+	row, col, err = editor.file.Buffer.Search(searchTerm, file.MakeCursor(0,-1), false)
+	if err == nil {
+		editor.file.CursorGoTo(row, col)
+		return row, col, err
+	}
+
+	editor.msg = "Not Found"
+	return row, col, err
+}
+
+func (editor *Editor) SearchAndReplace(multiFile bool) {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
 		editor.msg = "Cancelled"
 		return
 	}
 
-	// Search remainder of current file.
-	row, col, err := editor.file.Buffer.Search(searchTerm, editor.file.MultiCursor[0], false)
-	if err == nil {
-		editor.file.CursorGoTo(row, col)
+	replaceTerm := editor.screen.GetPromptAnswer("replace:", &editor.replaceHist)
+
+	replaceAll, err := editor.screen.AskYesNo("Replace All?")
+	if err != nil {
+		editor.msg = "Cancelled"
 		return
 	}
 
-	// Search other files.
-	if multi {
-		for idx := editor.fileIdx + 1; idx != editor.fileIdx; idx++ {
-			if idx >= len(editor.files) {
-				idx = 0
+	editor.MultiFileSearchAndReplace(searchTerm, replaceTerm, multiFile, replaceAll)
+}
+
+func (editor *Editor) MultiFileSearchAndReplace(searchTerm, replaceTerm string, multiFile, replaceAll bool) {
+
+	var idx0, row0, col0 int
+	idx0 = -1
+	numMatches := 0
+	for {
+		row, col, err := editor.MultiFileSearch(searchTerm, multiFile)
+		if err == nil {
+			if idx0 < 0 {
+				idx0 = editor.fileIdx
+				row0, col0 = row, col
+			} else if idx0 == editor.fileIdx && row0 == row && col0 == col {
+				break
 			}
-			theFile := editor.files[idx]
-			row, col, err := theFile.Buffer.Search(searchTerm, file.Cursor{}, false)
-			if err == nil {
-				editor.SwitchFile(idx)
-				editor.file.CursorGoTo(row, col)
-				return
-			}
+			numMatches++
+		} else {
+			break
 		}
 	}
 
-	// Search start of current file.
-	row, col, err = editor.file.Buffer.Search(searchTerm, file.Cursor{}, false)
-	if err == nil {
-		editor.file.CursorGoTo(row, col)
-		return
+	for {
+
+		row, col, err := editor.MultiFileSearch(searchTerm, multiFile)
+		numMatches--
+		if numMatches < 0 {
+			break
+		}
+
+		if err == nil {
+			err := editor.file.AskReplace(searchTerm, replaceTerm, row, col, replaceAll)
+			if err != nil {
+				editor.msg = "Cancelled"
+				return
+			}
+		} else {
+			editor.msg = "Not Found"
+			break
+		}
+
 	}
-
-	editor.msg = "Not Found"
-	return
-}
-
-func (editor *Editor) SearchAndReplace() {
-	editor.file.SearchAndReplace(&editor.searchHist, &editor.replaceHist)
-}
-
-func (editor *Editor) MultiFileSearchAndReplace() {
 }
 
 func (editor *Editor) Paste() {

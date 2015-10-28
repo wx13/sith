@@ -130,43 +130,36 @@ func (file *File) Redo() {
 	file.Buffer, file.MultiCursor = file.buffHist.Next()
 }
 
-func (file *File) SearchAndReplace(searchHist, replaceHist *[]string) {
+func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, replaceAll bool) error {
 
-	searchTerm := file.screen.GetPromptAnswer("search:", searchHist)
-	if searchTerm == "" {
-		return
-	}
+	file.CursorGoTo(row, col)
+	_, screenCol := file.GetCursor(0)
+	startColOffset := screenCol - col
 
-	replaceTerm := file.screen.GetPromptAnswer("replace:", replaceHist)
-	if replaceTerm == "" {
-		return
-	}
-
-	for {
-		row, col, err := file.Buffer.Search(searchTerm, file.MultiCursor[0], true)
-		if err != nil {
-			break
-		}
-
-		file.CursorGoTo(row, col)
-		_, screenCol := file.GetCursor(0)
-		startColOffset := screenCol - col
+	var doReplace bool
+	var err error
+	if replaceAll {
+		doReplace = true
+	} else {
 		file.Flush()
 		var startCol, endCol int
 		startCol, endCol = file.Buffer[row].Search(searchTerm, col, -1)
 		for c := startCol + startColOffset; c < endCol+startColOffset; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)
 		}
-		doReplace, err := file.screen.AskYesNo("Replace this instance?")
+		doReplace, err = file.screen.AskYesNo("Replace this instance?")
 		for c := startCol; c < endCol; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)
 		}
 		if err != nil {
-			break
-		}
-		if doReplace {
-			file.Buffer.Replace(searchTerm, replaceTerm, row, col)
-			file.screen.WriteString(row, 0, file.Buffer[row].toString())
+			return err
 		}
 	}
+	if doReplace {
+		file.Buffer.Replace(searchTerm, replaceTerm, row, col)
+		file.screen.WriteString(row, 0, file.Buffer[row].toString())
+	}
+	return nil
+
 }
+

@@ -4,7 +4,6 @@ Change Log
 ## To Do
 
 features:
- - Multi-file search or at least shared search history
  - Cut/paste a substring from current row
  - Linewrap (dynamic justify)
  - Restrict search / replace to marked lines
@@ -23,7 +22,6 @@ bugs:
  - Menus should expand to include long lines.  Horizontal scroll?
  - Menu no longer shows highlighting.
 
-
 ## [Unreleased]
 
 ### Bugfixes
@@ -33,6 +31,8 @@ bugs:
  - Use terminal default colors
  - Autodetect indentation, supported by 'tab' and backspace.
  - Toggle between two files
+ - Multi-file search and search/replace
+   - including "replace all"
 
 
 ## [0.2] "Editorish" 2015-10-21

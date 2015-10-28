@@ -4,6 +4,14 @@ type Cursor struct {
 	row, col, colwant int
 }
 
+func MakeCursor(row, col int) Cursor {
+	return Cursor{
+		row:     row,
+		col:     col,
+		colwant: col,
+	}
+}
+
 func (cursor Cursor) Dup() Cursor {
 	return Cursor{
 		row:     cursor.row,
