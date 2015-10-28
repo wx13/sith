@@ -12,7 +12,6 @@ features:
  - Reload from file
  - Async save
  - "accept all" option for search-and-replace
- - Toggle between two files
 
 bugs:
  - Truncate prompt histories (search/replace)
@@ -21,16 +20,18 @@ bugs:
    + maintain blank line after justified text
    + turn off multicursor when done
  - Menus should expand to include long lines.  Horizontal scroll?
- - Search doesn't match at end of line.
+ - Menu no longer shows highlighting.
 
 
 ## [Unreleased]
 
 ### Bugfixes
+ - Search doesn't match at end of line.
 
 ### Features
  - Use terminal default colors
  - Autodetect indentation, supported by 'tab' and backspace.
+ - Toggle between two files
 
 
 ## [0.2] "Editorish" 2015-10-21

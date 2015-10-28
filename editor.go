@@ -14,6 +14,7 @@ type Editor struct {
 	file       *file.File
 	files      []*file.File
 	fileIdx    int
+	fileIdxPrv int
 	keyboard   *terminal.Keyboard
 	flushChan  chan struct{}
 	msg        string
@@ -66,6 +67,7 @@ func (editor *Editor) OpenNewFile() {
 	cwd, _ := os.Getwd()
 	chosenFile, _ := filepath.Rel(cwd, dir+names[idx])
 	editor.OpenFile(chosenFile)
+	editor.fileIdxPrv = editor.fileIdx
 	editor.fileIdx = len(editor.files) - 1
 	editor.file = editor.files[editor.fileIdx]
 }
@@ -84,6 +86,7 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen))
 	}
 	editor.fileIdx = 0
+	editor.fileIdxPrv = 0
 	editor.file = editor.files[0]
 }
 
@@ -164,6 +167,8 @@ func (editor *Editor) Listen() {
 			editor.NextFile()
 		case "altB":
 			editor.PrevFile()
+		case "altV":
+			editor.LastFile()
 		case "altM":
 			editor.SelectFile()
 		case "ctrlX":
@@ -255,6 +260,10 @@ func (editor *Editor) PrevFile() {
 	editor.SwitchFile(editor.fileIdx - 1)
 }
 
+func (editor *Editor) LastFile() {
+	editor.SwitchFile(editor.fileIdxPrv)
+}
+
 func (editor *Editor) SelectFile() {
 	names := []string{}
 	for _, file := range editor.files {
@@ -285,6 +294,7 @@ func intMod(a, n int) int {
 
 func (editor *Editor) SwitchFile(n int) {
 	n = intMod(n, len(editor.files))
+	editor.fileIdxPrv = editor.fileIdx
 	editor.fileIdx = n
 	editor.file = editor.files[n]
 }
