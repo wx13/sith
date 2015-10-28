@@ -3,7 +3,6 @@ package file
 import "sync"
 import "os"
 import "path"
-import "errors"
 import "github.com/wx13/sith/syntaxcolor"
 import "github.com/wx13/sith/terminal"
 
@@ -129,18 +128,6 @@ func (file *File) Undo() {
 
 func (file *File) Redo() {
 	file.Buffer, file.MultiCursor = file.buffHist.Next()
-}
-
-func (file *File) Search(searchHist *[]string) error {
-	searchTerm := file.screen.GetPromptAnswer("search:", searchHist)
-	if searchTerm == "" {
-		return errors.New("Cancelled")
-	}
-	row, col, err := file.Buffer.Search(searchTerm, file.MultiCursor[0], true)
-	if err == nil {
-		file.CursorGoTo(row, col)
-	}
-	return err
 }
 
 func (file *File) SearchAndReplace(searchHist, replaceHist *[]string) {

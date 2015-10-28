@@ -236,14 +236,6 @@ func (editor *Editor) Cut() {
 	editor.copyContig = 2
 }
 
-func (editor *Editor) Search() {
-	editor.MultiFileSearch(false)
-	//err := editor.file.Search(&editor.searchHist)
-	//if err != nil {
-	//	editor.msg = err.Error()
-	//}
-}
-
 func (editor *Editor) MultiFileSearch(multi bool) {
 
 	// Get the search term.
@@ -283,6 +275,7 @@ func (editor *Editor) MultiFileSearch(multi bool) {
 		return
 	}
 
+	editor.msg = "Not Found"
 	return
 }
 
