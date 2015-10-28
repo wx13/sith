@@ -96,7 +96,7 @@ func (buffer Buffer) GetIndent() (string, bool) {
 	if tabCount > 0 && spaceCount > 0 {
 		clean = false
 	}
-	if tabCount > spaceCount {
+	if tabCount >= spaceCount {
 		return "\t", clean
 	} else {
 		return strings.Repeat(" ", nSpaces), clean
