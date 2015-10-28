@@ -14,8 +14,6 @@ type File struct {
 	savedBuffer Buffer
 
 	buffHist    *BufferHist
-	searchHist  []string
-	replaceHist []string
 	gotoHist    []string
 
 	Name        string
@@ -149,8 +147,8 @@ func (file *File) GetPromptAnswer(question string, history *[]string) string {
 	return answer
 }
 
-func (file *File) Search() error {
-	searchTerm := file.GetPromptAnswer("search:", &file.searchHist)
+func (file *File) Search(searchHist *[]string) error {
+	searchTerm := file.GetPromptAnswer("search:", searchHist)
 	if searchTerm == "" {
 		return errors.New("Cancelled")
 	}
@@ -161,14 +159,14 @@ func (file *File) Search() error {
 	return err
 }
 
-func (file *File) SearchAndReplace() {
+func (file *File) SearchAndReplace(searchHist, replaceHist *[]string) {
 
-	searchTerm := file.GetPromptAnswer("search:", &file.searchHist)
+	searchTerm := file.GetPromptAnswer("search:", searchHist)
 	if searchTerm == "" {
 		return
 	}
 
-	replaceTerm := file.GetPromptAnswer("replace:", &file.replaceHist)
+	replaceTerm := file.GetPromptAnswer("replace:", replaceHist)
 	if replaceTerm == "" {
 		return
 	}

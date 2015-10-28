@@ -20,6 +20,9 @@ type Editor struct {
 	msg        string
 	copyBuffer file.Buffer
 	copyContig int
+
+	searchHist  []string
+	replaceHist []string
 }
 
 func NewEditor() *Editor {
@@ -122,7 +125,7 @@ func (editor *Editor) Listen() {
 		switch cmd {
 		case "backspace":
 			editor.file.Backspace()
-		case "delete":
+		case "delete", "ctrlD":
 			editor.file.Delete()
 		case "space":
 			editor.file.InsertChar(' ')
@@ -193,8 +196,12 @@ func (editor *Editor) Listen() {
 			editor.file.PrevWord()
 		case "ctrlF":
 			editor.Search()
-		case "altF":
+		case "ctrlR":
 			editor.SearchAndReplace()
+		case "altF":
+			editor.MultiFileSearch()
+		case "altR":
+			editor.MultiFileSearchAndReplace()
 		case "ctrlC":
 			editor.Cut()
 		case "ctrlV":
@@ -230,14 +237,20 @@ func (editor *Editor) Cut() {
 }
 
 func (editor *Editor) Search() {
-	err := editor.file.Search()
+	err := editor.file.Search(&editor.searchHist)
 	if err != nil {
 		editor.msg = err.Error()
 	}
 }
 
+func (editor *Editor) MultiFileSearch() {
+}
+
 func (editor *Editor) SearchAndReplace() {
-	editor.file.SearchAndReplace()
+	editor.file.SearchAndReplace(&editor.searchHist, &editor.replaceHist)
+}
+
+func (editor *Editor) MultiFileSearchAndReplace() {
 }
 
 func (editor *Editor) Paste() {

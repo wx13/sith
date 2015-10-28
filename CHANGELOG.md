@@ -12,6 +12,7 @@ features:
  - Reload from file
  - Async save
  - "accept all" option for search-and-replace
+ - Cut/Paste history
 
 bugs:
  - Truncate prompt histories (search/replace)
