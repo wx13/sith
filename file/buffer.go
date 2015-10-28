@@ -38,7 +38,7 @@ func (buffer Buffer) ToString() string {
 	return str[:len(str)-1]
 }
 
-func (buffer Buffer) Search(searchTerm string, cursor Cursor) (int, int, error) {
+func (buffer Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, int, error) {
 	var col int
 	col, _ = buffer[cursor.row].Search(searchTerm, cursor.col+1, -1)
 	if col >= 0 {
@@ -49,6 +49,9 @@ func (buffer Buffer) Search(searchTerm string, cursor Cursor) (int, int, error) 
 		if col >= 0 {
 			return row, col, nil
 		}
+	}
+	if ! loop {
+		return cursor.row, cursor.col, errors.New("Not Found")
 	}
 	for row := 0; row < cursor.row; row++ {
 		col, _ = buffer[row].Search(searchTerm, 0, -1)

@@ -134,3 +134,21 @@ loop:
 	prompt.RestoreCursor()
 	return prompt.answer, nil
 }
+
+func (screen *Screen) GetPromptAnswer(question string, history *[]string) string {
+	answer, err := screen.Ask(question, *history)
+	if err != nil {
+		return ""
+	}
+	if answer == "" {
+		if len(*history) == 0 {
+			return ""
+		}
+		answer = (*history)[0]
+	} else {
+		*history = append([]string{answer}, *history...)
+	}
+	return answer
+}
+
+

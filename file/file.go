@@ -131,28 +131,12 @@ func (file *File) Redo() {
 	file.Buffer, file.MultiCursor = file.buffHist.Next()
 }
 
-func (file *File) GetPromptAnswer(question string, history *[]string) string {
-	answer, err := file.screen.Ask(question, *history)
-	if err != nil {
-		return ""
-	}
-	if answer == "" {
-		if len(*history) == 0 {
-			return ""
-		}
-		answer = (*history)[0]
-	} else {
-		*history = append([]string{answer}, *history...)
-	}
-	return answer
-}
-
 func (file *File) Search(searchHist *[]string) error {
-	searchTerm := file.GetPromptAnswer("search:", searchHist)
+	searchTerm := file.screen.GetPromptAnswer("search:", searchHist)
 	if searchTerm == "" {
 		return errors.New("Cancelled")
 	}
-	row, col, err := file.Buffer.Search(searchTerm, file.MultiCursor[0])
+	row, col, err := file.Buffer.Search(searchTerm, file.MultiCursor[0], true)
 	if err == nil {
 		file.CursorGoTo(row, col)
 	}
@@ -161,18 +145,18 @@ func (file *File) Search(searchHist *[]string) error {
 
 func (file *File) SearchAndReplace(searchHist, replaceHist *[]string) {
 
-	searchTerm := file.GetPromptAnswer("search:", searchHist)
+	searchTerm := file.screen.GetPromptAnswer("search:", searchHist)
 	if searchTerm == "" {
 		return
 	}
 
-	replaceTerm := file.GetPromptAnswer("replace:", replaceHist)
+	replaceTerm := file.screen.GetPromptAnswer("replace:", replaceHist)
 	if replaceTerm == "" {
 		return
 	}
 
 	for {
-		row, col, err := file.Buffer.Search(searchTerm, file.MultiCursor[0])
+		row, col, err := file.Buffer.Search(searchTerm, file.MultiCursor[0], true)
 		if err != nil {
 			break
 		}

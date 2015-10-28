@@ -226,7 +226,7 @@ func (file *File) PrevWord() {
 }
 
 func (file *File) GoToLine() {
-	lineNo := file.GetPromptAnswer("goto:", &file.gotoHist)
+	lineNo := file.screen.GetPromptAnswer("goto:", &file.gotoHist)
 	if lineNo == "" {
 		return
 	}

@@ -244,6 +244,43 @@ func (editor *Editor) Search() {
 }
 
 func (editor *Editor) MultiFileSearch() {
+
+	// Get the search term.
+	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	if searchTerm == "" {
+		editor.msg = "Cancelled"
+		return
+	}
+
+	// Search remainder of current file.
+	row, col, err := editor.file.Buffer.Search(searchTerm, editor.file.MultiCursor[0], false)
+	if err == nil {
+		editor.file.CursorGoTo(row, col)
+		return
+	}
+
+	// Search other files.
+	for idx := editor.fileIdx + 1; idx != editor.fileIdx; idx++ {
+		if idx >= len(editor.files) {
+			idx = 0
+		}
+		theFile := editor.files[idx]
+		row, col, err := theFile.Buffer.Search(searchTerm, file.Cursor{}, false)
+		if err == nil {
+			editor.SwitchFile(idx)
+			editor.file.CursorGoTo(row, col)
+			return
+		}
+	}
+
+	// Search start of current file.
+	row, col, err = editor.file.Buffer.Search(searchTerm, file.Cursor{}, false)
+	if err == nil {
+		editor.file.CursorGoTo(row, col)
+		return
+	}
+
+	return
 }
 
 func (editor *Editor) SearchAndReplace() {
