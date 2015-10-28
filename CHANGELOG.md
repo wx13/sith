@@ -10,6 +10,9 @@ features:
  - Restrict search / replace to marked lines
  - Revert to last saved copy
  - Reload from file
+ - Async save
+ - "accept all" option for search-and-replace
+ - Toggle between two files
 
 bugs:
  - Truncate prompt histories (search/replace)
@@ -18,7 +21,7 @@ bugs:
    + maintain blank line after justified text
    + turn off multicursor when done
  - Menus should expand to include long lines.  Horizontal scroll?
- - Indentation autodetect should never get 0s as answer.
+ - Search doesn't match at end of line.
 
 
 ## [Unreleased]
