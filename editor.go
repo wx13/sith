@@ -210,7 +210,6 @@ func (editor *Editor) Listen() {
 			editor.msg = "Unknown keypress"
 		}
 		editor.copyContig--
-		editor.file.ComputeIndent()
 		editor.RequestFlush()
 	}
 

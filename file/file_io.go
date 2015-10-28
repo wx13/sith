@@ -6,6 +6,7 @@ import "github.com/nsf/termbox-go"
 import "strings"
 
 func (file *File) Flush() {
+	file.ComputeIndent()
 	cols, rows := termbox.Size()
 	slice := file.Slice(rows-1, cols)
 	file.screen.Clear()
