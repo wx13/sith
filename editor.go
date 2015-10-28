@@ -225,7 +225,10 @@ func (editor *Editor) Cut() {
 }
 
 func (editor *Editor) Search() {
-	editor.msg = editor.file.Search().Error()
+	err := editor.file.Search()
+	if err != nil {
+		editor.msg = err.Error()
+	}
 }
 
 func (editor *Editor) SearchAndReplace() {

@@ -24,6 +24,9 @@ func (line Line) CommonStart(other Line) Line {
 }
 
 func (line Line) Search(term string, start, end int) (int, int) {
+	if len(line) == 0 {
+		return -1, -1
+	}
 	if end < 0 || end >= len(line) {
 		end = len(line) + end
 		if end < 0 || end < start {
@@ -32,7 +35,7 @@ func (line Line) Search(term string, start, end int) (int, int) {
 	}
 	n := len(term)
 	var startCol, endCol int
-	target := string(line[start:end])
+	target := string(line[start:end+1])
 	if term[0:1] == "/" && term[n-1:n] == "/" {
 		re, err := regexp.Compile(term[1 : n-1])
 		if err != nil {
