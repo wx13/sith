@@ -59,7 +59,7 @@ func (file *File) WriteStatus(row, col int) {
 		file.screen.WriteStringColor(row, col, status, fg, bg)
 	}
 
-	if ! file.tabHealth {
+	if !file.tabHealth {
 		status = "MixedIndent"
 		col -= len(status) + 2
 		fg := termbox.ColorRed

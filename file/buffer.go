@@ -50,7 +50,7 @@ func (buffer Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, i
 			return row, col, nil
 		}
 	}
-	if ! loop {
+	if !loop {
 		return cursor.row, cursor.col, errors.New("Not Found")
 	}
 	for row := 0; row < cursor.row; row++ {
@@ -89,7 +89,6 @@ func (buffer Buffer) slice(startRow, endRow, startCol, endCol int) []string {
 	}
 	return slice
 }
-
 
 func (buffer Buffer) GetIndent() (string, bool) {
 	spaceHisto := buffer.countLeadingSpacesAndTabs()

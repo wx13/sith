@@ -35,7 +35,7 @@ func (line Line) Search(term string, start, end int) (int, int) {
 	}
 	n := len(term)
 	var startCol, endCol int
-	target := string(line[start:end+1])
+	target := string(line[start : end+1])
 	if term[0:1] == "/" && term[n-1:n] == "/" {
 		re, err := regexp.Compile(term[1 : n-1])
 		if err != nil {
@@ -65,4 +65,3 @@ func (line Line) tabs2spaces() Line {
 	strLine = strings.Replace(strLine, "\t", "    ", -1)
 	return Line(strLine)
 }
-

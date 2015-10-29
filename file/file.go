@@ -12,8 +12,8 @@ type File struct {
 	MultiCursor MultiCursor
 	savedBuffer Buffer
 
-	buffHist    *BufferHist
-	gotoHist    []string
+	buffHist *BufferHist
+	gotoHist []string
 
 	Name        string
 	SyntaxRules *syntaxcolor.SyntaxRules
@@ -162,4 +162,3 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 	return nil
 
 }
-

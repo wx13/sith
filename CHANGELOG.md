@@ -10,7 +10,6 @@ features:
  - Revert to last saved copy
  - Reload from file
  - Async save
- - Cut/Paste history
 
 bugs:
  - Truncate prompt histories (search/replace)
@@ -32,6 +31,7 @@ bugs:
  - Toggle between two files
  - Multi-file search and search/replace
    - including "replace all"
+ - Cut/Paste history
 
 
 ## [0.2] "Editorish" 2015-10-21

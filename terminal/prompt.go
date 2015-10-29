@@ -150,5 +150,3 @@ func (screen *Screen) GetPromptAnswer(question string, history *[]string) string
 	}
 	return answer
 }
-
-

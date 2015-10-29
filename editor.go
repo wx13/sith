@@ -268,7 +268,7 @@ func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, i
 				idx = 0
 			}
 			theFile := editor.files[idx]
-			row, col, err := theFile.Buffer.Search(searchTerm, file.MakeCursor(0,-1), false)
+			row, col, err := theFile.Buffer.Search(searchTerm, file.MakeCursor(0, -1), false)
 			if err == nil {
 				editor.SwitchFile(idx)
 				editor.file.CursorGoTo(row, col)
@@ -278,7 +278,7 @@ func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, i
 	}
 
 	// Search start of current file.
-	row, col, err = editor.file.Buffer.Search(searchTerm, file.MakeCursor(0,-1), false)
+	row, col, err = editor.file.Buffer.Search(searchTerm, file.MakeCursor(0, -1), false)
 	if err == nil {
 		editor.file.CursorGoTo(row, col)
 		return row, col, err
