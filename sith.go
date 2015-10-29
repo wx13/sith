@@ -1,16 +1,17 @@
 package main
 
 import "os"
+import "github.com/wx13/sith/editor"
 
 func main() {
 
-	editor := NewEditor()
-	defer editor.Quit()
+	session := editor.NewEditor()
+	defer session.Quit()
 
-	editor.OpenFiles(os.Args[1:])
+	session.OpenFiles(os.Args[1:])
 
-	editor.Flush()
-	editor.KeepFlushed()
-	editor.Listen()
+	session.Flush()
+	session.KeepFlushed()
+	session.Listen()
 
 }

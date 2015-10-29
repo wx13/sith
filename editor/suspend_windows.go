@@ -1,4 +1,4 @@
-package main
+package editor
 
 func (editor *Editor) Suspend() {
 }
