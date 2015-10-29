@@ -18,11 +18,13 @@ type Editor struct {
 	keyboard   *terminal.Keyboard
 	flushChan  chan struct{}
 	msg        string
-	copyBuffer file.Buffer
-	copyContig int
 
 	searchHist  []string
 	replaceHist []string
+
+	copyBuffer file.Buffer
+	copyContig int
+	copyHist   []file.Buffer
 }
 
 func NewEditor() *Editor {
@@ -31,6 +33,7 @@ func NewEditor() *Editor {
 		screen:     terminal.NewScreen(),
 		copyBuffer: file.MakeBuffer([]string{}),
 		copyContig: 0,
+		copyHist:   []file.Buffer{},
 	}
 }
 
@@ -170,7 +173,7 @@ func (editor *Editor) Listen() {
 			editor.NextFile()
 		case "altB":
 			editor.PrevFile()
-		case "altV":
+		case "altK":
 			editor.LastFile()
 		case "altM":
 			editor.SelectFile()
@@ -206,6 +209,8 @@ func (editor *Editor) Listen() {
 			editor.Cut()
 		case "ctrlV":
 			editor.Paste()
+		case "altV":
+			editor.PasteFromMenu()
 		case "altG":
 			editor.GoFmt()
 		case "altJ":
@@ -230,8 +235,10 @@ func (editor *Editor) Listen() {
 func (editor *Editor) Cut() {
 	if editor.copyContig > 0 {
 		editor.copyBuffer = append(editor.copyBuffer, editor.file.Cut()...)
+		editor.copyHist[0] = editor.copyBuffer.Dup()
 	} else {
 		editor.copyBuffer = editor.file.Cut()
+		editor.copyHist = append([]file.Buffer{editor.copyBuffer.Dup()}, editor.copyHist...)
 	}
 	editor.copyContig = 2
 }
@@ -343,6 +350,17 @@ func (editor *Editor) MultiFileSearchAndReplace(searchTerm, replaceTerm string, 
 
 func (editor *Editor) Paste() {
 	editor.file.Paste(editor.copyBuffer)
+}
+
+func (editor *Editor) PasteFromMenu() {
+	menu := terminal.NewMenu(editor.screen)
+	items := []string{}
+	for _, buffer := range editor.copyHist {
+		str := buffer[0].ToString()
+		items = append(items, str)
+	}
+	idx := menu.Choose(items)
+	editor.file.Paste(editor.copyHist[idx])
 }
 
 func (editor *Editor) Undo() {

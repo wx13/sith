@@ -157,7 +157,7 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 	}
 	if doReplace {
 		file.Buffer.Replace(searchTerm, replaceTerm, row, col)
-		file.screen.WriteString(row, 0, file.Buffer[row].toString())
+		file.screen.WriteString(row, 0, file.Buffer[row].ToString())
 	}
 	return nil
 

@@ -12,7 +12,7 @@ func (file *File) Flush() {
 	file.screen.Clear()
 	for row, str := range slice {
 		file.screen.WriteString(row, 0, str)
-		strLine := file.Buffer[row+file.rowOffset].tabs2spaces().toString()
+		strLine := file.Buffer[row+file.rowOffset].tabs2spaces().ToString()
 		file.screen.Colorize(row, file.SyntaxRules.Colorize(strLine), file.colOffset)
 	}
 	for row := len(slice); row < rows-1; row++ {

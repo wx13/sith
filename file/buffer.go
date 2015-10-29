@@ -110,7 +110,7 @@ func (buffer Buffer) countLeadingSpacesAndTabs() []int {
 	spaceHisto := make([]int, 33)
 	re := regexp.MustCompile("^[ \t]*")
 	for _, line := range buffer {
-		indentStr := re.FindString(line.toString())
+		indentStr := re.FindString(line.ToString())
 		nSpaces := strings.Count(indentStr, " ")
 		nTabs := strings.Count(indentStr, "\t")
 		if nSpaces > 0 && nSpaces <= 32 {

@@ -8,7 +8,7 @@ func (file *File) IsModified() bool {
 		return true
 	}
 	for row, _ := range file.Buffer {
-		if file.Buffer[row].toString() != file.savedBuffer[row].toString() {
+		if file.Buffer[row].ToString() != file.savedBuffer[row].ToString() {
 			return true
 		}
 	}

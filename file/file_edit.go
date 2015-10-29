@@ -9,7 +9,7 @@ func (file *File) replaceBuffer(newBuffer Buffer) {
 		if k > len(file.Buffer) {
 			file.Buffer = append(file.Buffer, line)
 		} else {
-			if file.Buffer[k].toString() != line.toString() {
+			if file.Buffer[k].ToString() != line.ToString() {
 				file.Buffer[k] = line
 			}
 		}
@@ -144,7 +144,7 @@ func (file *File) DoAutoIndent(cursorIdx int) {
 
 	// Whitespace-only indent.
 	re, _ := regexp.Compile("^[ \t]+")
-	ws := Line(re.FindString(file.Buffer[row-1].toString()))
+	ws := Line(re.FindString(file.Buffer[row-1].ToString()))
 	if len(ws) > 0 {
 		file.Buffer[row] = append(ws, file.Buffer[row]...)
 		file.MultiCursor[cursorIdx].col += len(ws)

@@ -10,7 +10,7 @@ func (line Line) Dup() Line {
 	return Line(strLine)
 }
 
-func (line Line) toString() string {
+func (line Line) ToString() string {
 	return string(line)
 }
 

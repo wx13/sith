@@ -170,7 +170,7 @@ func (file *File) StartOfLine() {
 		for idx, cursor := range file.MultiCursor {
 			row := cursor.row
 			line := file.Buffer[row]
-			match := re.FindStringIndex(line.toString())
+			match := re.FindStringIndex(line.ToString())
 			file.MultiCursor[idx].col = match[1]
 			file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 		}
@@ -196,7 +196,7 @@ func (file *File) NextWord() {
 		line := file.Buffer[row]
 		col := cursor.col
 		re := regexp.MustCompile("[\t ][^\t ]")
-		offset := re.FindStringIndex(line[col:].toString())
+		offset := re.FindStringIndex(line[col:].ToString())
 		if offset == nil {
 			col = len(line)
 		} else {
@@ -213,7 +213,7 @@ func (file *File) PrevWord() {
 		line := file.Buffer[row]
 		col := cursor.col
 		re := regexp.MustCompile("[\t ][^\t ]")
-		offsets := re.FindAllStringIndex(line[:col].toString(), -1)
+		offsets := re.FindAllStringIndex(line[:col].ToString(), -1)
 		if offsets == nil {
 			col = 0
 		} else {
