@@ -2,6 +2,7 @@ package file
 
 import "github.com/nsf/termbox-go"
 import "fmt"
+import "strings"
 
 func (file *File) IsModified() bool {
 	if len(file.Buffer) != len(file.savedBuffer) {
@@ -26,25 +27,15 @@ func (file *File) ModStatus() string {
 func (file *File) WriteStatus(row, col int) {
 
 	status := file.ModStatus()
-	col -= len(status) + 2
-	fg := termbox.ColorYellow
-	bg := termbox.ColorDefault
-	file.screen.WriteStringColor(row, col, status, fg, bg)
+	file.AddToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
 
 	if len(file.MultiCursor) > 1 {
 		status = fmt.Sprintf("%dC", len(file.MultiCursor))
-		col -= len(status) + 2
-		fg := termbox.ColorBlack
-		bg := termbox.ColorRed
-		file.screen.WriteStringColor(row, col, status, fg, bg)
+		file.AddToStatus(status, row, &col, termbox.ColorBlack, termbox.ColorRed)
 	}
 
 	if file.autoIndent {
-		status = "->"
-		col -= len(status) + 2
-		fg := termbox.ColorRed | termbox.AttrBold
-		bg := termbox.ColorDefault
-		file.screen.WriteStringColor(row, col, status, fg, bg)
+		file.AddToStatus("->", row, &col, termbox.ColorRed | termbox.AttrBold, termbox.ColorDefault)
 	}
 
 	if file.autoTab {
@@ -53,18 +44,22 @@ func (file *File) WriteStatus(row, col int) {
 		} else {
 			status = fmt.Sprintf("%ds", len(file.tabString))
 		}
-		col -= len(status) + 2
-		fg := termbox.ColorGreen
-		bg := termbox.ColorDefault
-		file.screen.WriteStringColor(row, col, status, fg, bg)
+		file.AddToStatus(status, row, &col, termbox.ColorGreen, termbox.ColorDefault)
 	}
 
 	if !file.tabHealth {
-		status = "MixedIndent"
-		col -= len(status) + 2
-		fg := termbox.ColorRed
-		bg := termbox.ColorDefault
-		file.screen.WriteStringColor(row, col, status, fg, bg)
+		file.AddToStatus("MixedIndent", row, &col, termbox.ColorRed, termbox.ColorDefault)
 	}
 
+	if file.newline != "\n" {
+		status = strings.Replace(file.newline, "\n", "\\n", -1)
+		status = strings.Replace(status, "\r", "\\r", -1)
+		file.AddToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
+	}
+
+}
+
+func (file *File) AddToStatus(msg string, row int, col *int, fg, bg termbox.Attribute) {
+	*col -= len(msg) + 2
+	file.screen.WriteStringColor(row, *col, msg, fg, bg)
 }

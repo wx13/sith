@@ -18,7 +18,6 @@ bugs:
    + maintain blank line after justified text
    + turn off multicursor when done
  - Menus should expand to include long lines.  Horizontal scroll?
- - Menu no longer shows highlighting.
 
 ## [Unreleased]
 
@@ -32,6 +31,8 @@ bugs:
  - Multi-file search and search/replace
    - including "replace all"
  - Cut/Paste history
+ - Detect line endings (\n, \r, etc.)
+   - display non-\n ending in status bar
 
 
 ## [0.2] "Editorish" 2015-10-21

@@ -25,6 +25,7 @@ Commands
 | alt-W    | Close           | Close current window.  Check with user, if file is modified.
 | alt-N    | Next file       | Switch to the next open file
 | alt-B    | Previous file   | Switch to the previous open file
+| alt-K    | Toggle file     | Toggle between most recent files
 | alt-M    | File selct menu | Bring up a menu to select file/window.
 | alt-O    | File open menu  | Bring up a file browser menu to select a new file
 | ctrl-S   | Save
@@ -37,6 +38,7 @@ Commands
 | ctrl-Y   | Redo
 | ctrl-C   | Cut line        | Cut the current line and place in copy buffer
 | ctrl-V   | Paste           | Insert the copy buffer above the current line
+| alt-V    | Menu paste      | Menu select from copy/paste history
 | alt-J    | Justify         | Justify (72 cols) all lines from lowest to highest cursor
 | alt-G    | go fmt          | Run go formatter on code.
 | alt-D    | delete
@@ -49,10 +51,14 @@ Commands
 | ctrl-P   | Scroll Down     | Scroll the entire screen down by one line
 | ctrl-J/K/L/O   | Cursor Up/Down/Right/Left  | Same as arrow keys
 | ctrl-N/B | Page down/up    | PageDn / PageUp also supported
-| **Misc**
-| ctrl-F   | Search
-| alt-F    | Search and replace
-| alt-L    | Refresh screen  | Redraw all pixels on screen.
+| ctrl-G   | Goto line number| Editor will prompt for line number (with per-file history)
 | **Toggles**
 | alt-I    | Toggle auto-indent
 | alt-T    | Toogle auto-tab | Toggle auto-detection of indentation string.
+| **Search**
+| ctrl-F   | Search
+| alt-F    | Search and replace
+| ctrl-R   | Multi-file search
+| alt-R    | Multi-file search and replace
+| **Misc**
+| alt-L    | Refresh screen  | Redraw all pixels on screen.

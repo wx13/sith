@@ -30,10 +30,10 @@ func MakeBuffer(stringBuf []string) Buffer {
 	return buffer
 }
 
-func (buffer Buffer) ToString() string {
+func (buffer Buffer) ToString(newline string) string {
 	str := ""
 	for _, line := range buffer {
-		str += string(line) + "\n"
+		str += string(line) + newline
 	}
 	return str[:len(str)-1]
 }

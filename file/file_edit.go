@@ -24,7 +24,7 @@ func (file *File) GoFmt() string {
 	contents := file.toString()
 	bytes, err := format.Source([]byte(contents))
 	if err == nil {
-		stringBuf := strings.Split(string(bytes), "\n")
+		stringBuf := strings.Split(string(bytes), file.newline)
 		newBuffer := MakeBuffer(stringBuf)
 		file.replaceBuffer(newBuffer)
 	}

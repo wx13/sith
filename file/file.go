@@ -24,6 +24,8 @@ type File struct {
 	tabString string
 	tabHealth bool
 
+	newline string
+
 	rowOffset int
 	colOffset int
 	screen    *terminal.Screen
@@ -43,6 +45,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		autoIndent:  true,
 		autoTab:     true,
 		tabString:   "\t",
+		newline:     "\n",
 		tabHealth:   true,
 	}
 	file.buffHist = NewBufferHist(file.Buffer, file.MultiCursor)
@@ -95,7 +98,7 @@ func (file *File) AddCursorCol() {
 }
 
 func (file *File) toString() string {
-	return file.Buffer.ToString()
+	return file.Buffer.ToString(file.newline)
 }
 
 // Slice returns a 2D slice of the buffer.

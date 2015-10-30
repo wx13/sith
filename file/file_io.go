@@ -20,6 +20,23 @@ func (file *File) Flush() {
 	}
 }
 
+func (file *File) setNewline(buffer string) {
+	file.newline = "\n"
+	count := strings.Count(buffer, "\n")
+	c := strings.Count(buffer, "\r")
+	if c > count {
+		count = c
+		file.newline = "\r"
+	}
+	for _, newline := range []string{"\n\r", "\r\n"} {
+		c := strings.Count(buffer, newline)
+		if c > count/2 {
+			count = c
+			file.newline = newline
+		}
+	}
+}
+
 // ReadFile reads in a file (if it exists).
 func (file *File) ReadFile(name string) {
 
@@ -28,11 +45,12 @@ func (file *File) ReadFile(name string) {
 		file.Buffer = MakeBuffer([]string{""})
 	} else {
 		file.fileMode = fileInfo.Mode()
+		stringBuf := []string{""}
 
 		byteBuf, err := ioutil.ReadFile(name)
-		stringBuf := []string{""}
 		if err == nil {
-			stringBuf = strings.Split(string(byteBuf), "\n")
+			file.setNewline(string(byteBuf))
+			stringBuf = strings.Split(string(byteBuf), file.newline)
 		}
 
 		file.Buffer = MakeBuffer(stringBuf)
