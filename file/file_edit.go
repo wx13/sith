@@ -3,6 +3,7 @@ package file
 import "go/format"
 import "strings"
 import "regexp"
+import "errors"
 
 func (file *File) replaceBuffer(newBuffer Buffer) {
 	for k, line := range newBuffer {
@@ -16,10 +17,10 @@ func (file *File) replaceBuffer(newBuffer Buffer) {
 	}
 }
 
-func (file *File) GoFmt() string {
+func (file *File) GoFmt() error {
 	filetype := file.SyntaxRules.GetFileType(file.Name)
 	if filetype != "go" {
-		return "Will not gofmt a non-go file."
+		return errors.New("Will not gofmt a non-go file.")
 	}
 	contents := file.toString()
 	bytes, err := format.Source([]byte(contents))
@@ -29,7 +30,7 @@ func (file *File) GoFmt() string {
 		file.replaceBuffer(newBuffer)
 	}
 	file.Snapshot()
-	return "Gofmt done."
+	return nil
 }
 
 func (file *File) InsertChar(ch rune) {

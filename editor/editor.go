@@ -17,7 +17,6 @@ type Editor struct {
 	fileIdxPrv int
 	keyboard   *terminal.Keyboard
 	flushChan  chan struct{}
-	msg        string
 
 	searchHist  []string
 	replaceHist []string
@@ -124,7 +123,6 @@ func (editor *Editor) Listen() {
 	keyboard := terminal.NewKeyboard()
 	for {
 		cmd, r := keyboard.GetKey()
-		editor.msg = ""
 		switch cmd {
 		case "backspace":
 			editor.file.Backspace()
@@ -220,11 +218,11 @@ func (editor *Editor) Listen() {
 		case "altT":
 			editor.file.ToggleAutoTab()
 		case "unknown":
-			editor.msg = "Unknown keypress"
+			editor.screen.Notify("Unknown keypress")
 		case "char":
 			editor.file.InsertChar(r)
 		default:
-			editor.msg = "Unknown keypress"
+			editor.screen.Notify("Unknown keypress")
 		}
 		editor.copyContig--
 		editor.RequestFlush()
@@ -265,11 +263,26 @@ func (editor *Editor) SelectFile() {
 }
 
 func (editor *Editor) Save() {
-	editor.msg = editor.file.Save()
+	go func() {
+		err := editor.file.Save()
+		if err != nil {
+			editor.screen.Alert(err.Error())
+		} else {
+			editor.screen.Notify("File Saved")
+		}
+	}()
 }
 
 func (editor *Editor) GoFmt() {
-	editor.msg = editor.file.GoFmt()
+	go func() {
+		err := editor.file.GoFmt()
+		if err == nil {
+			editor.RequestFlush()
+			editor.screen.Notify("GoFmt done")
+		} else {
+			editor.screen.Notify(err.Error())
+		}
+	}()
 }
 
 func intMod(a, n int) int {
@@ -305,7 +318,6 @@ func (editor *Editor) Flush() {
 	editor.file.Flush()
 	editor.HighlightCursors()
 	editor.UpdateStatus()
-	editor.screen.WriteMessage(editor.msg)
 	editor.screen.Flush()
 }
 

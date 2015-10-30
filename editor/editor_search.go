@@ -6,7 +6,7 @@ import "github.com/wx13/sith/file"
 func (editor *Editor) Search(multiFile bool) {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
-		editor.msg = "Cancelled"
+		editor.screen.Notify("Cancelled")
 		return
 	}
 	editor.MultiFileSearch(searchTerm, multiFile)
@@ -44,14 +44,14 @@ func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, i
 		return row, col, err
 	}
 
-	editor.msg = "Not Found"
+	editor.screen.Notify("Not Found")
 	return row, col, err
 }
 
 func (editor *Editor) SearchAndReplace(multiFile bool) {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
-		editor.msg = "Cancelled"
+		editor.screen.Notify("Cancelled")
 		return
 	}
 
@@ -59,7 +59,7 @@ func (editor *Editor) SearchAndReplace(multiFile bool) {
 
 	replaceAll, err := editor.screen.AskYesNo("Replace All?")
 	if err != nil {
-		editor.msg = "Cancelled"
+		editor.screen.Notify("Cancelled")
 		return
 	}
 
@@ -97,11 +97,11 @@ func (editor *Editor) MultiFileSearchAndReplace(searchTerm, replaceTerm string, 
 		if err == nil {
 			err := editor.file.AskReplace(searchTerm, replaceTerm, row, col, replaceAll)
 			if err != nil {
-				editor.msg = "Cancelled"
+				editor.screen.Notify("Cancelled")
 				return
 			}
 		} else {
-			editor.msg = "Not Found"
+			editor.screen.Notify("Not Found")
 			break
 		}
 

@@ -102,6 +102,15 @@ func (screen *Screen) WriteMessage(msg string) {
 	screen.WriteString(rows-1, 0, msg+"  ")
 }
 
+func (screen *Screen) Notify(msg string) {
+	cols, rows := termbox.Size()
+	screen.WriteString(rows-1, (cols-len(msg))/2, msg+"  ")
+}
+
+func (screen *Screen) Alert(msg string) {
+	screen.Notify(msg)
+}
+
 func (screen *Screen) AskYesNo(question string) (bool, error) {
 	prompt := MakePrompt(screen)
 	return prompt.AskYesNo(question)
@@ -119,3 +128,4 @@ func (screen *Screen) Highlight(row, col int) {
 	cells[j].Bg |= termbox.AttrReverse
 	cells[j].Fg |= termbox.AttrReverse
 }
+

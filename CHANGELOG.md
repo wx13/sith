@@ -18,6 +18,7 @@ bugs:
    + maintain blank line after justified text
    + turn off multicursor when done
  - Menus should expand to include long lines.  Horizontal scroll?
+ - Highlighting (reverse text) does not work on windows, it seems.
 
 ## [Unreleased]
 

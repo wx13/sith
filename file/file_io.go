@@ -4,6 +4,7 @@ import "io/ioutil"
 import "os"
 import "github.com/nsf/termbox-go"
 import "strings"
+import "errors"
 
 func (file *File) Flush() {
 	file.ComputeIndent()
@@ -66,13 +67,13 @@ func (file *File) ReadFile(name string) {
 
 }
 
-func (file *File) Save() string {
+func (file *File) Save() error {
 	contents := file.toString()
 	err := ioutil.WriteFile(file.Name, []byte(contents), file.fileMode)
 	if err != nil {
-		return ("Could not save to file: " + file.Name)
+		return errors.New("Could not save to file: " + file.Name)
 	} else {
 		file.savedBuffer = file.Buffer.DeepDup()
-		return ("Saved to: " + file.Name)
+		return nil
 	}
 }
