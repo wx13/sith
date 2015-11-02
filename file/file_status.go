@@ -35,7 +35,7 @@ func (file *File) WriteStatus(row, col int) {
 	}
 
 	if file.autoIndent {
-		file.AddToStatus("->", row, &col, termbox.ColorRed | termbox.AttrBold, termbox.ColorDefault)
+		file.AddToStatus("->", row, &col, termbox.ColorRed|termbox.AttrBold, termbox.ColorDefault)
 	}
 
 	if file.autoTab {

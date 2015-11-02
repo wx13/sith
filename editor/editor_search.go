@@ -2,7 +2,6 @@ package editor
 
 import "github.com/wx13/sith/file"
 
-
 func (editor *Editor) Search(multiFile bool) {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {

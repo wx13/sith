@@ -128,4 +128,3 @@ func (screen *Screen) Highlight(row, col int) {
 	cells[j].Bg |= termbox.AttrReverse
 	cells[j].Fg |= termbox.AttrReverse
 }
-

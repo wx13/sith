@@ -9,7 +9,6 @@ features:
  - Restrict search / replace to marked lines
  - Revert to last saved copy
  - Reload from file
- - Async save
 
 bugs:
  - Truncate prompt histories (search/replace)
@@ -18,12 +17,15 @@ bugs:
    + maintain blank line after justified text
    + turn off multicursor when done
  - Menus should expand to include long lines.  Horizontal scroll?
- - Highlighting (reverse text) does not work on windows, it seems.
+ - Async notifications
+   + Sometimes notifications are shown and immediately overwritten
 
 ## [Unreleased]
 
 ### Bugfixes
  - Search doesn't match at end of line.
+ - Use AttrReverse for multicursor, so that it works with new
+   terminal default colors
 
 ### Features
  - Use terminal default colors
@@ -34,6 +36,7 @@ bugs:
  - Cut/Paste history
  - Detect line endings (\n, \r, etc.)
    - display non-\n ending in status bar
+ - Async save and gofmt
 
 
 ## [0.2] "Editorish" 2015-10-21

@@ -28,4 +28,3 @@ func (editor *Editor) PasteFromMenu() {
 	idx := menu.Choose(items)
 	editor.file.Paste(editor.copyHist[idx])
 }
-
