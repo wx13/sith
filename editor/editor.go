@@ -309,8 +309,8 @@ func (editor *Editor) HighlightCursors() {
 		if j < 0 || j >= len(cells) {
 			continue
 		}
-		cell := cells[j]
-		cells[j].Bg, cells[j].Fg = cell.Fg, cell.Bg
+		cells[j].Bg |= termbox.AttrReverse
+		cells[j].Fg |= termbox.AttrReverse
 	}
 }
 
