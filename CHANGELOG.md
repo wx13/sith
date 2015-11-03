@@ -20,7 +20,13 @@ bugs:
  - Async notifications
    + Sometimes notifications are shown and immediately overwritten
 
-## [Unreleased]
+
+
+## [0.3] "The Good and the Bad" 2015-11-03
+
+Some good new features (autodetection of indentation, multi-file
+search/replace, toggle between files, cut/paste history), but one
+uncovered problem (how to do async notifications).
 
 ### Bugfixes
  - Search doesn't match at end of line.
@@ -36,7 +42,8 @@ bugs:
  - Cut/Paste history
  - Detect line endings (\n, \r, etc.)
    - display non-\n ending in status bar
- - Async save and gofmt
+ - Async save and gofmt, with async notifications
+
 
 
 ## [0.2] "Editorish" 2015-10-21
