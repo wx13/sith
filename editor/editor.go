@@ -339,8 +339,14 @@ func (editor *Editor) RequestFlush() {
 
 func (editor *Editor) UpdateStatus() {
 	cols, rows := termbox.Size()
+	maxNameLen := cols / 3
+	name := editor.file.Name
+	nameLen := len(name)
+	if nameLen > maxNameLen {
+		name = name[0:maxNameLen/2] + "..." + name[nameLen-maxNameLen/2:nameLen]
+	}
 	message := fmt.Sprintf("%s (%d/%d)   %d/%d,%d",
-		editor.file.Name,
+		name,
 		editor.fileIdx,
 		len(editor.files),
 		editor.file.MultiCursor[0].Row(),
