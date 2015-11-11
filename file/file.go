@@ -32,7 +32,7 @@ type File struct {
 	flushChan chan struct{}
 	saveChan  chan struct{}
 
-	notification string
+	notification      string
 	clearNotification bool
 }
 
