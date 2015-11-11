@@ -148,11 +148,13 @@ func (file *File) UpdateOffsets(nRows, nCols int) {
 		file.rowOffset = file.MultiCursor[0].row - nRows + 1
 	}
 
-	if file.MultiCursor[0].col < file.colOffset {
-		file.colOffset = file.MultiCursor[0].col
+	_, col := file.GetCursor(0)
+	col += file.colOffset
+	if col < file.colOffset {
+		file.colOffset = col
 	}
-	if file.MultiCursor[0].col >= file.colOffset+nCols-1 {
-		file.colOffset = file.MultiCursor[0].col - nCols + 1
+	if col >= file.colOffset+nCols-1 {
+		file.colOffset = col - nCols + 1
 	}
 
 }

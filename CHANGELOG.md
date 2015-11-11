@@ -21,6 +21,11 @@ bugs:
    + Sometimes notifications are shown and immediately overwritten
 
 
+## [unreleased]
+
+### Bugfixes
+- Correctly account for tabs when positioning cursor
+
 
 ## [0.3] "The Good and the Bad" 2015-11-03
 
