@@ -79,6 +79,12 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 	cols, _ := termbox.Size()
 	for _, lc := range colors {
 		for col := lc.Start; col < lc.End; col++ {
+			if (col-offset) > cols {
+				break
+			}
+			if (col-offset) < 0 {
+				continue
+			}
 			j := row*cols + (col - offset)
 			if j < 0 || j >= len(cells) {
 				continue
