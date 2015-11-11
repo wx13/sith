@@ -88,6 +88,10 @@ loop:
 		case "tab":
 		case "enter":
 			break loop
+		case "ctrlE":
+			prompt.col = len(prompt.answer)
+		case "ctrlA":
+			prompt.col = 0
 		case "arrowLeft":
 			if prompt.col > 0 {
 				prompt.col -= 1
