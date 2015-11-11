@@ -39,6 +39,7 @@ func (file *File) MakeCursorNotAtTopBottom() {
 func (file *File) CursorGoTo(row, col int) {
 	file.MultiCursor[0].row = row
 	file.MultiCursor[0].col = col
+	file.MultiCursor[0].colwant = col
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
 	file.MakeCursorNotAtTopBottom()
