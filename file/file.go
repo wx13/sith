@@ -31,6 +31,9 @@ type File struct {
 	screen    *terminal.Screen
 	flushChan chan struct{}
 	saveChan  chan struct{}
+
+	notification string
+	clearNotification bool
 }
 
 func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *File {

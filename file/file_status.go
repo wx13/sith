@@ -27,7 +27,9 @@ func (file *File) ModStatus() string {
 func (file *File) WriteStatus(row, col int) {
 
 	status := file.ModStatus()
-	file.AddToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
+	if len(status) > 0 {
+		file.AddToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
+	}
 
 	if len(file.MultiCursor) > 1 {
 		status = fmt.Sprintf("%dC", len(file.MultiCursor))
@@ -57,9 +59,29 @@ func (file *File) WriteStatus(row, col int) {
 		file.AddToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
 	}
 
+	if file.notification != "" {
+		file.AddToStatus(file.notification, row, &col, termbox.ColorCyan, termbox.ColorDefault)
+	}
+
+	if file.clearNotification {
+		file.clearNotification = false
+		file.notification = ""
+	} else {
+		file.clearNotification = true
+	}
+
 }
 
 func (file *File) AddToStatus(msg string, row int, col *int, fg, bg termbox.Attribute) {
 	*col -= len(msg) + 2
 	file.screen.WriteStringColor(row, *col, msg, fg, bg)
+}
+
+func (file *File) NotifyUser(msg string) {
+	if len(file.notification) > 0 {
+		file.notification += " | "
+	}
+	file.notification += msg
+	file.clearNotification = false
+	file.RequestFlush()
 }

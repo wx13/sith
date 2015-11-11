@@ -279,9 +279,9 @@ func (editor *Editor) GoFmt() {
 		err := editor.file.GoFmt()
 		if err == nil {
 			editor.RequestFlush()
-			editor.screen.Notify("GoFmt done")
+			editor.file.NotifyUser("GoFmt done")
 		} else {
-			editor.screen.Notify(err.Error())
+			editor.file.NotifyUser(err.Error())
 		}
 	}()
 }
