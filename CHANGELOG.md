@@ -16,15 +16,18 @@ bugs:
    + remove trailing whitespace
    + maintain blank line after justified text
    + turn off multicursor when done
- - Menus should expand to include long lines.  Horizontal scroll?
- - Async notifications
-   + Sometimes notifications are shown and immediately overwritten
 
 
 ## [unreleased]
 
 ### Bugfixes
 - Correctly account for tabs when positioning cursor
+- Make nav column stickiness work better
+- Prevent syntax coloring from wrapping on long lines
+- Truncate long filenames in status bar
+- Async notifications work now
+- Menu width set by contents
+- Catch bad values returned from menu in paste-from-menu
 
 
 ## [0.3] "The Good and the Bad" 2015-11-03
