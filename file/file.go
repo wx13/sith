@@ -30,6 +30,7 @@ type File struct {
 	colOffset int
 	screen    *terminal.Screen
 	flushChan chan struct{}
+	saveChan  chan struct{}
 }
 
 func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *File {
@@ -41,6 +42,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		buffMutex:   &sync.Mutex{},
 		MultiCursor: MakeMultiCursor(),
 		flushChan:   flushChan,
+		saveChan:    make(chan struct{}, 1),
 		SyntaxRules: syntaxcolor.NewSyntaxRules(""),
 		autoIndent:  true,
 		autoTab:     true,
@@ -49,6 +51,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		tabHealth:   true,
 	}
 	file.buffHist = NewBufferHist(file.Buffer, file.MultiCursor)
+	go file.ProcessSaveRequests()
 	go file.ReadFile(name)
 	switch path.Ext(name) {
 	case ".md", ".txt", ".csv", ".C":

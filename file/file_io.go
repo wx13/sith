@@ -67,6 +67,20 @@ func (file *File) ReadFile(name string) {
 
 }
 
+func (file *File) RequestSave() {
+	select {
+	case file.saveChan <- struct{}{}:
+	default:
+	}
+}
+
+func (file *File) ProcessSaveRequests() {
+	for {
+		<-file.saveChan
+		file.Save()
+	}
+}
+
 func (file *File) Save() error {
 	contents := file.toString()
 	err := ioutil.WriteFile(file.Name, []byte(contents), file.fileMode)

@@ -263,14 +263,15 @@ func (editor *Editor) SelectFile() {
 }
 
 func (editor *Editor) Save() {
-	go func() {
-		err := editor.file.Save()
-		if err != nil {
-			editor.screen.Alert(err.Error())
-		} else {
-			editor.screen.Notify("File Saved")
-		}
-	}()
+	editor.file.RequestSave()
+	//go func() {
+	//	err := editor.file.Save()
+	//	if err != nil {
+	//		editor.screen.Alert(err.Error())
+	//	} else {
+	//		editor.screen.Notify("File Saved")
+	//	}
+	//}()
 }
 
 func (editor *Editor) GoFmt() {
