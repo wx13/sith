@@ -11,22 +11,35 @@ type Menu struct {
 	selection   int
 	rowShift    int
 	borderColor termbox.Attribute
+	choices     []string
 }
 
 func NewMenu(screen *Screen) *Menu {
 	menu := Menu{}
-	menu.cols, menu.rows = termbox.Size()
-	menu.cols -= 8
-	menu.rows -= 8
-	if menu.cols > 70 {
-		menu.cols = 70
-	}
-	menu.col0 = 4
-	menu.row0 = 4
+	menu.SetDims()
 	menu.screen = screen
 	menu.keyboard = NewKeyboard()
 	menu.borderColor = termbox.ColorBlue
 	return &menu
+}
+
+func (menu *Menu) SetDims() {
+	cols, rows := termbox.Size()
+	menu.rows = rows - 8
+	menu.col0 = 4
+	menu.row0 = 4
+	if len(menu.choices) < menu.rows {
+		menu.rows = len(menu.choices)
+	}
+	menu.cols = 4
+	for _, choice := range menu.choices {
+		if len(choice) + 2 > menu.cols {
+			menu.cols = len(choice) + 2
+		}
+	}
+	if menu.cols > cols - 8 {
+		menu.cols = cols - 8
+	}
 }
 
 func (menu *Menu) Clear() {
@@ -70,9 +83,8 @@ func (menu *Menu) Show(choices []string) {
 }
 
 func (menu *Menu) Choose(choices []string) int {
-	if len(choices) < menu.rows {
-		menu.rows = len(choices)
-	}
+	menu.choices = choices
+	menu.SetDims()
 	menu.selection = 0
 	searchStr := ""
 loop:
