@@ -26,5 +26,8 @@ func (editor *Editor) PasteFromMenu() {
 		items = append(items, str)
 	}
 	idx := menu.Choose(items)
+	if idx < 0 || idx >= len(editor.copyHist) {
+		return
+	}
 	editor.file.Paste(editor.copyHist[idx])
 }
