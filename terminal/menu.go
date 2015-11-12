@@ -33,11 +33,11 @@ func (menu *Menu) SetDims() {
 	}
 	menu.cols = 4
 	for _, choice := range menu.choices {
-		if len(choice) + 2 > menu.cols {
+		if len(choice)+2 > menu.cols {
 			menu.cols = len(choice) + 2
 		}
 	}
-	if menu.cols > cols - 8 {
+	if menu.cols > cols-8 {
 		menu.cols = cols - 8
 	}
 }
