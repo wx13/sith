@@ -15,7 +15,7 @@ bugs:
    don't get too long
 
 
-## [unreleased]
+## [0.3.1] 2015-11-11
 
 ### Bugfixes
 - Correctly account for tabs when positioning cursor
