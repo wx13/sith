@@ -11,11 +11,8 @@ features:
  - Reload from file
 
 bugs:
- - Truncate prompt histories (search/replace)
- - Justify
-   + remove trailing whitespace
-   + maintain blank line after justified text
-   + turn off multicursor when done
+ - Truncate prompt histories (search/replace), so they
+   don't get too long
 
 
 ## [unreleased]
@@ -28,6 +25,10 @@ bugs:
 - Async notifications work now
 - Menu width set by contents
 - Catch bad values returned from menu in paste-from-menu
+- Justify
+  + remove trailing whitespace
+  + maintain blank line after justified text
+  + turn off multicursor when done
 
 
 ## [0.3] "The Good and the Bad" 2015-11-03
