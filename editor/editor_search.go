@@ -5,10 +5,20 @@ import "github.com/wx13/sith/file"
 func (editor *Editor) Search(multiFile bool) {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
-		editor.screen.Notify("Cancelled")
+		editor.file.NotifyUser("Cancelled")
 		return
 	}
-	editor.MultiFileSearch(searchTerm, multiFile)
+	if len(editor.file.MultiCursor) > 1 {
+		_, maxRow := editor.file.MultiCursor.MinMaxRow()
+		row, col, err := editor.file.Buffer[:maxRow+1].Search(searchTerm, editor.file.MultiCursor[0], false)
+		if err == nil {
+			editor.file.CursorGoTo(row, col)
+		} else {
+			editor.file.NotifyUser("Not Found")
+		}
+	} else {
+		editor.MultiFileSearch(searchTerm, multiFile)
+	}
 }
 
 func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, int, error) {
@@ -43,7 +53,7 @@ func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, i
 		return row, col, err
 	}
 
-	editor.screen.Notify("Not Found")
+	editor.file.NotifyUser("Not Found")
 	return row, col, err
 }
 
