@@ -187,15 +187,16 @@ func (file *File) Justify() {
 			for file.Buffer[row][0] == ' ' {
 				file.Buffer[row] = file.Buffer[row][1:]
 			}
-			if row+1 == len(file.Buffer) {
-				file.Buffer = append(file.Buffer, line[col:])
-			} else if row == maxRow {
+			if row == maxRow {
 				rest := line[col:]
 				file.Buffer = append(file.Buffer, Line(""))
 				copy(file.Buffer[row+2:], file.Buffer[row+1:])
 				file.Buffer[row+1] = rest
 				for file.Buffer[row+1][0] == ' ' {
 					file.Buffer[row+1] = file.Buffer[row+1][1:]
+				}
+				if len(file.Buffer[row+1]) > 72 {
+					maxRow++
 				}
 			} else {
 				rest := append(line[col:], ' ')
