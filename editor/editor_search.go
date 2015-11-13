@@ -8,6 +8,11 @@ func (editor *Editor) Search(multiFile bool) {
 		editor.file.NotifyUser("Cancelled")
 		return
 	}
+	editor.MultiFileSearch(searchTerm, multiFile)
+}
+
+func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, int, error) {
+
 	if len(editor.file.MultiCursor) > 1 {
 		_, maxRow := editor.file.MultiCursor.MinMaxRow()
 		row, col, err := editor.file.Buffer[:maxRow+1].Search(searchTerm, editor.file.MultiCursor[0], false)
@@ -16,12 +21,8 @@ func (editor *Editor) Search(multiFile bool) {
 		} else {
 			editor.file.NotifyUser("Not Found")
 		}
-	} else {
-		editor.MultiFileSearch(searchTerm, multiFile)
+		return row, col, err
 	}
-}
-
-func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, int, error) {
 
 	// Search remainder of current file.
 	row, col, err := editor.file.Buffer.Search(searchTerm, editor.file.MultiCursor[0], false)
@@ -80,6 +81,7 @@ func (editor *Editor) MultiFileSearchAndReplace(searchTerm, replaceTerm string, 
 	var idx0, row0, col0 int
 	idx0 = -1
 	numMatches := 0
+	mc := editor.file.MultiCursor.Dup()
 	for {
 		row, col, err := editor.MultiFileSearch(searchTerm, multiFile)
 		if err == nil {
@@ -94,6 +96,7 @@ func (editor *Editor) MultiFileSearchAndReplace(searchTerm, replaceTerm string, 
 			break
 		}
 	}
+	editor.file.MultiCursor = mc
 
 	for {
 
