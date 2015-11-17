@@ -212,7 +212,9 @@ func (editor *Editor) Listen() {
 		case "altG":
 			editor.GoFmt()
 		case "altJ":
-			editor.file.Justify()
+			editor.file.Justify(72)
+		case "altE":
+			editor.file.Justify(0)
 		case "altI":
 			editor.file.ToggleAutoIndent()
 		case "altT":

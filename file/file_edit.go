@@ -168,11 +168,11 @@ func (file *File) DoAutoIndent(cursorIdx int) {
 
 }
 
-func (file *File) Justify() {
+func (file *File) Justify(lineLen int) {
 	minRow, maxRow := file.MultiCursor.MinMaxRow()
 	lines := file.Buffer[minRow : maxRow+1]
 	bigString := lines.ToString(" ")
-	lines = MakeSplitBuffer(bigString, 72)
+	lines = MakeSplitBuffer(bigString, lineLen)
 	file.Buffer = file.Buffer.ReplaceLines(lines, minRow, maxRow)
 	file.MultiCursor = file.MultiCursor.Clear()
 	file.Snapshot()
