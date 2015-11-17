@@ -30,12 +30,41 @@ func MakeBuffer(stringBuf []string) Buffer {
 	return buffer
 }
 
+func MakeSplitBuffer(bigString string, lineLen int) Buffer {
+	words := strings.Fields(bigString)
+	lines := []Line{}
+	lineStr := words[0]
+	for _, word := range words[1:] {
+		if len(lineStr)+len(word) > lineLen {
+			lines = append(lines, Line(lineStr))
+			lineStr = word
+		} else {
+			lineStr += " " + word
+		}
+	}
+	lines = append(lines, Line(lineStr))
+	return lines
+}
+
 func (buffer Buffer) ToString(newline string) string {
 	str := ""
 	for _, line := range buffer {
 		str += string(line) + newline
 	}
 	return str[:len(str)-1]
+}
+
+// ReplaceLines replaces the lines from minRow to maxRow with lines.
+func (buffer Buffer) ReplaceLines(lines []Line, minRow, maxRow int) Buffer {
+	// Delete offending lines.
+	buffer = append(buffer[:minRow], buffer[maxRow+1:]...)
+	// Create space for new lines.
+	buffer = append(buffer, lines...)
+	// Shift content down.
+	copy(buffer[minRow+len(lines):], buffer[minRow:])
+	// Insert new content.
+	copy(buffer[minRow:], lines)
+	return buffer
 }
 
 func (buffer Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, int, error) {

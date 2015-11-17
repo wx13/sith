@@ -170,43 +170,10 @@ func (file *File) DoAutoIndent(cursorIdx int) {
 
 func (file *File) Justify() {
 	minRow, maxRow := file.MultiCursor.MinMaxRow()
-	for row := minRow; row <= maxRow; row++ {
-		if len(file.Buffer[row]) > 72 {
-			col := 72
-			for ; col >= 0; col-- {
-				r := file.Buffer[row][col]
-				if r == ' ' || r == '\t' {
-					break
-				}
-			}
-			if col <= 0 {
-				continue
-			}
-			line := file.Buffer[row].Dup()
-			file.Buffer[row] = line[:col]
-			for file.Buffer[row][0] == ' ' {
-				file.Buffer[row] = file.Buffer[row][1:]
-			}
-			if row == maxRow {
-				rest := line[col:]
-				file.Buffer = append(file.Buffer, Line(""))
-				copy(file.Buffer[row+2:], file.Buffer[row+1:])
-				file.Buffer[row+1] = rest
-				for file.Buffer[row+1][0] == ' ' {
-					file.Buffer[row+1] = file.Buffer[row+1][1:]
-				}
-				if len(file.Buffer[row+1]) > 72 {
-					maxRow++
-				}
-			} else {
-				rest := append(line[col:], ' ')
-				file.Buffer[row+1] = append(rest, file.Buffer[row+1].Dup()...)
-				for file.Buffer[row+1][0] == ' ' {
-					file.Buffer[row+1] = file.Buffer[row+1][1:]
-				}
-			}
-		}
-	}
+	lines := file.Buffer[minRow : maxRow+1]
+	bigString := lines.ToString(" ")
+	lines = MakeSplitBuffer(bigString, 72)
+	file.Buffer = file.Buffer.ReplaceLines(lines, minRow, maxRow)
 	file.MultiCursor = file.MultiCursor.Clear()
 	file.Snapshot()
 }
@@ -241,3 +208,4 @@ func (file *File) Paste(buffer Buffer) {
 	file.EnforceColBounds()
 	file.Snapshot()
 }
+
