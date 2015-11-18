@@ -112,7 +112,7 @@ func (editor *Editor) CloseFile() bool {
 	editor.files = append(editor.files[:idx], editor.files[idx+1:]...)
 	if len(editor.files) == 0 {
 		editor.screen.Close()
-		os.Exit(0)
+		return true
 	}
 	editor.NextFile()
 	return true

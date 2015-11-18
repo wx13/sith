@@ -78,7 +78,30 @@ func (editor *Editor) SearchAndReplace(multiFile bool) {
 		return
 	}
 
-	editor.MultiFileSearchAndReplace(searchTerm, replaceTerm, multiFile, replaceAll)
+	if len(editor.file.MultiCursor) > 1 {
+		editor.MarkedSearchAndReplace(searchTerm, replaceTerm, replaceAll)
+	} else {
+		editor.MultiFileSearchAndReplace(searchTerm, replaceTerm, multiFile, replaceAll)
+	}
+}
+
+func (editor *Editor) MarkedSearchAndReplace(searchTerm, replaceTerm string, replaceAll bool) {
+	for {
+
+		row, col, err := editor.MultiFileSearch(searchTerm, false)
+
+		if err == nil {
+			err := editor.file.AskReplace(searchTerm, replaceTerm, row, col, replaceAll)
+			if err != nil {
+				editor.screen.Notify("Cancelled")
+				return
+			}
+		} else {
+			editor.screen.Notify("Not Found")
+			break
+		}
+
+	}
 }
 
 func (editor *Editor) MultiFileSearchAndReplace(searchTerm, replaceTerm string, multiFile, replaceAll bool) {

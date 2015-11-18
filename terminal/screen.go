@@ -3,11 +3,15 @@ package terminal
 import "github.com/nsf/termbox-go"
 import "strings"
 import "github.com/wx13/sith/syntaxcolor"
+import "os"
 
 type Screen struct {
 	row, col int
 	fg, bg   termbox.Attribute
 	colors   map[string]termbox.Attribute
+
+	flushChan chan struct{}
+	dieChan   chan struct{}
 }
 
 func NewScreen() *Screen {
@@ -16,15 +20,19 @@ func NewScreen() *Screen {
 		col: 0,
 		bg:  termbox.ColorDefault,
 		fg:  termbox.ColorDefault,
+		flushChan: make(chan struct{}, 1),
+		dieChan: make(chan struct{}, 1),
 	}
 	termbox.Init()
+	screen.handleRequests()
 	return &screen
 }
 
 func (screen *Screen) Close() {
-	screen.Clear()
-	termbox.Flush()
-	termbox.Close()
+	select {
+	case screen.dieChan <- struct{}{}:
+	default:
+	}
 }
 
 func (screen *Screen) Open() {
@@ -32,7 +40,26 @@ func (screen *Screen) Open() {
 }
 
 func (screen *Screen) Flush() {
-	termbox.Flush()
+	select {
+	case screen.flushChan <- struct{}{}:
+	default:
+	}
+}
+
+func (screen *Screen) handleRequests() {
+	go func() {
+		for {
+			select {
+			case <-screen.flushChan:
+				termbox.Flush()
+			case <-screen.dieChan:
+				screen.Clear()
+				termbox.Flush()
+				termbox.Close()
+				os.Exit(0)
+			}
+		}
+	}()
 }
 
 func (screen *Screen) SetCursor(r, c int) {

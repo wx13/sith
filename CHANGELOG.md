@@ -4,16 +4,18 @@ Change Log
 ## To Do
 
 features:
- - Cut/paste a substring from current row
- - Linewrap (dynamic justify)
- - Revert to last saved copy
- - Reload from file
+- Cut/paste a substring from current row
+- Linewrap (dynamic justify)
+- Revert to last saved copy
+- Reload from file
 
 bugs:
- - Truncate prompt histories (search/replace), so they
-   don't get too long
- - Marked S&R doesn't highlight terms on first or last row.
-
+- Truncate prompt histories (search/replace), so they
+  don't get too long
+- Marked S&R doesn't highlight terms on first or last row.
+- Terminal mess (reset needed) sometimes on exit.
+  Perhaps due to quitting while flushing?  Would make sense
+  since these are now async.
 
 
 ## [unreleased]
@@ -23,6 +25,9 @@ bugs:
 - Justify was not handling lines without spaces.  Now it does.
 - Justify was not working with short lines.  Now it merges short
   lines together.
+- Make screen.Flush() async.  Just like editor, place empty struct
+  on a flush chan.  This is to prevent race condition during user
+  prompint.
 
 ### Features
 - Search and S&R can now be restricted to a set of lines.
