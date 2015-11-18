@@ -11,17 +11,22 @@ func (editor *Editor) Search(multiFile bool) {
 	editor.MultiFileSearch(searchTerm, multiFile)
 }
 
+func (editor *Editor) MarkedSearch(searchTerm string) (int, int, error) {
+	editor.file.MultiCursor = editor.file.MultiCursor.OuterMost()
+	maxRow := editor.file.MultiCursor[1].Row()
+	row, col, err := editor.file.Buffer[:maxRow+1].Search(searchTerm, editor.file.MultiCursor[0], false)
+	if err == nil {
+		editor.file.CursorGoTo(row, col)
+	} else {
+		editor.file.NotifyUser("Not Found")
+	}
+	return row, col, err
+}
+
 func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, int, error) {
 
 	if len(editor.file.MultiCursor) > 1 {
-		_, maxRow := editor.file.MultiCursor.MinMaxRow()
-		row, col, err := editor.file.Buffer[:maxRow+1].Search(searchTerm, editor.file.MultiCursor[0], false)
-		if err == nil {
-			editor.file.CursorGoTo(row, col)
-		} else {
-			editor.file.NotifyUser("Not Found")
-		}
-		return row, col, err
+		return editor.MarkedSearch(searchTerm)
 	}
 
 	// Search remainder of current file.

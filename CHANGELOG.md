@@ -6,22 +6,29 @@ Change Log
 features:
  - Cut/paste a substring from current row
  - Linewrap (dynamic justify)
- - Restrict search / replace to marked lines
  - Revert to last saved copy
  - Reload from file
- - Turn a set of lines into a single, long line
 
 bugs:
  - Truncate prompt histories (search/replace), so they
    don't get too long
- - Justify has problems when threre aren't enough spaces
-   in the text.
+ - Marked S&R doesn't highlight terms on first or last row.
+
 
 
 ## [unreleased]
 
 ### Bugfixes
 - Justify was not handling long last lines.  Now it is.
+- Justify was not handling lines without spaces.  Now it does.
+- Justify was not working with short lines.  Now it merges short
+  lines together.
+
+### Features
+- Search and S&R can now be restricted to a set of lines.
+- Unjustify turns a set of lines into a single long line.
+
+
 
 
 ## [0.3.1] 2015-11-11

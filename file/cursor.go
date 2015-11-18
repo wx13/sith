@@ -56,6 +56,23 @@ func (mc MultiCursor) Add() MultiCursor {
 	return mc
 }
 
+func (mc MultiCursor) OuterMost() MultiCursor {
+	if len(mc) == 1 {
+		return mc
+	}
+	minCursor := mc[0].Dup()
+	maxCursor := mc[0].Dup()
+	for _, cursor := range mc {
+		if cursor.row < minCursor.row {
+			minCursor = cursor.Dup()
+		}
+		if cursor.row >= maxCursor.row {
+			maxCursor = cursor.Dup()
+		}
+	}
+	return []Cursor{minCursor, maxCursor}
+}
+
 func (mc MultiCursor) MinMaxRow() (minRow, maxRow int) {
 	minRow = mc[0].row
 	maxRow = mc[0].row
