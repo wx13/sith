@@ -16,12 +16,12 @@ type Screen struct {
 
 func NewScreen() *Screen {
 	screen := Screen{
-		row: 0,
-		col: 0,
-		bg:  termbox.ColorDefault,
-		fg:  termbox.ColorDefault,
+		row:       0,
+		col:       0,
+		bg:        termbox.ColorDefault,
+		fg:        termbox.ColorDefault,
 		flushChan: make(chan struct{}, 1),
-		dieChan: make(chan struct{}, 1),
+		dieChan:   make(chan struct{}, 1),
 	}
 	termbox.Init()
 	screen.handleRequests()

@@ -208,4 +208,3 @@ func (file *File) Paste(buffer Buffer) {
 	file.EnforceColBounds()
 	file.Snapshot()
 }
-
