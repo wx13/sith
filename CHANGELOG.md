@@ -12,10 +12,6 @@ features:
 bugs:
 - Truncate prompt histories (search/replace), so they
   don't get too long
-- Marked S&R doesn't highlight terms on first or last row.
-- Terminal mess (reset needed) sometimes on exit.
-  Perhaps due to quitting while flushing?  Would make sense
-  since these are now async.
 
 
 ## [unreleased]
