@@ -81,7 +81,7 @@ func (screen *Screen) ReallyClear() {
 	for row := 0; row < rows; row++ {
 		screen.WriteString(row, 0, strings.Repeat(".", cols))
 	}
-	screen.Flush()
+	termbox.Flush()
 	for row := 0; row < rows; row++ {
 		screen.WriteString(row, 0, strings.Repeat(" ", cols))
 	}
