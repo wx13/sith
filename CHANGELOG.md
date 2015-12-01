@@ -14,7 +14,7 @@ bugs:
   don't get too long
 
 
-## [unreleased]
+## [0.3.2] 2015-11-30
 
 ### Bugfixes
 - Justify was not handling long last lines.  Now it is.
