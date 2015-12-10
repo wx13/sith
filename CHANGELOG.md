@@ -10,10 +10,18 @@ features:
 - Reload from file
 
 bugs:
-- Search/replace must advance to end of word when replacing;
-  otherwise, we may match the same word twice.
 - Truncate prompt histories (search/replace), so they
   don't get too long
+
+
+## [unreleased]
+
+### Bugfixes
+- Search/replace must advance to end of word when replacing;
+  otherwise, we may match the same word twice.
+- must force flush for screen refresh, or else no changes get made
+
+### Features
 
 
 ## [0.3.2] 2015-11-30
