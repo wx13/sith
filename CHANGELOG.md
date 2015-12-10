@@ -10,6 +10,8 @@ features:
 - Reload from file
 
 bugs:
+- Search/replace must advance to end of word when replacing;
+  otherwise, we may match the same word twice.
 - Truncate prompt histories (search/replace), so they
   don't get too long
 
