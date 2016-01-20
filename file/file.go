@@ -7,7 +7,7 @@ import "github.com/wx13/sith/syntaxcolor"
 import "github.com/wx13/sith/terminal"
 
 type File struct {
-	Buffer      Buffer
+	buffer      Buffer
 	buffMutex   *sync.Mutex
 	MultiCursor MultiCursor
 	savedBuffer Buffer
@@ -41,7 +41,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		Name:        name,
 		screen:      screen,
 		fileMode:    os.FileMode(int(0644)),
-		Buffer:      MakeBuffer([]string{""}),
+		buffer:      MakeBuffer([]string{""}),
 		buffMutex:   &sync.Mutex{},
 		MultiCursor: MakeMultiCursor(),
 		flushChan:   flushChan,
@@ -53,7 +53,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		newline:     "\n",
 		tabHealth:   true,
 	}
-	file.buffHist = NewBufferHist(file.Buffer, file.MultiCursor)
+	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
 	go file.ProcessSaveRequests()
 	go file.ReadFile(name)
 	switch path.Ext(name) {
@@ -83,7 +83,7 @@ func (file *File) ToggleAutoTab() {
 
 func (file *File) ComputeIndent() {
 	if file.autoTab {
-		file.tabString, file.tabHealth = file.Buffer.GetIndent()
+		file.tabString, file.tabHealth = file.buffer.GetIndent()
 	}
 }
 
@@ -104,7 +104,7 @@ func (file *File) AddCursorCol() {
 }
 
 func (file *File) toString() string {
-	return file.Buffer.ToString(file.newline)
+	return file.buffer.ToString(file.newline)
 }
 
 // Slice returns a 2D slice of the buffer.
@@ -116,27 +116,27 @@ func (file *File) Slice(nRows, nCols int) []string {
 	endRow := nRows + file.rowOffset
 	startCol := file.colOffset
 	endCol := nCols + file.colOffset
-	if endRow > len(file.Buffer) {
-		endRow = len(file.Buffer)
+	if endRow > len(file.buffer) {
+		endRow = len(file.buffer)
 	}
 	if endRow <= startRow {
 		return []string{}
 	}
 
-	return file.Buffer.slice(startRow, endRow, startCol, endCol)
+	return file.buffer.slice(startRow, endRow, startCol, endCol)
 
 }
 
 func (file *File) Snapshot() {
-	file.buffHist.Snapshot(file.Buffer, file.MultiCursor)
+	file.buffHist.Snapshot(file.buffer, file.MultiCursor)
 }
 
 func (file *File) Undo() {
-	file.Buffer, file.MultiCursor = file.buffHist.Prev()
+	file.buffer, file.MultiCursor = file.buffHist.Prev()
 }
 
 func (file *File) Redo() {
-	file.Buffer, file.MultiCursor = file.buffHist.Next()
+	file.buffer, file.MultiCursor = file.buffHist.Next()
 }
 
 func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, replaceAll bool) error {
@@ -152,7 +152,7 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 	} else {
 		file.Flush()
 		var startCol, endCol int
-		startCol, endCol = file.Buffer[row].Search(searchTerm, col, -1)
+		startCol, endCol = file.buffer[row].Search(searchTerm, col, -1)
 		for c := startCol + startColOffset; c < endCol+startColOffset; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)
 		}
@@ -165,10 +165,41 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 		}
 	}
 	if doReplace {
-		file.Buffer.Replace(searchTerm, replaceTerm, row, col)
-		file.screen.WriteString(row, 0, file.Buffer[row].ToString())
+		file.buffer.Replace(searchTerm, replaceTerm, row, col)
+		file.screen.WriteString(row, 0, file.buffer[row].ToString())
 		file.CursorGoTo(row, col + len(replaceTerm))
 	}
 	return nil
 
+}
+
+func (file *File) Length() int {
+	return len(file.buffer)
+}
+
+func (file *File) SetMultiCursor(mc MultiCursor) {
+	file.MultiCursor = mc
+}
+
+func (file *File) MarkedSearch(searchTerm string, loop bool) (row, col int, err error) {
+	file.SetMultiCursor(file.MultiCursor.OuterMost())
+	_, maxRow := file.MultiCursor.MinMaxRow()
+	subBuffer := file.buffer.InclSlice(0, maxRow)
+	firstCursor := file.MultiCursor.GetFirstCursor()
+	row, col, err = subBuffer.Search(searchTerm, firstCursor, false)
+	return
+}
+
+func (file *File) SearchFromCursor(searchTerm string) (row, col int, err error) {
+	loop := false
+	cursor := file.MultiCursor[0]
+	row, col, err = file.buffer.Search(searchTerm, cursor, loop)
+	return
+}
+
+func (file *File) SearchFromStart(searchTerm string) (row, col int, err error) {
+	loop := false
+	cursor := MakeCursor(0, -1)
+	row, col, err = file.buffer.Search(searchTerm, cursor, loop)
+	return
 }

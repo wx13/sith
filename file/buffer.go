@@ -67,6 +67,10 @@ func (buffer Buffer) ReplaceLines(lines []Line, minRow, maxRow int) Buffer {
 	return buffer
 }
 
+func (buffer Buffer) InclSlice(row0, row1 int) Buffer {
+	return buffer[row0:row1+1]
+}
+
 func (buffer Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, int, error) {
 	var col int
 	col, _ = buffer[cursor.row].Search(searchTerm, cursor.col+1, -1)

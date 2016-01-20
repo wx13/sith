@@ -1,5 +1,6 @@
 package file
 
+
 type Cursor struct {
 	row, col, colwant int
 }
@@ -85,6 +86,16 @@ func (mc MultiCursor) MinMaxRow() (minRow, maxRow int) {
 		}
 	}
 	return
+}
+
+func (mc MultiCursor) GetFirstCursor() Cursor {
+	firstCursor := mc[0]
+	for _, cursor := range mc {
+		if cursor.row < firstCursor.row {
+			firstCursor = cursor
+		}
+	}
+	return firstCursor
 }
 
 func (mc MultiCursor) SetColumn() MultiCursor {

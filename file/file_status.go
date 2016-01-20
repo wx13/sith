@@ -5,11 +5,11 @@ import "fmt"
 import "strings"
 
 func (file *File) IsModified() bool {
-	if len(file.Buffer) != len(file.savedBuffer) {
+	if len(file.buffer) != len(file.savedBuffer) {
 		return true
 	}
-	for row, _ := range file.Buffer {
-		if file.Buffer[row].ToString() != file.savedBuffer[row].ToString() {
+	for row, _ := range file.buffer {
+		if file.buffer[row].ToString() != file.savedBuffer[row].ToString() {
 			return true
 		}
 	}

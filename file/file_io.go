@@ -12,7 +12,7 @@ func (file *File) Flush() {
 	file.screen.Clear()
 	for row, str := range slice {
 		file.screen.WriteString(row, 0, str)
-		strLine := file.Buffer[row+file.rowOffset].tabs2spaces().ToString()
+		strLine := file.buffer[row+file.rowOffset].tabs2spaces().ToString()
 		file.screen.Colorize(row, file.SyntaxRules.Colorize(strLine), file.colOffset)
 	}
 	for row := len(slice); row < rows-1; row++ {
@@ -42,7 +42,7 @@ func (file *File) ReadFile(name string) {
 
 	fileInfo, err := os.Stat(name)
 	if err != nil {
-		file.Buffer = MakeBuffer([]string{""})
+		file.buffer = MakeBuffer([]string{""})
 	} else {
 		file.fileMode = fileInfo.Mode()
 		stringBuf := []string{""}
@@ -53,11 +53,11 @@ func (file *File) ReadFile(name string) {
 			stringBuf = strings.Split(string(byteBuf), file.newline)
 		}
 
-		file.Buffer = MakeBuffer(stringBuf)
+		file.buffer = MakeBuffer(stringBuf)
 	}
 
 	file.Snapshot()
-	file.savedBuffer = file.Buffer.DeepDup()
+	file.savedBuffer = file.buffer.DeepDup()
 
 	file.RequestFlush()
 
@@ -90,7 +90,7 @@ func (file *File) Save() {
 	if err != nil {
 		file.NotifyUser("Could not save to file: " + file.Name)
 	} else {
-		file.savedBuffer = file.Buffer.DeepDup()
+		file.savedBuffer = file.buffer.DeepDup()
 		file.NotifyUser("Saved to file: " + file.Name)
 	}
 }

@@ -7,11 +7,11 @@ import "errors"
 
 func (file *File) replaceBuffer(newBuffer Buffer) {
 	for k, line := range newBuffer {
-		if k > len(file.Buffer) {
-			file.Buffer = append(file.Buffer, line)
+		if k > len(file.buffer) {
+			file.buffer = append(file.buffer, line)
 		} else {
-			if file.Buffer[k].ToString() != line.ToString() {
-				file.Buffer[k] = line
+			if file.buffer[k].ToString() != line.ToString() {
+				file.buffer[k] = line
 			}
 		}
 	}
@@ -40,8 +40,8 @@ func (file *File) InsertChar(ch rune) {
 		if cursor.col > maxCol {
 			maxCol = cursor.col
 		}
-		if len(file.Buffer[cursor.row]) > maxLineLen {
-			maxLineLen = len(file.Buffer[cursor.row])
+		if len(file.buffer[cursor.row]) > maxLineLen {
+			maxLineLen = len(file.buffer[cursor.row])
 		}
 	}
 	for idx, cursor := range file.MultiCursor {
@@ -49,7 +49,7 @@ func (file *File) InsertChar(ch rune) {
 		if maxCol > 0 && col == 0 {
 			continue
 		}
-		line := file.Buffer[row]
+		line := file.buffer[row]
 		if (ch == ' ' || ch == '\t') && col == 0 && len(line) == 0 && maxLineLen > 0 {
 			continue
 		}
@@ -57,7 +57,7 @@ func (file *File) InsertChar(ch rune) {
 		if ch == '\t' && file.autoTab && file.tabString != "\t" {
 			insertStr = file.tabString
 		}
-		file.Buffer[row] = Line(string(line[0:col]) + insertStr + string(line[col:]))
+		file.buffer[row] = Line(string(line[0:col]) + insertStr + string(line[col:]))
 		file.MultiCursor[idx].col += len(insertStr)
 		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
@@ -75,16 +75,16 @@ func (file *File) Backspace() {
 				return
 			}
 			row -= 1
-			if row+1 >= len(file.Buffer) {
+			if row+1 >= len(file.buffer) {
 				return
 			}
-			col = len(file.Buffer[row])
-			file.Buffer[row] = append(file.Buffer[row], file.Buffer[row+1]...)
-			file.Buffer = append(file.Buffer[0:row+1], file.Buffer[row+2:]...)
+			col = len(file.buffer[row])
+			file.buffer[row] = append(file.buffer[row], file.buffer[row+1]...)
+			file.buffer = append(file.buffer[0:row+1], file.buffer[row+2:]...)
 			file.MultiCursor[idx].col = col
 			file.MultiCursor[idx].row = row
 		} else {
-			line := file.Buffer[row]
+			line := file.buffer[row]
 			if col > len(line) {
 				continue
 			}
@@ -100,7 +100,7 @@ func (file *File) Backspace() {
 				}
 			}
 
-			file.Buffer[row] = Line(string(line[0:col-nDel]) + string(line[col:]))
+			file.buffer[row] = Line(string(line[0:col-nDel]) + string(line[col:]))
 			file.MultiCursor[idx].col = col - nDel
 			file.MultiCursor[idx].row = row
 		}
@@ -119,12 +119,12 @@ func (file *File) Delete() {
 func (file *File) Newline() {
 	for idx, cursor := range file.MultiCursor {
 		col, row := cursor.col, cursor.row
-		lineStart := file.Buffer[row][0:col]
-		lineEnd := file.Buffer[row][col:]
-		file.Buffer[row] = lineStart
-		file.Buffer = append(file.Buffer, Line(""))
-		copy(file.Buffer[row+2:], file.Buffer[row+1:])
-		file.Buffer[row+1] = lineEnd
+		lineStart := file.buffer[row][0:col]
+		lineEnd := file.buffer[row][col:]
+		file.buffer[row] = lineStart
+		file.buffer = append(file.buffer, Line(""))
+		copy(file.buffer[row+2:], file.buffer[row+1:])
+		file.buffer[row+1] = lineEnd
 		file.MultiCursor[idx].row = row + 1
 		file.MultiCursor[idx].col = 0
 		if file.autoIndent {
@@ -141,16 +141,16 @@ func (file *File) DoAutoIndent(cursorIdx int) {
 		return
 	}
 
-	origLine := file.Buffer[row].Dup()
+	origLine := file.buffer[row].Dup()
 
 	// Whitespace-only indent.
 	re, _ := regexp.Compile("^[ \t]+")
-	ws := Line(re.FindString(file.Buffer[row-1].ToString()))
+	ws := Line(re.FindString(file.buffer[row-1].ToString()))
 	if len(ws) > 0 {
-		file.Buffer[row] = append(ws, file.Buffer[row]...)
+		file.buffer[row] = append(ws, file.buffer[row]...)
 		file.MultiCursor[cursorIdx].col += len(ws)
-		if len(file.Buffer[row-1]) == len(ws) {
-			file.Buffer[row-1] = Line("")
+		if len(file.buffer[row-1]) == len(ws) {
+			file.buffer[row-1] = Line("")
 		}
 	}
 
@@ -159,10 +159,10 @@ func (file *File) DoAutoIndent(cursorIdx int) {
 	}
 
 	// Non-whitespace indent.
-	indent := file.Buffer[row-1].CommonStart(file.Buffer[row-2])
+	indent := file.buffer[row-1].CommonStart(file.buffer[row-2])
 	if len(indent) > len(ws) {
 		file.Snapshot()
-		file.Buffer[row] = append(indent, origLine...)
+		file.buffer[row] = append(indent, origLine...)
 		file.MultiCursor[cursorIdx].col += len(indent) - len(ws)
 	}
 
@@ -170,25 +170,25 @@ func (file *File) DoAutoIndent(cursorIdx int) {
 
 func (file *File) Justify(lineLen int) {
 	minRow, maxRow := file.MultiCursor.MinMaxRow()
-	lines := file.Buffer[minRow : maxRow+1]
+	lines := file.buffer[minRow : maxRow+1]
 	bigString := lines.ToString(" ")
 	lines = MakeSplitBuffer(bigString, lineLen)
-	file.Buffer = file.Buffer.ReplaceLines(lines, minRow, maxRow)
+	file.buffer = file.buffer.ReplaceLines(lines, minRow, maxRow)
 	file.MultiCursor = file.MultiCursor.Clear()
 	file.Snapshot()
 }
 
 func (file *File) Cut() Buffer {
 	row := file.MultiCursor[0].row
-	cutBuffer := file.Buffer[row : row+1].Dup()
-	if len(file.Buffer) == 1 {
-		file.Buffer = MakeBuffer([]string{""})
+	cutBuffer := file.buffer[row : row+1].Dup()
+	if len(file.buffer) == 1 {
+		file.buffer = MakeBuffer([]string{""})
 	} else if row == 0 {
-		file.Buffer = file.Buffer[1:]
-	} else if row < len(file.Buffer)-1 {
-		file.Buffer = append(file.Buffer[:row], file.Buffer[row+1:]...)
+		file.buffer = file.buffer[1:]
+	} else if row < len(file.buffer)-1 {
+		file.buffer = append(file.buffer[:row], file.buffer[row+1:]...)
 	} else {
-		file.Buffer = file.Buffer[:row]
+		file.buffer = file.buffer[:row]
 	}
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
@@ -198,11 +198,11 @@ func (file *File) Cut() Buffer {
 
 func (file *File) Paste(buffer Buffer) {
 	row := file.MultiCursor[0].row
-	newBuffer := file.Buffer[:row].Dup()
+	newBuffer := file.buffer[:row].Dup()
 	for _, line := range buffer {
 		newBuffer = append(newBuffer, line.Dup())
 	}
-	file.Buffer = append(newBuffer, file.Buffer[row:].Dup()...)
+	file.buffer = append(newBuffer, file.buffer[row:].Dup()...)
 	file.CursorDown(len(buffer))
 	file.EnforceRowBounds()
 	file.EnforceColBounds()

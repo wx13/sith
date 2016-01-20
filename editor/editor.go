@@ -266,14 +266,6 @@ func (editor *Editor) SelectFile() {
 
 func (editor *Editor) Save() {
 	editor.file.RequestSave()
-	//go func() {
-	//	err := editor.file.Save()
-	//	if err != nil {
-	//		editor.screen.Alert(err.Error())
-	//	} else {
-	//		editor.screen.Notify("File Saved")
-	//	}
-	//}()
 }
 
 func (editor *Editor) GoFmt() {
@@ -353,7 +345,7 @@ func (editor *Editor) UpdateStatus() {
 		editor.fileIdx,
 		len(editor.files),
 		editor.file.MultiCursor[0].Row(),
-		len(editor.file.Buffer)-1,
+		editor.file.Length()-1,
 		editor.file.MultiCursor[0].Col(),
 	)
 	col := cols - len(message)

@@ -7,8 +7,8 @@ import "strconv"
 
 func (file *File) EnforceColBounds() {
 	for idx, cursor := range file.MultiCursor {
-		if cursor.col > len(file.Buffer[cursor.row]) {
-			file.MultiCursor[idx].col = len(file.Buffer[cursor.row])
+		if cursor.col > len(file.buffer[cursor.row]) {
+			file.MultiCursor[idx].col = len(file.buffer[cursor.row])
 		}
 		if cursor.col < 0 {
 			file.MultiCursor[idx].col = 0
@@ -18,8 +18,8 @@ func (file *File) EnforceColBounds() {
 
 func (file *File) EnforceRowBounds() {
 	for idx, cursor := range file.MultiCursor {
-		if cursor.row >= len(file.Buffer) {
-			file.MultiCursor[idx].row = len(file.Buffer) - 1
+		if cursor.row >= len(file.buffer) {
+			file.MultiCursor[idx].row = len(file.buffer) - 1
 		}
 		if cursor.row < 0 {
 			file.MultiCursor[idx].row = 0
@@ -66,8 +66,8 @@ func (file *File) CursorUp(n int) {
 
 func (file *File) CursorDown(n int) {
 	file.MultiCursor[0].row += n
-	if file.MultiCursor[0].row >= len(file.Buffer) {
-		file.MultiCursor[0].row = len(file.Buffer) - 1
+	if file.MultiCursor[0].row >= len(file.buffer) {
+		file.MultiCursor[0].row = len(file.buffer) - 1
 	}
 	file.MultiCursor[0].col = file.MultiCursor[0].colwant
 	file.EnforceColBounds()
@@ -75,13 +75,13 @@ func (file *File) CursorDown(n int) {
 
 func (file *File) CursorRight() {
 	for idx, cursor := range file.MultiCursor {
-		if cursor.col < len(file.Buffer[cursor.row]) {
+		if cursor.col < len(file.buffer[cursor.row]) {
 			file.MultiCursor[idx].col += 1
 		} else {
 			if len(file.MultiCursor) > 1 {
 				continue
 			}
-			if cursor.row < len(file.Buffer)-1 {
+			if cursor.row < len(file.buffer)-1 {
 				file.MultiCursor[idx].row += 1
 				file.MultiCursor[idx].col = 0
 			}
@@ -102,7 +102,7 @@ func (file *File) CursorLeft() {
 			}
 			if cursor.row > 0 {
 				file.MultiCursor[idx].row -= 1
-				file.MultiCursor[idx].col = len(file.Buffer[file.MultiCursor[idx].row])
+				file.MultiCursor[idx].col = len(file.buffer[file.MultiCursor[idx].row])
 			}
 		}
 		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
@@ -112,7 +112,7 @@ func (file *File) CursorLeft() {
 func (file *File) GetCursor(idx int) (int, int) {
 	file.EnforceRowBounds()
 	file.EnforceColBounds()
-	line := file.Buffer[file.MultiCursor[idx].row][0:file.MultiCursor[idx].col]
+	line := file.buffer[file.MultiCursor[idx].row][0:file.MultiCursor[idx].col]
 	strLine := string(line)
 	strLine = strings.Replace(strLine, "\t", "    ", -1)
 	return file.MultiCursor[idx].row - file.rowOffset, len(strLine) - file.colOffset
@@ -129,7 +129,7 @@ func (file *File) ScrollRight() {
 }
 
 func (file *File) ScrollUp() {
-	if file.rowOffset < len(file.Buffer)-1 {
+	if file.rowOffset < len(file.buffer)-1 {
 		file.rowOffset += 1
 	}
 }
@@ -172,7 +172,7 @@ func (file *File) StartOfLine() {
 		re := regexp.MustCompile("^[ \t]*")
 		for idx, cursor := range file.MultiCursor {
 			row := cursor.row
-			line := file.Buffer[row]
+			line := file.buffer[row]
 			match := re.FindStringIndex(line.ToString())
 			file.MultiCursor[idx].col = match[1]
 			file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
@@ -188,7 +188,7 @@ func (file *File) StartOfLine() {
 func (file *File) EndOfLine() {
 	for idx, _ := range file.MultiCursor {
 		row := file.MultiCursor[idx].row
-		file.MultiCursor[idx].col = len(file.Buffer[row])
+		file.MultiCursor[idx].col = len(file.buffer[row])
 		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
 }
@@ -196,7 +196,7 @@ func (file *File) EndOfLine() {
 func (file *File) NextWord() {
 	for idx, cursor := range file.MultiCursor {
 		row := cursor.row
-		line := file.Buffer[row]
+		line := file.buffer[row]
 		col := cursor.col
 		re := regexp.MustCompile("[\t ][^\t ]")
 		offset := re.FindStringIndex(line[col:].ToString())
@@ -213,7 +213,7 @@ func (file *File) NextWord() {
 func (file *File) PrevWord() {
 	for idx, cursor := range file.MultiCursor {
 		row := cursor.row
-		line := file.Buffer[row]
+		line := file.buffer[row]
 		col := cursor.col
 		re := regexp.MustCompile("[\t ][^\t ]")
 		offsets := re.FindAllStringIndex(line[:col].ToString(), -1)
