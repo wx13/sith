@@ -76,40 +76,39 @@ func NewKeyboard() *Keyboard {
 	return &kb
 }
 
+func (kb *Keyboard) altKeyToCmd(ev termbox.Event) (string, rune) {
+	cmd, ok := kb.AltKeyMap[string(ev.Ch)]
+	if ok {
+		return cmd, 0
+	} else {
+		return "unknown", 0
+	}
+}
+
+func (kb *Keyboard) keyToCmd(ev termbox.Event) (string, rune) {
+
+	cmd, ok := kb.KeyMap[ev.Key]
+
+	if ok {
+		return cmd, 0
+	} else if (ev.Mod & termbox.ModAlt) != 0 {
+		return kb.altKeyToCmd(ev)
+	} else if ev.Ch > 160 && ev.Ch < 256 {
+		ev.Ch -= 128
+		return kb.altKeyToCmd(ev)
+	} else if ev.Ch >= 32 && ev.Ch < 128 {
+		return "char", ev.Ch
+	} else {
+		return "unknown", 0
+	}
+}
+
 // GetCmdString turns termbox keyboard input into a string representation
 // of the keypress.  If the result is "char", then it also returns the rune.
 func (kb *Keyboard) GetCmdString(ev termbox.Event) (string, rune) {
-	// handle a keypress event
+
 	if ev.Type == termbox.EventKey {
-
-		// Convert termbox.Key to string description of key.
-		cmd, ok := kb.KeyMap[ev.Key]
-		if ok {
-			return cmd, 0
-		} else if (ev.Mod & termbox.ModAlt) != 0 {
-			// Handle alt/esc sequences
-			cmd, ok := kb.AltKeyMap[string(ev.Ch)]
-			if ok {
-				return cmd, 0
-			} else {
-				return "unknown", 0
-			}
-		} else if ev.Ch > 160 && ev.Ch < 256 {
-			// Allow for alternate alt keys which are off by 128
-			// on some computers.
-			cmd, ok := kb.AltKeyMap[string(ev.Ch-128)]
-			if ok {
-				return cmd, 0
-			} else {
-				return "unknown", 0
-			}
-		} else if ev.Ch >= 32 && ev.Ch < 128 {
-			// Handle regular characters.
-			return "char", ev.Ch
-		} else {
-			return "unknown", 0
-		}
-
+		return kb.keyToCmd(ev)
 	} else {
 		return "unknown", 0
 	}
