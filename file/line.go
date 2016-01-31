@@ -83,7 +83,7 @@ func (line Line) search(term string, start, end int) (int, int) {
 	}
 }
 
-func (line Line) tabs2spaces() Line {
+func (line Line) Tabs2spaces() Line {
 	strLine := string(line)
 	strLine = strings.Replace(strLine, "\t", "    ", -1)
 	return Line(strLine)

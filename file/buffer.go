@@ -109,7 +109,7 @@ func (buffer *Buffer) Replace(searchTerm, replaceTerm string, row, col int) {
 func (buffer Buffer) slice(startRow, endRow, startCol, endCol int) []string {
 	slice := make([]string, endRow-startRow)
 	for row := startRow; row < endRow; row++ {
-		line := buffer[row].tabs2spaces()
+		line := buffer[row].Tabs2spaces()
 		rowEndCol := endCol
 		if rowEndCol > len(line) {
 			rowEndCol = len(line)
