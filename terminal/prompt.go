@@ -85,7 +85,6 @@ loop:
 		case "space":
 			prompt.answer += " "
 			prompt.col += 1
-		case "tab":
 		case "enter":
 			break loop
 		case "ctrlE":
@@ -128,6 +127,9 @@ loop:
 			prompt.answer = ""
 			prompt.col = 0
 		case "unknown":
+		case "tab":
+			prompt.answer = prompt.answer[:prompt.col] + "\t" + prompt.answer[prompt.col:]
+			prompt.col += 1
 		case "char":
 			prompt.answer = prompt.answer[:prompt.col] + string(r) + prompt.answer[prompt.col:]
 			prompt.col += 1
