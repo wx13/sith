@@ -43,10 +43,12 @@ func (mc MultiCursor) Dup() MultiCursor {
 	return mcCopy
 }
 
+// Clear keeps only the first cursor.
 func (mc MultiCursor) Clear() MultiCursor {
 	return mc[0:1]
 }
 
+// Add appends another cursor.
 func (mc MultiCursor) Add() MultiCursor {
 	cursor := Cursor{
 		row:     mc[0].row,
@@ -57,6 +59,8 @@ func (mc MultiCursor) Add() MultiCursor {
 	return mc
 }
 
+// Outermost returns a multicursor object with just the
+// first and last cursor (by row, and in order).
 func (mc MultiCursor) OuterMost() MultiCursor {
 	if len(mc) == 1 {
 		return mc
@@ -74,6 +78,7 @@ func (mc MultiCursor) OuterMost() MultiCursor {
 	return []Cursor{minCursor, maxCursor}
 }
 
+// Return the smallest and largest row from all the cursors.
 func (mc MultiCursor) MinMaxRow() (minRow, maxRow int) {
 	minRow = mc[0].row
 	maxRow = mc[0].row
@@ -88,6 +93,7 @@ func (mc MultiCursor) MinMaxRow() (minRow, maxRow int) {
 	return
 }
 
+// Get FirstCursor returns the first cursor (by row).
 func (mc MultiCursor) GetFirstCursor() Cursor {
 	firstCursor := mc[0]
 	for _, cursor := range mc {
@@ -98,6 +104,7 @@ func (mc MultiCursor) GetFirstCursor() Cursor {
 	return firstCursor
 }
 
+// SetColumn sets the col of each cursor.
 func (mc MultiCursor) SetColumn() MultiCursor {
 	col := mc[0].col
 	minRow, maxRow := mc.MinMaxRow()
