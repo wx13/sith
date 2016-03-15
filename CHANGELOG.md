@@ -8,10 +8,12 @@ features:
 - Linewrap (dynamic justify)
 - Revert to last saved copy
 - Reload from file
+- autofix "MixedIndent"
 
 bugs:
 - Truncate prompt histories (search/replace), so they
   don't get too long
+- when pasting, last bit is unsnapshotted
 
 
 ## [unreleased]
@@ -22,7 +24,9 @@ bugs:
 - must force flush for screen refresh, or else no changes get made
 
 ### Features
-
+- prev/next word uses any non-alphanum char as a break point
+- disable snapshotting on paste
+- disable autoindent on paste
 
 ## [0.3.2] 2015-11-30
 

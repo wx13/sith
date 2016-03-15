@@ -28,6 +28,12 @@ func NewScreen() *Screen {
 	return &screen
 }
 
+func (screen *Screen) Suspend() {
+	screen.Clear()
+	termbox.Flush()
+	termbox.Close()
+}
+
 func (screen *Screen) Close() {
 	select {
 	case screen.dieChan <- struct{}{}:

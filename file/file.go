@@ -12,7 +12,8 @@ type File struct {
 	MultiCursor MultiCursor
 	savedBuffer Buffer
 
-	timer Timer
+	timer   Timer
+	maxRate float64
 
 	buffHist *BufferHist
 	gotoHist []string
@@ -55,6 +56,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		newline:     "\n",
 		tabHealth:   true,
 		timer:       MakeTimer(),
+		maxRate:     100.0,
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
 	go file.ProcessSaveRequests()

@@ -1,19 +1,53 @@
 package file
 
+import "time"
+
 type BufferHist struct {
-	buffers []Buffer
-	cursors []MultiCursor
-	idx     int
+	buffers  []Buffer
+	cursors  []MultiCursor
+	idx      int
+	snapChan chan struct{}
+	snapReq  SnapshotRequest
+}
+
+type SnapshotRequest struct {
+	Buffer Buffer
+	Cursor MultiCursor
 }
 
 func NewBufferHist(buffer Buffer, cursor MultiCursor) *BufferHist {
 	bh := BufferHist{}
 	bh.buffers = append(bh.buffers, buffer)
 	bh.cursors = append(bh.cursors, cursor.Dup())
+	bh.snapChan = make(chan struct{}, 1)
+	bh.handleSnapshots()
 	return &bh
 }
 
 func (bh *BufferHist) Snapshot(buffer Buffer, mc MultiCursor) {
+	request := SnapshotRequest{
+		Buffer: buffer,
+		Cursor: mc,
+	}
+	bh.snapReq = request
+	select {
+	case bh.snapChan <- struct{}{}:
+	default:
+	}
+}
+
+func (bh *BufferHist) handleSnapshots() {
+	go func() {
+		for range time.Tick(time.Millisecond * 100) {
+			select {
+			case <-bh.snapChan:
+				bh.snapshot(bh.snapReq.Buffer, bh.snapReq.Cursor)
+			}
+		}
+	}()
+}
+
+func (bh *BufferHist) snapshot(buffer Buffer, mc MultiCursor) {
 
 	var buffers []Buffer
 	var cursors []MultiCursor
