@@ -12,6 +12,8 @@ type File struct {
 	MultiCursor MultiCursor
 	savedBuffer Buffer
 
+	timer Timer
+
 	buffHist *BufferHist
 	gotoHist []string
 
@@ -52,6 +54,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		tabString:   "\t",
 		newline:     "\n",
 		tabHealth:   true,
+		timer:       MakeTimer(),
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
 	go file.ProcessSaveRequests()
@@ -167,7 +170,7 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 	if doReplace {
 		file.buffer.Replace(searchTerm, replaceTerm, row, col)
 		file.screen.WriteString(row, 0, file.buffer[row].ToString())
-		file.CursorGoTo(row, col + len(replaceTerm))
+		file.CursorGoTo(row, col+len(replaceTerm))
 	}
 	return nil
 

@@ -34,6 +34,7 @@ func (file *File) GoFmt() error {
 }
 
 func (file *File) InsertChar(ch rune) {
+	rate := file.timer.Tick()
 	maxCol := 0
 	maxLineLen := 0
 	for _, cursor := range file.MultiCursor {
@@ -61,7 +62,9 @@ func (file *File) InsertChar(ch rune) {
 		file.MultiCursor[idx].col += len(insertStr)
 		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
 	}
-	file.Snapshot()
+	if rate < 1.0e3 {
+		file.Snapshot()
+	}
 }
 
 func (file *File) Backspace() {
