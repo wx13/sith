@@ -265,19 +265,21 @@ func (editor *Editor) SelectFile() {
 }
 
 func (editor *Editor) Save() {
+	filetype := editor.file.SyntaxRules.GetFileType(editor.file.Name)
+	if filetype == "go" {
+		editor.GoFmt()
+	}
 	editor.file.RequestSave()
 }
 
 func (editor *Editor) GoFmt() {
-	go func() {
-		err := editor.file.GoFmt()
-		if err == nil {
-			editor.RequestFlush()
-			editor.file.NotifyUser("GoFmt done")
-		} else {
-			editor.file.NotifyUser(err.Error())
-		}
-	}()
+	err := editor.file.GoFmt()
+	if err == nil {
+		editor.RequestFlush()
+		editor.file.NotifyUser("GoFmt done")
+	} else {
+		editor.file.NotifyUser(err.Error())
+	}
 }
 
 func intMod(a, n int) int {
