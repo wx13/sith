@@ -117,21 +117,29 @@ func (file *File) Delete() {
 }
 
 func (file *File) Newline() {
+
 	rate := file.timer.Tick()
+
 	for idx, cursor := range file.MultiCursor {
+
 		col, row := cursor.col, cursor.row
 		lineStart := file.buffer[row][0:col]
 		lineEnd := file.buffer[row][col:]
-		file.buffer[row] = lineStart
+
+		file.buffer[row] = lineStart.RemoveTrailingWhitespace()
 		file.buffer = append(file.buffer, Line(""))
 		copy(file.buffer[row+2:], file.buffer[row+1:])
 		file.buffer[row+1] = lineEnd
+
 		file.MultiCursor[idx].row = row + 1
 		file.MultiCursor[idx].col = 0
+
 		if file.autoIndent && rate < file.maxRate {
 			file.DoAutoIndent(idx)
 		}
+
 	}
+
 	file.Snapshot()
 }
 

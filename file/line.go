@@ -83,6 +83,11 @@ func (line Line) search(term string, start, end int) (int, int) {
 	}
 }
 
+func (line Line) RemoveTrailingWhitespace() Line {
+	re := regexp.MustCompile("[\t ]*$")
+	return Line(re.ReplaceAllString(string(line), ""))
+}
+
 func (line Line) Tabs2spaces() Line {
 	strLine := string(line)
 	strLine = strings.Replace(strLine, "\t", "    ", -1)
