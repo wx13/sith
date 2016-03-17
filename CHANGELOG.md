@@ -7,9 +7,6 @@ features:
 - Revert to last saved copy
 - Reload from file
 
-bugs:
-- Truncate prompt histories (search/replace), so they
-  don't get too long
 
 
 ## [unreleased]
@@ -18,6 +15,8 @@ bugs:
 - Search/replace must advance to end of word when replacing;
   otherwise, we may match the same word twice.
 - must force flush for screen refresh, or else no changes get made
+- Truncate prompt histories (search/replace), so they
+  don't get too long
 
 ### Features
 - prev/next word uses any non-alphanum char as a break point
@@ -25,6 +24,8 @@ bugs:
 - disable autoindent on paste
 - remove trailing whitespace on newline
 - run gofmt when saving a go file
+
+
 
 ## [0.3.2] 2015-11-30
 

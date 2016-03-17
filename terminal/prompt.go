@@ -154,5 +154,9 @@ func (screen *Screen) GetPromptAnswer(question string, history *[]string) string
 	} else {
 		*history = append([]string{answer}, *history...)
 	}
+	n := len(*history)
+	if n > 10000 {
+		*history = (*history)[(n-10000):]
+	}
 	return answer
 }
