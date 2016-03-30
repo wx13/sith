@@ -126,7 +126,6 @@ func (file *File) Newline() {
 		lineStart := file.buffer[row][0:col]
 		lineEnd := file.buffer[row][col:]
 
-		file.buffer[row] = lineStart.RemoveTrailingWhitespace()
 		file.buffer = append(file.buffer, Line(""))
 		copy(file.buffer[row+2:], file.buffer[row+1:])
 		file.buffer[row+1] = lineEnd
@@ -137,6 +136,8 @@ func (file *File) Newline() {
 		if file.autoIndent && rate < file.maxRate {
 			file.DoAutoIndent(idx)
 		}
+
+		file.buffer[row] = lineStart.RemoveTrailingWhitespace()
 
 	}
 
