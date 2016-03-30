@@ -171,7 +171,7 @@ func (file *File) DoAutoIndent(cursorIdx int) {
 	// Non-whitespace indent.
 	indent := file.buffer[row-1].CommonStart(file.buffer[row-2])
 	if len(indent) > len(ws) {
-		file.Snapshot()
+		file.ForceSnapshot()
 		file.buffer[row] = append(indent, origLine...)
 		file.MultiCursor[cursorIdx].col += len(indent) - len(ws)
 	}

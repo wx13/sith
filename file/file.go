@@ -132,6 +132,10 @@ func (file *File) Slice(nRows, nCols int) []string {
 
 }
 
+func (file *File) ForceSnapshot() {
+	file.buffHist.ForceSnapshot(file.buffer, file.MultiCursor)
+}
+
 func (file *File) Snapshot() {
 	file.buffHist.Snapshot(file.buffer, file.MultiCursor)
 }

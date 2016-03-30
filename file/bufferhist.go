@@ -24,6 +24,10 @@ func NewBufferHist(buffer Buffer, cursor MultiCursor) *BufferHist {
 	return &bh
 }
 
+func (bh *BufferHist) ForceSnapshot(buffer Buffer, mc MultiCursor) {
+	bh.snapshot(buffer, mc)
+}
+
 func (bh *BufferHist) Snapshot(buffer Buffer, mc MultiCursor) {
 	request := SnapshotRequest{
 		Buffer: buffer,
