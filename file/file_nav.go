@@ -198,7 +198,7 @@ func (file *File) NextWord() {
 		row := cursor.row
 		line := file.buffer[row]
 		col := cursor.col
-		re := regexp.MustCompile("[^a-zA-Z0-9][a-zA-Z0-9]")
+		re := regexp.MustCompile("([ \t][^ \t])|([^a-zA-Z0-9][a-zA-Z0-9])")
 		offset := re.FindStringIndex(line[col:].ToString())
 		if offset == nil {
 			col = len(line)
@@ -215,7 +215,7 @@ func (file *File) PrevWord() {
 		row := cursor.row
 		line := file.buffer[row]
 		col := cursor.col
-		re := regexp.MustCompile("[^a-zA-Z0-9][a-zA-Z0-9]")
+		re := regexp.MustCompile("([ \t][^ \t])|([^a-zA-Z0-9][a-zA-Z0-9])")
 		offsets := re.FindAllStringIndex(line[:col].ToString(), -1)
 		if offsets == nil {
 			col = 0
