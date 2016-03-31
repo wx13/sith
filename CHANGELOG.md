@@ -9,7 +9,7 @@ features:
 
 
 
-## [unreleased]
+## [0.3.3] 2016-03-30
 
 ### Bugfixes
 - Search/replace must advance to end of word when replacing;
