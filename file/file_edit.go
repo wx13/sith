@@ -133,7 +133,7 @@ func (file *File) Newline() {
 		file.MultiCursor[idx].row = row + 1
 		file.MultiCursor[idx].col = 0
 
-		if file.autoIndent && rate < file.maxRate {
+		if file.autoIndent && rate < file.maxRate && len(lineEnd) == 0 {
 			file.DoAutoIndent(idx)
 		}
 
