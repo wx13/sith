@@ -41,7 +41,7 @@ func NewBufferHist(buffer Buffer, cursor MultiCursor) *BufferHist {
 }
 
 func (bh *BufferHist) ForceSnapshot(buffer Buffer, mc MultiCursor) {
-	bh.snapshot(buffer, mc)
+	bh.snapshot(buffer.Dup(), mc.Dup())
 }
 
 func (bh *BufferHist) Snapshot(buffer Buffer, mc MultiCursor) {
