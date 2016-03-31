@@ -70,10 +70,37 @@ func (bh *BufferHist) snapshot(buffer Buffer, mc MultiCursor) {
 
 	state := NewBufferState(buffer, mc)
 	bh.element = bh.list.InsertAfter(state, bh.element)
-
+	bh.Trim()
 }
 
-func (bh *BufferHist) Trim(n int) {
+func (bh *BufferHist) Trim() {
+
+	if bh.list.Len() < 200 {
+		return
+	}
+
+	rm := []*list.Element{}
+
+	n := 0
+	for el := bh.element.Next(); el != nil; el = el.Next() {
+		n++
+		if n > 50 {
+			rm = append(rm, el)
+		}
+	}
+
+	n = 0
+	for el := bh.element.Prev(); el != nil; el = el.Prev() {
+		n++
+		if n > 50 {
+			rm = append(rm, el)
+		}
+	}
+
+	for _, el := range rm {
+		bh.list.Remove(el)
+	}
+
 }
 
 func (bh *BufferHist) Current() (Buffer, MultiCursor) {
