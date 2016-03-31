@@ -164,7 +164,7 @@ func (editor *Editor) Listen() {
 			editor.Quit()
 		case "altW":
 			editor.CloseFile()
-		case "altZ":
+		case "altS":
 			editor.Suspend()
 			keyboard = terminal.NewKeyboard()
 		case "altN":
@@ -185,6 +185,10 @@ func (editor *Editor) Listen() {
 			editor.Undo()
 		case "ctrlY":
 			editor.Redo()
+		case "altZ":
+			editor.UndoSaved()
+		case "altY":
+			editor.RedoSaved()
 		case "ctrlS":
 			editor.Save()
 		case "ctrlA":
@@ -238,6 +242,14 @@ func (editor *Editor) Undo() {
 
 func (editor *Editor) Redo() {
 	editor.file.Redo()
+}
+
+func (editor *Editor) UndoSaved() {
+	editor.file.UndoSaved()
+}
+
+func (editor *Editor) RedoSaved() {
+	editor.file.RedoSaved()
 }
 
 func (editor *Editor) NextFile() {

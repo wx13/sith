@@ -66,11 +66,13 @@ func NewKeyboard() *Keyboard {
 		"p": "altP",
 		"q": "altQ",
 		"r": "altR",
+		"s": "altS",
 		"t": "altT",
 		"u": "altU",
 		"v": "altV",
 		"w": "altW",
 		"x": "altX",
+		"y": "altY",
 		"z": "altZ",
 	}
 	return &kb

@@ -56,7 +56,8 @@ func (file *File) ReadFile(name string) {
 		file.buffer = MakeBuffer(stringBuf)
 	}
 
-	file.Snapshot()
+	file.ForceSnapshot()
+	file.SnapshotSaved()
 	file.savedBuffer = file.buffer.DeepDup()
 
 	file.RequestFlush()
@@ -85,6 +86,7 @@ func (file *File) ProcessSaveRequests() {
 }
 
 func (file *File) Save() {
+	file.SnapshotSaved()
 	contents := file.toString()
 	err := ioutil.WriteFile(file.Name, []byte(contents), file.fileMode)
 	if err != nil {

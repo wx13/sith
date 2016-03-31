@@ -140,12 +140,24 @@ func (file *File) Snapshot() {
 	file.buffHist.Snapshot(file.buffer, file.MultiCursor)
 }
 
+func (file *File) SnapshotSaved() {
+	file.buffHist.SnapshotSaved()
+}
+
 func (file *File) Undo() {
 	file.buffer, file.MultiCursor = file.buffHist.Prev()
 }
 
 func (file *File) Redo() {
 	file.buffer, file.MultiCursor = file.buffHist.Next()
+}
+
+func (file *File) UndoSaved() {
+	file.buffer, file.MultiCursor = file.buffHist.PrevSaved()
+}
+
+func (file *File) RedoSaved() {
+	file.buffer, file.MultiCursor = file.buffHist.NextSaved()
 }
 
 func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, replaceAll bool) error {

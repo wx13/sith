@@ -6,8 +6,9 @@ import (
 )
 
 type BufferState struct {
-	buff Buffer
-	mc   MultiCursor
+	buff  Buffer
+	mc    MultiCursor
+	saved bool
 }
 
 func NewBufferState(buff Buffer, mc MultiCursor) *BufferState {
@@ -66,6 +67,10 @@ func (bh *BufferHist) handleSnapshots() {
 	}()
 }
 
+func (bh *BufferHist) SnapshotSaved() {
+	bh.element.Value.(*BufferState).saved = true
+}
+
 func (bh *BufferHist) snapshot(buffer Buffer, mc MultiCursor) {
 
 	state := NewBufferState(buffer, mc)
@@ -82,16 +87,34 @@ func (bh *BufferHist) Trim() {
 	rm := []*list.Element{}
 
 	n := 0
+	ns := 0
 	for el := bh.element.Next(); el != nil; el = el.Next() {
 		n++
+		state := el.Value.(*BufferState)
+		if state.saved {
+			ns++
+			if ns > 50 {
+				rm = append(rm, el)
+			}
+			continue
+		}
 		if n > 50 {
 			rm = append(rm, el)
 		}
 	}
 
 	n = 0
+	ns = 0
 	for el := bh.element.Prev(); el != nil; el = el.Prev() {
 		n++
+		state := el.Value.(*BufferState)
+		if state.saved {
+			ns++
+			if ns > 50 {
+				rm = append(rm, el)
+			}
+			continue
+		}
 		if n > 50 {
 			rm = append(rm, el)
 		}
@@ -124,3 +147,24 @@ func (bh *BufferHist) Prev() (Buffer, MultiCursor) {
 	return bh.Current()
 }
 
+func (bh *BufferHist) NextSaved() (Buffer, MultiCursor) {
+	for el := bh.element.Next(); el != nil; el = el.Next() {
+		if el.Value.(*BufferState).saved {
+			bh.SnapshotSaved()
+			bh.element = el
+			break
+		}
+	}
+	return bh.Current()
+}
+
+func (bh *BufferHist) PrevSaved() (Buffer, MultiCursor) {
+	for el := bh.element.Prev(); el != nil; el = el.Prev() {
+		if el.Value.(*BufferState).saved {
+			bh.SnapshotSaved()
+			bh.element = el
+			break
+		}
+	}
+	return bh.Current()
+}
