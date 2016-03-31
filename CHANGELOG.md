@@ -1,12 +1,14 @@
 Change Log
 ==========
 
-## To Do
 
-features:
-- Revert to last saved copy
-- Reload from file
+## [Unreleased]
 
+### Bugfixes
+
+### Features
+- "macro" undo/redo
+  - Each save marks a state, which can be reverted to.
 
 
 ## [0.3.3] 2016-03-30

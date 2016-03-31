@@ -29,6 +29,7 @@ Commands
 | alt-M    | File selct menu | Bring up a menu to select file/window.
 | alt-O    | File open menu  | Bring up a file browser menu to select a new file
 | ctrl-S   | Save
+| Alt-S    | Suspend
 | **Multi-Cursor**
 | ctrl-X   | Add Cursor      | Adds another cursor to the multi-cursor.
 | alt-X    | Clear cursors   | Removes all but the main cursor from the multicursor.
@@ -36,12 +37,14 @@ Commands
 | **Editing**
 | ctrl-Z   | Undo
 | ctrl-Y   | Redo
+| Alt-Z    | Macro undo      | Like undo, but go the the next "saved" state.
+| Alt-Y    | Macro redo      | Like redo, but go the the next "saved" state.
 | ctrl-C   | Cut line        | Cut the current line and place in copy buffer
 | ctrl-V   | Paste           | Insert the copy buffer above the current line
 | alt-V    | Menu paste      | Menu select from copy/paste history
 | alt-J    | Justify         | Justify (72 cols) all lines from lowest to highest cursor
 | alt-G    | go fmt          | Run go formatter on code.
-| alt-D    | delete
+| ctrl-D   | delete
 | **Navigation**
 | ctrl-A   | Start of line   | Go to the first column in the current line (all cursors)
 | ctrl-E   | End of line     | go to the last column of the current line (all cursors)
