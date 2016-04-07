@@ -2,9 +2,14 @@ Change Log
 ==========
 
 
-## [Unreleased]
+## [0.3.4] 2016-04-07
 
 ### Bugfixes
+- In replaceBuffer, truncate end of old buffer to length of new
+  - This was causing problems when "gofmt" was shortening the
+    file.
+- Dup buffer on forced snapshot.
+  - This was causing issues with undoing auto indent stuff.
 
 ### Features
 - "macro" undo/redo
