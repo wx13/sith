@@ -1,9 +1,11 @@
 package file
 
-import "io/ioutil"
-import "os"
-import "github.com/nsf/termbox-go"
-import "strings"
+import (
+	"github.com/nsf/termbox-go"
+	"io/ioutil"
+	"os"
+	"strings"
+)
 
 func (file *File) Flush() {
 	file.ComputeIndent()

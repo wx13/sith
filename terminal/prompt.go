@@ -1,8 +1,10 @@
 package terminal
 
-import "errors"
-import "github.com/nsf/termbox-go"
-import "strings"
+import (
+	"errors"
+	"github.com/nsf/termbox-go"
+	"strings"
+)
 
 type Prompt struct {
 	oldRow, oldCol   int
@@ -156,7 +158,7 @@ func (screen *Screen) GetPromptAnswer(question string, history *[]string) string
 	}
 	n := len(*history)
 	if n > 10000 {
-		*history = (*history)[(n-10000):]
+		*history = (*history)[(n - 10000):]
 	}
 	return answer
 }

@@ -1,7 +1,9 @@
 package editor
 
-import "github.com/wx13/sith/terminal"
-import "github.com/wx13/sith/file"
+import (
+	"github.com/wx13/sith/file"
+	"github.com/wx13/sith/terminal"
+)
 
 func (editor *Editor) Cut() {
 	if editor.copyContig > 0 {

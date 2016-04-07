@@ -1,9 +1,11 @@
 package file
 
-import "github.com/nsf/termbox-go"
-import "strings"
-import "regexp"
-import "strconv"
+import (
+	"github.com/nsf/termbox-go"
+	"regexp"
+	"strconv"
+	"strings"
+)
 
 func (file *File) EnforceColBounds() {
 	for idx, cursor := range file.MultiCursor {

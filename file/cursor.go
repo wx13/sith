@@ -1,6 +1,5 @@
 package file
 
-
 type Cursor struct {
 	row, col, colwant int
 }

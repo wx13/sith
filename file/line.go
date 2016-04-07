@@ -1,7 +1,9 @@
 package file
 
-import "strings"
-import "regexp"
+import (
+	"regexp"
+	"strings"
+)
 
 type Line []rune
 

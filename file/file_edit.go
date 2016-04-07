@@ -1,9 +1,11 @@
 package file
 
-import "go/format"
-import "strings"
-import "regexp"
-import "errors"
+import (
+	"errors"
+	"go/format"
+	"regexp"
+	"strings"
+)
 
 func (file *File) replaceBuffer(newBuffer Buffer) {
 	n := len(newBuffer)

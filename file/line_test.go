@@ -1,7 +1,9 @@
 package file_test
 
-import "testing"
-import "github.com/wx13/sith/file"
+import (
+	"github.com/wx13/sith/file"
+	"testing"
+)
 
 func TestDup(t *testing.T) {
 	line1 := file.Line("hello world")

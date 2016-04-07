@@ -1,8 +1,10 @@
 package syntaxcolor_test
 
-import "github.com/wx13/sith/syntaxcolor"
-import "testing"
-import "fmt"
+import (
+	"fmt"
+	"github.com/wx13/sith/syntaxcolor"
+	"testing"
+)
 
 func TestGetFileType(t *testing.T) {
 

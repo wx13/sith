@@ -1,8 +1,10 @@
 package file
 
-import "errors"
-import "strings"
-import "regexp"
+import (
+	"errors"
+	"regexp"
+	"strings"
+)
 
 type Buffer []Line
 
@@ -68,7 +70,7 @@ func (buffer Buffer) ReplaceLines(lines []Line, minRow, maxRow int) Buffer {
 }
 
 func (buffer Buffer) InclSlice(row0, row1 int) Buffer {
-	return buffer[row0:row1+1]
+	return buffer[row0 : row1+1]
 }
 
 func (buffer Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, int, error) {

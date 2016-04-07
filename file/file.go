@@ -1,10 +1,12 @@
 package file
 
-import "sync"
-import "os"
-import "path"
-import "github.com/wx13/sith/syntaxcolor"
-import "github.com/wx13/sith/terminal"
+import (
+	"github.com/wx13/sith/syntaxcolor"
+	"github.com/wx13/sith/terminal"
+	"os"
+	"path"
+	"sync"
+)
 
 type File struct {
 	buffer      Buffer

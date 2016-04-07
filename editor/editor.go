@@ -1,13 +1,15 @@
 package editor
 
-import "github.com/nsf/termbox-go"
-import "fmt"
-import "os"
-import "io/ioutil"
-import "path/filepath"
-import "github.com/wx13/sith/syntaxcolor"
-import "github.com/wx13/sith/terminal"
-import "github.com/wx13/sith/file"
+import (
+	"fmt"
+	"github.com/nsf/termbox-go"
+	"github.com/wx13/sith/file"
+	"github.com/wx13/sith/syntaxcolor"
+	"github.com/wx13/sith/terminal"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+)
 
 type Editor struct {
 	screen     *terminal.Screen

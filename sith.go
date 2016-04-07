@@ -1,7 +1,9 @@
 package main
 
-import "os"
-import "github.com/wx13/sith/editor"
+import (
+	"github.com/wx13/sith/editor"
+	"os"
+)
 
 func main() {
 

@@ -1,9 +1,11 @@
 package syntaxcolor
 
-import "regexp"
-import "github.com/nsf/termbox-go"
-import "path"
-import "fmt"
+import (
+	"fmt"
+	"github.com/nsf/termbox-go"
+	"path"
+	"regexp"
+)
 
 // Color specifies a foreground and background color.
 type Color struct {

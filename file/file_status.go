@@ -1,8 +1,10 @@
 package file
 
-import "github.com/nsf/termbox-go"
-import "fmt"
-import "strings"
+import (
+	"fmt"
+	"github.com/nsf/termbox-go"
+	"strings"
+)
 
 func (file *File) IsModified() bool {
 	if len(file.buffer) != len(file.savedBuffer) {

@@ -1,7 +1,9 @@
 package terminal
 
-import "github.com/nsf/termbox-go"
-import "strings"
+import (
+	"github.com/nsf/termbox-go"
+	"strings"
+)
 
 type Menu struct {
 	cols, rows  int

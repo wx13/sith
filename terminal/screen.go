@@ -1,9 +1,11 @@
 package terminal
 
-import "github.com/nsf/termbox-go"
-import "strings"
-import "github.com/wx13/sith/syntaxcolor"
-import "os"
+import (
+	"github.com/nsf/termbox-go"
+	"github.com/wx13/sith/syntaxcolor"
+	"os"
+	"strings"
+)
 
 type Screen struct {
 	row, col int
