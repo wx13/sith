@@ -6,6 +6,8 @@ import "regexp"
 import "errors"
 
 func (file *File) replaceBuffer(newBuffer Buffer) {
+	n := len(newBuffer)
+	file.buffer = file.buffer[:n]
 	for k, line := range newBuffer {
 		if k > len(file.buffer) {
 			file.buffer = append(file.buffer, line)
