@@ -3,6 +3,8 @@ Sith
 
 Sith is a text editor written in go.  MIT license.
 
+![screenshot](http://www.wx13.com/sithscreenshot.png)
+
 Build
 -----
 
