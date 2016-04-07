@@ -24,4 +24,3 @@ func (timer *Timer) Tick() float64 {
 	timer.Rate = (0.0*timer.Rate + 1.0*rate)
 	return timer.Rate
 }
-

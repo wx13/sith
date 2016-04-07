@@ -2,9 +2,10 @@ package syntaxcolor
 
 import (
 	"fmt"
-	"github.com/nsf/termbox-go"
 	"path"
 	"regexp"
+
+	"github.com/nsf/termbox-go"
 )
 
 // Color specifies a foreground and background color.

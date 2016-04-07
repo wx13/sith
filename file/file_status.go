@@ -2,8 +2,9 @@ package file
 
 import (
 	"fmt"
-	"github.com/nsf/termbox-go"
 	"strings"
+
+	"github.com/nsf/termbox-go"
 )
 
 func (file *File) IsModified() bool {

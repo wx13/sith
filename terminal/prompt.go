@@ -2,8 +2,9 @@ package terminal
 
 import (
 	"errors"
-	"github.com/nsf/termbox-go"
 	"strings"
+
+	"github.com/nsf/termbox-go"
 )
 
 type Prompt struct {

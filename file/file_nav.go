@@ -1,10 +1,11 @@
 package file
 
 import (
-	"github.com/nsf/termbox-go"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/nsf/termbox-go"
 )
 
 func (file *File) EnforceColBounds() {

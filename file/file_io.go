@@ -1,10 +1,11 @@
 package file
 
 import (
-	"github.com/nsf/termbox-go"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/nsf/termbox-go"
 )
 
 func (file *File) Flush() {

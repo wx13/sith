@@ -2,13 +2,14 @@ package editor
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/file"
 	"github.com/wx13/sith/syntaxcolor"
 	"github.com/wx13/sith/terminal"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 type Editor struct {

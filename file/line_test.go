@@ -1,8 +1,9 @@
 package file_test
 
 import (
-	"github.com/wx13/sith/file"
 	"testing"
+
+	"github.com/wx13/sith/file"
 )
 
 func TestDup(t *testing.T) {

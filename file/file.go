@@ -1,11 +1,12 @@
 package file
 
 import (
-	"github.com/wx13/sith/syntaxcolor"
-	"github.com/wx13/sith/terminal"
 	"os"
 	"path"
 	"sync"
+
+	"github.com/wx13/sith/syntaxcolor"
+	"github.com/wx13/sith/terminal"
 )
 
 type File struct {

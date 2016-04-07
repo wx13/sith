@@ -1,8 +1,9 @@
 package terminal
 
 import (
-	"github.com/nsf/termbox-go"
 	"strings"
+
+	"github.com/nsf/termbox-go"
 )
 
 type Menu struct {
