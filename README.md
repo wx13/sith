@@ -37,14 +37,17 @@ Commands
 | alt-X    | Clear cursors   | Removes all but the main cursor from the multicursor.
 | alt-C    | Column cursor   | Populates multicursor with a set of virtical cursors.
 | **Editing**
-| ctrl-Z   | Undo
+| ctrl-U   | Undo
 | ctrl-Y   | Redo
-| Alt-Z    | Macro undo      | Like undo, but go the the next "saved" state.
+| Alt-U    | Macro undo      | Like undo, but go the the next "saved" state.
 | Alt-Y    | Macro redo      | Like redo, but go the the next "saved" state.
 | ctrl-C   | Cut line        | Cut the current line and place in copy buffer
+| ctrl-C   | Cut to end      | Cut the current line(s) from cursor to end on line.
+| ctrl-C   | Cut to start    | Cut the current line(s) from cursor to start on line.
 | ctrl-V   | Paste           | Insert the copy buffer above the current line
 | alt-V    | Menu paste      | Menu select from copy/paste history
 | alt-J    | Justify         | Justify (72 cols) all lines from lowest to highest cursor
+| alt-H    | Unjustify       | Unjustify all lines from lowest to highest cursor into one long line
 | alt-G    | go fmt          | Run go formatter on code.
 | ctrl-D   | delete
 | **Navigation**
@@ -52,9 +55,10 @@ Commands
 | ctrl-E   | End of line     | go to the last column of the current line (all cursors)
 | ctrl-W   | Next word       | move to the next whitespace character in the current line
 | ctrl-Q   | Previous workd  | move to the previous whitespace character in the current line
-| ctrl-U   | Scroll Up       | Scroll the entire screen up by one line
-| ctrl-P   | Scroll Down     | Scroll the entire screen down by one line
-| ctrl-J/K/L/O   | Cursor Up/Down/Right/Left  | Same as arrow keys
+| ctrl-J   | Scroll Up       | Scroll the entire screen up by one line
+| ctrl-K   | Scroll Down     | Scroll the entire screen down by one line
+| ctrl-O   | Scroll Left     | Scroll the entire screen left by one column
+| ctrl-P   | Scroll Right    | Scroll the entire screen right by one column
 | ctrl-N/B | Page down/up    | PageDn / PageUp also supported
 | ctrl-G   | Goto line number| Editor will prompt for line number (with per-file history)
 | **Toggles**
