@@ -222,3 +222,36 @@ func (file *File) Paste(buffer Buffer) {
 	file.EnforceColBounds()
 	file.Snapshot()
 }
+
+func (file *File) CutToStartOfLine() {
+	allAtZero := true
+	for _, cursor := range file.MultiCursor {
+		if cursor.col != 0 {
+			allAtZero = false
+			break
+		}
+	}
+	if allAtZero {
+		re := regexp.MustCompile("^[ \t]*")
+		for idx, cursor := range file.MultiCursor {
+			row := cursor.row
+			line := file.buffer[row]
+			match := re.FindStringIndex(line.ToString())
+			file.MultiCursor[idx].col = match[1]
+			file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
+		}
+	} else {
+		for idx, _ := range file.MultiCursor {
+			file.MultiCursor[idx].col = 0
+			file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
+		}
+	}
+}
+
+func (file *File) CutToEndOfLine() {
+	for idx, _ := range file.MultiCursor {
+		row := file.MultiCursor[idx].row
+		file.MultiCursor[idx].col = len(file.buffer[row])
+		file.MultiCursor[idx].colwant = file.MultiCursor[idx].col
+	}
+}

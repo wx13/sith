@@ -137,21 +137,21 @@ func (editor *Editor) Listen() {
 			editor.file.InsertChar('\t')
 		case "enter":
 			editor.file.Newline()
-		case "arrowLeft", "ctrlO":
+		case "arrowLeft":
 			editor.file.CursorLeft()
-		case "arrowRight", "ctrlL":
+		case "arrowRight":
 			editor.file.CursorRight()
-		case "arrowUp", "ctrlK":
+		case "arrowUp":
 			editor.file.CursorUp(1)
-		case "arrowDown", "ctrlJ":
+		case "arrowDown":
 			editor.file.CursorDown(1)
-		case "ctrlU":
+		case "ctrlJ":
 			editor.file.ScrollUp()
-		case "ctrlP":
+		case "ctrlK":
 			editor.file.ScrollDown()
-		case "altP":
+		case "ctrlP":
 			editor.file.ScrollRight()
-		case "altU":
+		case "ctrlO":
 			editor.file.ScrollLeft()
 		case "pageDown", "ctrlN":
 			editor.file.PageDown()
@@ -184,11 +184,11 @@ func (editor *Editor) Listen() {
 			editor.file.AddCursorCol()
 		case "altX":
 			editor.file.ClearCursors()
-		case "ctrlZ":
+		case "ctrlU":
 			editor.Undo()
 		case "ctrlY":
 			editor.Redo()
-		case "altZ":
+		case "altU":
 			editor.UndoSaved()
 		case "altY":
 			editor.RedoSaved()
@@ -198,6 +198,10 @@ func (editor *Editor) Listen() {
 			editor.file.StartOfLine()
 		case "ctrlE":
 			editor.file.EndOfLine()
+		case "altA":
+			editor.file.CutToStartOfLine()
+		case "altE":
+			editor.file.CutToEndOfLine()
 		case "ctrlW":
 			editor.file.NextWord()
 		case "ctrlQ":
@@ -220,7 +224,7 @@ func (editor *Editor) Listen() {
 			editor.GoFmt()
 		case "altJ":
 			editor.file.Justify(72)
-		case "altE":
+		case "altH":
 			editor.file.Justify(0)
 		case "altI":
 			editor.file.ToggleAutoIndent()
