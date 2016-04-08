@@ -8,15 +8,7 @@ import (
 )
 
 func (file *File) IsModified() bool {
-	if len(file.buffer) != len(file.savedBuffer) {
-		return true
-	}
-	for row, _ := range file.buffer {
-		if file.buffer[row].ToString() != file.savedBuffer[row].ToString() {
-			return true
-		}
-	}
-	return false
+	return !file.buffer.Equals(file.savedBuffer)
 }
 
 func (file *File) ModStatus() string {
@@ -34,8 +26,8 @@ func (file *File) WriteStatus(row, col int) {
 		file.AddToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
 	}
 
-	if len(file.MultiCursor) > 1 {
-		status = fmt.Sprintf("%dC", len(file.MultiCursor))
+	if file.MultiCursor.Length() > 1 {
+		status = fmt.Sprintf("%dC", file.MultiCursor.Length())
 		file.AddToStatus(status, row, &col, termbox.ColorBlack, termbox.ColorRed)
 	}
 

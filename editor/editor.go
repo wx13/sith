@@ -24,18 +24,18 @@ type Editor struct {
 	searchHist  []string
 	replaceHist []string
 
-	copyBuffer file.Buffer
+	copyBuffer []string
 	copyContig int
-	copyHist   []file.Buffer
+	copyHist   [][]string
 }
 
 func NewEditor() *Editor {
 	return &Editor{
 		flushChan:  make(chan struct{}, 1),
 		screen:     terminal.NewScreen(),
-		copyBuffer: file.MakeBuffer([]string{}),
+		copyBuffer: []string{},
 		copyContig: 0,
-		copyHist:   []file.Buffer{},
+		copyHist:   [][]string{},
 	}
 }
 
@@ -319,7 +319,7 @@ func (editor *Editor) SwitchFile(n int) {
 func (editor *Editor) HighlightCursors() {
 	cells := termbox.CellBuffer()
 	cols, _ := termbox.Size()
-	for k, _ := range editor.file.MultiCursor[1:] {
+	for k, _ := range editor.file.MultiCursor.Cursors()[1:] {
 		r, c := editor.file.GetCursor(k + 1)
 		j := r*cols + c
 		if j < 0 || j >= len(cells) {
@@ -365,13 +365,13 @@ func (editor *Editor) UpdateStatus() {
 		name,
 		editor.fileIdx,
 		len(editor.files),
-		editor.file.MultiCursor[0].Row(),
+		editor.file.MultiCursor.GetRow(0),
 		editor.file.Length()-1,
-		editor.file.MultiCursor[0].Col(),
+		editor.file.MultiCursor.GetCol(0),
 	)
 	col := cols - len(message)
 	editor.screen.WriteString(rows-1, col, message)
-	editor.screen.WriteString(rows-1, 0, "[ Sith 0.3.4 ]")
+	editor.screen.WriteString(rows-1, 0, "[ Sith 0.3.4-r1 ]")
 	editor.screen.DecorateStatusLine()
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))

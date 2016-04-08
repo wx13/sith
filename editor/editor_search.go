@@ -22,7 +22,7 @@ func (editor *Editor) MarkedSearch(searchTerm string) (int, int, error) {
 
 func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, int, error) {
 
-	if len(editor.file.MultiCursor) > 1 {
+	if editor.file.MultiCursor.Length() > 1 {
 		return editor.MarkedSearch(searchTerm)
 	}
 
@@ -75,7 +75,7 @@ func (editor *Editor) SearchAndReplace(multiFile bool) {
 		return
 	}
 
-	if len(editor.file.MultiCursor) > 1 {
+	if editor.file.MultiCursor.Length() > 1 {
 		editor.MarkedSearchAndReplace(searchTerm, replaceTerm, replaceAll)
 	} else {
 		editor.MultiFileSearchAndReplace(searchTerm, replaceTerm, multiFile, replaceAll)

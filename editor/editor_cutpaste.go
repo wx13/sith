@@ -1,17 +1,16 @@
 package editor
 
 import (
-	"github.com/wx13/sith/file"
 	"github.com/wx13/sith/terminal"
 )
 
 func (editor *Editor) Cut() {
 	if editor.copyContig > 0 {
 		editor.copyBuffer = append(editor.copyBuffer, editor.file.Cut()...)
-		editor.copyHist[0] = editor.copyBuffer.Dup()
+		editor.copyHist[0] = editor.copyBuffer
 	} else {
 		editor.copyBuffer = editor.file.Cut()
-		editor.copyHist = append([]file.Buffer{editor.copyBuffer.Dup()}, editor.copyHist...)
+		editor.copyHist = append([][]string{editor.copyBuffer}, editor.copyHist...)
 	}
 	editor.copyContig = 2
 }
@@ -24,7 +23,7 @@ func (editor *Editor) PasteFromMenu() {
 	menu := terminal.NewMenu(editor.screen)
 	items := []string{}
 	for _, buffer := range editor.copyHist {
-		str := buffer[0].ToString()
+		str := buffer[0]
 		items = append(items, str)
 	}
 	idx := menu.Choose(items)

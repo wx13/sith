@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/nsf/termbox-go"
+	"github.com/wx13/sith/file/buffer"
 )
 
 func (file *File) Flush() {
@@ -15,24 +16,24 @@ func (file *File) Flush() {
 	file.screen.Clear()
 	for row, str := range slice {
 		file.screen.WriteString(row, 0, str)
-		strLine := file.buffer[row+file.rowOffset].Tabs2spaces().ToString()
-		file.screen.Colorize(row, file.SyntaxRules.Colorize(strLine), file.colOffset)
+		fullStr := file.buffer.GetRow(row).Tabs2spaces().ToString()
+		file.screen.Colorize(row, file.SyntaxRules.Colorize(fullStr), file.colOffset)
 	}
 	for row := len(slice); row < rows-1; row++ {
 		file.screen.WriteString(row, 0, "~")
 	}
 }
 
-func (file *File) setNewline(buffer string) {
+func (file *File) setNewline(bufferStr string) {
 	file.newline = "\n"
-	count := strings.Count(buffer, "\n")
-	c := strings.Count(buffer, "\r")
+	count := strings.Count(bufferStr, "\n")
+	c := strings.Count(bufferStr, "\r")
 	if c > count {
 		count = c
 		file.newline = "\r"
 	}
 	for _, newline := range []string{"\n\r", "\r\n"} {
-		c := strings.Count(buffer, newline)
+		c := strings.Count(bufferStr, newline)
 		if c > count/2 {
 			count = c
 			file.newline = newline
@@ -45,7 +46,7 @@ func (file *File) ReadFile(name string) {
 
 	fileInfo, err := os.Stat(name)
 	if err != nil {
-		file.buffer = MakeBuffer([]string{""})
+		file.buffer.ReplaceBuffer(buffer.MakeBuffer([]string{""}))
 	} else {
 		file.fileMode = fileInfo.Mode()
 		stringBuf := []string{""}
@@ -56,7 +57,7 @@ func (file *File) ReadFile(name string) {
 			stringBuf = strings.Split(string(byteBuf), file.newline)
 		}
 
-		file.buffer = MakeBuffer(stringBuf)
+		file.buffer.ReplaceBuffer(buffer.MakeBuffer(stringBuf))
 	}
 
 	file.ForceSnapshot()

@@ -2,6 +2,12 @@ Change Log
 ==========
 
 
+## [Unreleased]
+
+Big refactor.  Pushed buffer and cursor stuff into their own
+sub-packages.  File no longer accesses buffer/cursor internals.
+
+
 ## [0.3.4] 2016-04-07
 
 ### Bugfixes

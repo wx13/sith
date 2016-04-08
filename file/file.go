@@ -3,17 +3,17 @@ package file
 import (
 	"os"
 	"path"
-	"sync"
 
+	"github.com/wx13/sith/file/buffer"
+	"github.com/wx13/sith/file/cursor"
 	"github.com/wx13/sith/syntaxcolor"
 	"github.com/wx13/sith/terminal"
 )
 
 type File struct {
-	buffer      Buffer
-	buffMutex   *sync.Mutex
-	MultiCursor MultiCursor
-	savedBuffer Buffer
+	buffer      buffer.Buffer
+	MultiCursor cursor.MultiCursor
+	savedBuffer buffer.Buffer
 
 	timer   Timer
 	maxRate float64
@@ -47,9 +47,8 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		Name:        name,
 		screen:      screen,
 		fileMode:    os.FileMode(int(0644)),
-		buffer:      MakeBuffer([]string{""}),
-		buffMutex:   &sync.Mutex{},
-		MultiCursor: MakeMultiCursor(),
+		buffer:      buffer.MakeBuffer([]string{""}),
+		MultiCursor: cursor.MakeMultiCursor(),
 		flushChan:   flushChan,
 		saveChan:    make(chan struct{}, 1),
 		SyntaxRules: syntaxcolor.NewSyntaxRules(""),
@@ -100,15 +99,15 @@ func (file *File) Refresh() {
 }
 
 func (file *File) ClearCursors() {
-	file.MultiCursor = file.MultiCursor.Clear()
+	file.MultiCursor.Clear()
 }
 
 func (file *File) AddCursor() {
-	file.MultiCursor = file.MultiCursor.Add()
+	file.MultiCursor.Snapshot()
 }
 
 func (file *File) AddCursorCol() {
-	file.MultiCursor = file.MultiCursor.SetColumn()
+	file.MultiCursor.SetColumn()
 }
 
 func (file *File) toString() string {
@@ -124,14 +123,14 @@ func (file *File) Slice(nRows, nCols int) []string {
 	endRow := nRows + file.rowOffset
 	startCol := file.colOffset
 	endCol := nCols + file.colOffset
-	if endRow > len(file.buffer) {
-		endRow = len(file.buffer)
+	if endRow > file.buffer.Length() {
+		endRow = file.buffer.Length()
 	}
 	if endRow <= startRow {
 		return []string{}
 	}
 
-	return file.buffer.slice(startRow, endRow, startCol, endCol)
+	return file.buffer.StrSlab(startRow, endRow, startCol, endCol)
 
 }
 
@@ -148,19 +147,27 @@ func (file *File) SnapshotSaved() {
 }
 
 func (file *File) Undo() {
-	file.buffer, file.MultiCursor = file.buffHist.Prev()
+	buffer, mc := file.buffHist.Prev()
+	file.MultiCursor.ReplaceMC(mc)
+	file.buffer.ReplaceBuffer(buffer)
 }
 
 func (file *File) Redo() {
-	file.buffer, file.MultiCursor = file.buffHist.Next()
+	buffer, mc := file.buffHist.Next()
+	file.buffer.ReplaceBuffer(buffer)
+	file.MultiCursor.ReplaceMC(mc)
 }
 
 func (file *File) UndoSaved() {
-	file.buffer, file.MultiCursor = file.buffHist.PrevSaved()
+	buffer, mc := file.buffHist.PrevSaved()
+	file.MultiCursor.ReplaceMC(mc)
+	file.buffer.ReplaceBuffer(buffer)
 }
 
 func (file *File) RedoSaved() {
-	file.buffer, file.MultiCursor = file.buffHist.NextSaved()
+	buffer, mc := file.buffHist.NextSaved()
+	file.MultiCursor.ReplaceMC(mc)
+	file.buffer.ReplaceBuffer(buffer)
 }
 
 func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, replaceAll bool) error {
@@ -176,7 +183,7 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 	} else {
 		file.Flush()
 		var startCol, endCol int
-		startCol, endCol = file.buffer[row].Search(searchTerm, col, -1)
+		startCol, endCol = file.buffer.GetRow(row).Search(searchTerm, col, -1)
 		for c := startCol + startColOffset; c < endCol+startColOffset; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)
 		}
@@ -189,8 +196,8 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 		}
 	}
 	if doReplace {
-		file.buffer.Replace(searchTerm, replaceTerm, row, col)
-		file.screen.WriteString(row, 0, file.buffer[row].ToString())
+		file.buffer.ReplaceWord(searchTerm, replaceTerm, row, col)
+		file.screen.WriteString(row, 0, file.buffer.GetRow(row).ToString())
 		file.CursorGoTo(row, col+len(replaceTerm))
 	}
 	return nil
@@ -198,15 +205,11 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 }
 
 func (file *File) Length() int {
-	return len(file.buffer)
-}
-
-func (file *File) SetMultiCursor(mc MultiCursor) {
-	file.MultiCursor = mc
+	return file.buffer.Length()
 }
 
 func (file *File) MarkedSearch(searchTerm string, loop bool) (row, col int, err error) {
-	file.SetMultiCursor(file.MultiCursor.OuterMost())
+	file.MultiCursor.OuterMost()
 	_, maxRow := file.MultiCursor.MinMaxRow()
 	subBuffer := file.buffer.InclSlice(0, maxRow)
 	firstCursor := file.MultiCursor.GetFirstCursor()
@@ -216,14 +219,14 @@ func (file *File) MarkedSearch(searchTerm string, loop bool) (row, col int, err 
 
 func (file *File) SearchFromCursor(searchTerm string) (row, col int, err error) {
 	loop := false
-	cursor := file.MultiCursor[0]
+	cursor := file.MultiCursor.GetCursor(0)
 	row, col, err = file.buffer.Search(searchTerm, cursor, loop)
 	return
 }
 
 func (file *File) SearchFromStart(searchTerm string) (row, col int, err error) {
 	loop := false
-	cursor := MakeCursor(0, -1)
+	cursor := cursor.MakeCursor(0, -1)
 	row, col, err = file.buffer.Search(searchTerm, cursor, loop)
 	return
 }

@@ -3,15 +3,18 @@ package file
 import (
 	"container/list"
 	"time"
+
+	"github.com/wx13/sith/file/buffer"
+	"github.com/wx13/sith/file/cursor"
 )
 
 type BufferState struct {
-	buff  Buffer
-	mc    MultiCursor
+	buff  buffer.Buffer
+	mc    cursor.MultiCursor
 	saved bool
 }
 
-func NewBufferState(buff Buffer, mc MultiCursor) *BufferState {
+func NewBufferState(buff buffer.Buffer, mc cursor.MultiCursor) *BufferState {
 	return &BufferState{
 		buff: buff,
 		mc:   mc,
@@ -26,11 +29,11 @@ type BufferHist struct {
 }
 
 type SnapshotRequest struct {
-	Buffer Buffer
-	Cursor MultiCursor
+	Buffer buffer.Buffer
+	Cursor cursor.MultiCursor
 }
 
-func NewBufferHist(buffer Buffer, cursor MultiCursor) *BufferHist {
+func NewBufferHist(buffer buffer.Buffer, cursor cursor.MultiCursor) *BufferHist {
 	bh := BufferHist{}
 	state := NewBufferState(buffer, cursor)
 	bh.list = list.New()
@@ -40,13 +43,13 @@ func NewBufferHist(buffer Buffer, cursor MultiCursor) *BufferHist {
 	return &bh
 }
 
-func (bh *BufferHist) ForceSnapshot(buffer Buffer, mc MultiCursor) {
-	bh.snapshot(buffer.Dup(), mc.Dup())
+func (bh *BufferHist) ForceSnapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
+	bh.snapshot(buff.Dup(), mc.Dup())
 }
 
-func (bh *BufferHist) Snapshot(buffer Buffer, mc MultiCursor) {
+func (bh *BufferHist) Snapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
 	request := SnapshotRequest{
-		Buffer: buffer.Dup(),
+		Buffer: buff.Dup(),
 		Cursor: mc.Dup(),
 	}
 	bh.snapReq = request
@@ -71,9 +74,9 @@ func (bh *BufferHist) SnapshotSaved() {
 	bh.element.Value.(*BufferState).saved = true
 }
 
-func (bh *BufferHist) snapshot(buffer Buffer, mc MultiCursor) {
+func (bh *BufferHist) snapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
 
-	state := NewBufferState(buffer, mc)
+	state := NewBufferState(buff, mc)
 	bh.element = bh.list.InsertAfter(state, bh.element)
 	bh.Trim()
 }
@@ -126,12 +129,12 @@ func (bh *BufferHist) Trim() {
 
 }
 
-func (bh *BufferHist) Current() (Buffer, MultiCursor) {
+func (bh *BufferHist) Current() (buffer.Buffer, cursor.MultiCursor) {
 	state := bh.element.Value.(*BufferState)
 	return state.buff, state.mc.Dup()
 }
 
-func (bh *BufferHist) Next() (Buffer, MultiCursor) {
+func (bh *BufferHist) Next() (buffer.Buffer, cursor.MultiCursor) {
 	next := bh.element.Next()
 	if next != nil {
 		bh.element = next
@@ -139,7 +142,7 @@ func (bh *BufferHist) Next() (Buffer, MultiCursor) {
 	return bh.Current()
 }
 
-func (bh *BufferHist) Prev() (Buffer, MultiCursor) {
+func (bh *BufferHist) Prev() (buffer.Buffer, cursor.MultiCursor) {
 	prev := bh.element.Prev()
 	if prev != nil {
 		bh.element = prev
@@ -147,7 +150,7 @@ func (bh *BufferHist) Prev() (Buffer, MultiCursor) {
 	return bh.Current()
 }
 
-func (bh *BufferHist) NextSaved() (Buffer, MultiCursor) {
+func (bh *BufferHist) NextSaved() (buffer.Buffer, cursor.MultiCursor) {
 	for el := bh.element.Next(); el != nil; el = el.Next() {
 		if el.Value.(*BufferState).saved {
 			bh.SnapshotSaved()
@@ -158,7 +161,7 @@ func (bh *BufferHist) NextSaved() (Buffer, MultiCursor) {
 	return bh.Current()
 }
 
-func (bh *BufferHist) PrevSaved() (Buffer, MultiCursor) {
+func (bh *BufferHist) PrevSaved() (buffer.Buffer, cursor.MultiCursor) {
 	for el := bh.element.Prev(); el != nil; el = el.Prev() {
 		if el.Value.(*BufferState).saved {
 			bh.SnapshotSaved()
