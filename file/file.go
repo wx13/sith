@@ -3,6 +3,7 @@ package file
 import (
 	"os"
 	"path"
+	"sync"
 
 	"github.com/wx13/sith/file/buffer"
 	"github.com/wx13/sith/file/cursor"
@@ -40,6 +41,8 @@ type File struct {
 
 	notification      string
 	clearNotification bool
+
+	statusMutex *sync.Mutex
 }
 
 func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *File {
@@ -48,6 +51,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		screen:      screen,
 		fileMode:    os.FileMode(int(0644)),
 		buffer:      buffer.MakeBuffer([]string{""}),
+		savedBuffer: buffer.MakeBuffer([]string{""}),
 		MultiCursor: cursor.MakeMultiCursor(),
 		flushChan:   flushChan,
 		saveChan:    make(chan struct{}, 1),
@@ -59,6 +63,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		tabHealth:   true,
 		timer:       MakeTimer(),
 		maxRate:     100.0,
+		statusMutex: &sync.Mutex{},
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
 	go file.ProcessSaveRequests()

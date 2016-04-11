@@ -2,6 +2,7 @@ package file
 
 import (
 	"container/list"
+	"sync"
 	"time"
 
 	"github.com/wx13/sith/file/buffer"
@@ -22,10 +23,13 @@ func NewBufferState(buff buffer.Buffer, mc cursor.MultiCursor) *BufferState {
 }
 
 type BufferHist struct {
-	list     *list.List
-	element  *list.Element
+	list      *list.List
+	element   *list.Element
+	elemMutex *sync.Mutex
+
 	snapChan chan struct{}
 	snapReq  SnapshotRequest
+	reqMutex *sync.Mutex
 }
 
 type SnapshotRequest struct {
@@ -38,7 +42,9 @@ func NewBufferHist(buffer buffer.Buffer, cursor cursor.MultiCursor) *BufferHist 
 	state := NewBufferState(buffer, cursor)
 	bh.list = list.New()
 	bh.element = bh.list.PushBack(state)
+	bh.elemMutex = &sync.Mutex{}
 	bh.snapChan = make(chan struct{}, 1)
+	bh.reqMutex = &sync.Mutex{}
 	bh.handleSnapshots()
 	return &bh
 }
@@ -52,7 +58,11 @@ func (bh *BufferHist) Snapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
 		Buffer: buff.Dup(),
 		Cursor: mc.Dup(),
 	}
+
+	bh.reqMutex.Lock()
 	bh.snapReq = request
+	bh.reqMutex.Unlock()
+
 	select {
 	case bh.snapChan <- struct{}{}:
 	default:
@@ -64,20 +74,26 @@ func (bh *BufferHist) handleSnapshots() {
 		for range time.Tick(time.Millisecond * 100) {
 			select {
 			case <-bh.snapChan:
+				bh.reqMutex.Lock()
 				bh.snapshot(bh.snapReq.Buffer, bh.snapReq.Cursor)
+				bh.reqMutex.Unlock()
 			}
 		}
 	}()
 }
 
 func (bh *BufferHist) SnapshotSaved() {
+	bh.elemMutex.Lock()
 	bh.element.Value.(*BufferState).saved = true
+	bh.elemMutex.Unlock()
 }
 
 func (bh *BufferHist) snapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
 
 	state := NewBufferState(buff, mc)
+	bh.elemMutex.Lock()
 	bh.element = bh.list.InsertAfter(state, bh.element)
+	bh.elemMutex.Unlock()
 	bh.Trim()
 }
 
@@ -143,9 +159,13 @@ func (bh *BufferHist) Next() (buffer.Buffer, cursor.MultiCursor) {
 }
 
 func (bh *BufferHist) Prev() (buffer.Buffer, cursor.MultiCursor) {
+	bh.elemMutex.Lock()
 	prev := bh.element.Prev()
+	bh.elemMutex.Unlock()
 	if prev != nil {
+		bh.elemMutex.Lock()
 		bh.element = prev
+		bh.elemMutex.Unlock()
 	}
 	return bh.Current()
 }
@@ -154,7 +174,9 @@ func (bh *BufferHist) NextSaved() (buffer.Buffer, cursor.MultiCursor) {
 	for el := bh.element.Next(); el != nil; el = el.Next() {
 		if el.Value.(*BufferState).saved {
 			bh.SnapshotSaved()
+			bh.elemMutex.Lock()
 			bh.element = el
+			bh.elemMutex.Unlock()
 			break
 		}
 	}
@@ -165,7 +187,9 @@ func (bh *BufferHist) PrevSaved() (buffer.Buffer, cursor.MultiCursor) {
 	for el := bh.element.Prev(); el != nil; el = el.Prev() {
 		if el.Value.(*BufferState).saved {
 			bh.SnapshotSaved()
+			bh.elemMutex.Lock()
 			bh.element = el
+			bh.elemMutex.Unlock()
 			break
 		}
 	}

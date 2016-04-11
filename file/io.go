@@ -62,7 +62,7 @@ func (file *File) ReadFile(name string) {
 
 	file.ForceSnapshot()
 	file.SnapshotSaved()
-	file.savedBuffer = file.buffer.DeepDup()
+	file.savedBuffer.ReplaceBuffer(file.buffer.DeepDup())
 
 	file.RequestFlush()
 
@@ -96,7 +96,7 @@ func (file *File) Save() {
 	if err != nil {
 		file.NotifyUser("Could not save to file: " + file.Name)
 	} else {
-		file.savedBuffer = file.buffer.DeepDup()
+		file.savedBuffer.ReplaceBuffer(file.buffer.DeepDup())
 		file.NotifyUser("Saved to file: " + file.Name)
 	}
 }

@@ -41,8 +41,8 @@ func (screen *Screen) Suspend() {
 	screen.Clear()
 	screen.tbMutex.Lock()
 	termbox.Flush()
-	screen.tbMutex.Unlock()
 	termbox.Close()
+	screen.tbMutex.Unlock()
 }
 
 func (screen *Screen) Close() {
@@ -77,8 +77,8 @@ func (screen *Screen) handleRequests() {
 				screen.Clear()
 				screen.tbMutex.Lock()
 				termbox.Flush()
-				screen.tbMutex.Unlock()
 				termbox.Close()
+				screen.tbMutex.Unlock()
 				os.Exit(0)
 			}
 		}
@@ -132,7 +132,9 @@ func (screen *Screen) WriteString(row, col int, s string) {
 
 func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset int) {
 	cells := termbox.CellBuffer()
+	screen.tbMutex.Lock()
 	cols, _ := termbox.Size()
+	screen.tbMutex.Unlock()
 	for _, lc := range colors {
 		for col := lc.Start; col < lc.End; col++ {
 			if (col - offset) > cols {

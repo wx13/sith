@@ -25,7 +25,7 @@ func MakeBuffer(stringBuf []string) Buffer {
 	}
 }
 
-func (buffer Buffer) Lines() []Line {
+func (buffer *Buffer) Lines() []Line {
 	lines := buffer.DeepDup().lines
 	return lines
 }
@@ -298,11 +298,17 @@ func (buffer *Buffer) scoreIndents(spaceHisto []int) (int, int) {
 	return nSpaces, count
 }
 
-func (buffer *Buffer) Equals(buffer2 Buffer) bool {
+func (buffer *Buffer) Equals(buffer2 *Buffer) bool {
 	if buffer.Length() != buffer2.Length() {
 		return false
 	}
-	for idx, _ := range buffer.Lines() {
+
+	buffer.mutex.Lock()
+	defer buffer.mutex.Unlock()
+	buffer2.mutex.Lock()
+	defer buffer2.mutex.Unlock()
+
+	for idx, _ := range buffer.lines {
 		if buffer.lines[idx].ToString() != buffer2.lines[idx].ToString() {
 			return false
 		}

@@ -8,7 +8,7 @@ import (
 )
 
 func (file *File) IsModified() bool {
-	return !file.buffer.Equals(file.savedBuffer)
+	return !file.buffer.Equals(&file.savedBuffer)
 }
 
 func (file *File) ModStatus() string {
@@ -54,6 +54,8 @@ func (file *File) WriteStatus(row, col int) {
 		file.AddToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
 	}
 
+	file.statusMutex.Lock()
+
 	if file.notification != "" {
 		file.AddToStatus(file.notification, row, &col, termbox.ColorCyan, termbox.ColorDefault)
 	}
@@ -65,6 +67,8 @@ func (file *File) WriteStatus(row, col int) {
 		file.clearNotification = true
 	}
 
+	file.statusMutex.Unlock()
+
 }
 
 func (file *File) AddToStatus(msg string, row int, col *int, fg, bg termbox.Attribute) {
@@ -73,10 +77,12 @@ func (file *File) AddToStatus(msg string, row int, col *int, fg, bg termbox.Attr
 }
 
 func (file *File) NotifyUser(msg string) {
+	file.statusMutex.Lock()
 	if len(file.notification) > 0 {
 		file.notification += " | "
 	}
 	file.notification += msg
 	file.clearNotification = false
+	file.statusMutex.Unlock()
 	file.RequestFlush()
 }
