@@ -3,6 +3,7 @@ package terminal
 import (
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/syntaxcolor"
@@ -15,6 +16,8 @@ type Screen struct {
 
 	flushChan chan struct{}
 	dieChan   chan struct{}
+
+	tbMutex *sync.Mutex
 }
 
 func NewScreen() *Screen {
@@ -25,15 +28,20 @@ func NewScreen() *Screen {
 		fg:        termbox.ColorDefault,
 		flushChan: make(chan struct{}, 1),
 		dieChan:   make(chan struct{}, 1),
+		tbMutex:   &sync.Mutex{},
 	}
+	screen.tbMutex.Lock()
 	termbox.Init()
+	screen.tbMutex.Unlock()
 	screen.handleRequests()
 	return &screen
 }
 
 func (screen *Screen) Suspend() {
 	screen.Clear()
+	screen.tbMutex.Lock()
 	termbox.Flush()
+	screen.tbMutex.Unlock()
 	termbox.Close()
 }
 
@@ -45,7 +53,9 @@ func (screen *Screen) Close() {
 }
 
 func (screen *Screen) Open() {
+	screen.tbMutex.Lock()
 	termbox.Init()
+	screen.tbMutex.Unlock()
 }
 
 func (screen *Screen) Flush() {
@@ -60,10 +70,14 @@ func (screen *Screen) handleRequests() {
 		for {
 			select {
 			case <-screen.flushChan:
+				screen.tbMutex.Lock()
 				termbox.Flush()
+				screen.tbMutex.Unlock()
 			case <-screen.dieChan:
 				screen.Clear()
+				screen.tbMutex.Lock()
 				termbox.Flush()
+				screen.tbMutex.Unlock()
 				termbox.Close()
 				os.Exit(0)
 			}
@@ -74,11 +88,15 @@ func (screen *Screen) handleRequests() {
 func (screen *Screen) SetCursor(r, c int) {
 	screen.row = r
 	screen.col = c
+	screen.tbMutex.Lock()
 	termbox.SetCursor(c, r)
+	screen.tbMutex.Unlock()
 }
 
 func (screen *Screen) Clear() {
+	screen.tbMutex.Lock()
 	termbox.Clear(screen.fg, screen.bg)
+	screen.tbMutex.Unlock()
 	cols, rows := termbox.Size()
 	for row := 0; row < rows; row++ {
 		screen.WriteString(row, 0, strings.Repeat(" ", cols))
@@ -90,7 +108,9 @@ func (screen *Screen) ReallyClear() {
 	for row := 0; row < rows; row++ {
 		screen.WriteString(row, 0, strings.Repeat(".", cols))
 	}
+	screen.tbMutex.Lock()
 	termbox.Flush()
+	screen.tbMutex.Unlock()
 	for row := 0; row < rows; row++ {
 		screen.WriteString(row, 0, strings.Repeat(" ", cols))
 	}
@@ -132,7 +152,9 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 
 func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.Attribute) {
 	for k, c := range s {
+		screen.tbMutex.Lock()
 		termbox.SetCell(col+k, row, c, fg, bg)
+		screen.tbMutex.Unlock()
 	}
 }
 
@@ -164,6 +186,8 @@ func (screen *Screen) Ask(question string, history []string) (string, error) {
 }
 
 func (screen *Screen) Highlight(row, col int) {
+	screen.tbMutex.Lock()
+	defer screen.tbMutex.Unlock()
 	cells := termbox.CellBuffer()
 	cols, _ := termbox.Size()
 	j := row*cols + col
