@@ -14,7 +14,7 @@ func (file *File) GoFmt() error {
 	if filetype != "go" {
 		return errors.New("Will not gofmt a non-go file.")
 	}
-	contents := file.toString()
+	contents := file.ToString()
 	bytes, err := format.Source([]byte(contents))
 	if err == nil {
 		stringBuf := strings.Split(string(bytes), file.newline)

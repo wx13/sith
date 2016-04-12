@@ -115,7 +115,7 @@ func (file *File) AddCursorCol() {
 	file.MultiCursor.SetColumn()
 }
 
-func (file *File) toString() string {
+func (file *File) ToString() string {
 	return file.buffer.ToString(file.newline)
 }
 

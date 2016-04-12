@@ -91,7 +91,7 @@ func (file *File) ProcessSaveRequests() {
 
 func (file *File) Save() {
 	file.SnapshotSaved()
-	contents := file.toString()
+	contents := file.ToString()
 	err := ioutil.WriteFile(file.Name, []byte(contents), file.fileMode)
 	if err != nil {
 		file.NotifyUser("Could not save to file: " + file.Name)
