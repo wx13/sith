@@ -2,12 +2,13 @@ Change Log
 ==========
 
 
-## [Unreleased]
+## [0.4] 2016-05-02
 
 Big refactor.  Pushed buffer and cursor stuff into their own
 sub-packages.  File no longer accesses buffer/cursor internals.
 
 Removed all known race conditions.
+
 
 ## [0.3.4] 2016-04-07
 
