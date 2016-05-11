@@ -2,6 +2,11 @@ Change Log
 ==========
 
 
+ToDo:
+- fix unicode cursor position bug
+- handle undo/redo cursor position changes better
+
+
 ## [0.4] 2016-05-02
 
 Big refactor.  Pushed buffer and cursor stuff into their own
