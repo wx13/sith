@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/syntaxcolor"
@@ -152,11 +153,35 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 	}
 }
 
+func (screen *Screen) IsPrintable(c rune) bool {
+	if !unicode.IsPrint(c) {
+		return false
+	}
+	if c >= 768 && c <= 879 {
+		return false
+	}
+	if c >= 1155 && c <= 1161 {
+		return false
+	}
+	if c >= 1300 && c <= 1487 {
+		return false
+	}
+	if c >= 1515 {
+		return false
+	}
+	return true
+}
+
 func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.Attribute) {
-	for k, c := range s {
+	k := 0
+	for _, c := range s {
+		if !screen.IsPrintable(c) {
+			c = 183
+		}
 		screen.tbMutex.Lock()
 		termbox.SetCell(col+k, row, c, fg, bg)
 		screen.tbMutex.Unlock()
+		k++
 	}
 }
 
