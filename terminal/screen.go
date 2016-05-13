@@ -6,8 +6,19 @@ import (
 	"sync"
 	"unicode"
 
+	"github.com/mattn/go-runewidth"
+
 	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/syntaxcolor"
+)
+
+type CharMode int
+
+const (
+	CharModeAscii CharMode = iota
+	CharModeSomeUnicode
+	CharModeNarrowUnicode
+	CharModeFullUnicode
 )
 
 type Screen struct {
@@ -19,6 +30,8 @@ type Screen struct {
 	dieChan   chan struct{}
 
 	tbMutex *sync.Mutex
+
+	charMode CharMode
 }
 
 func NewScreen() *Screen {
@@ -30,6 +43,7 @@ func NewScreen() *Screen {
 		flushChan: make(chan struct{}, 1),
 		dieChan:   make(chan struct{}, 1),
 		tbMutex:   &sync.Mutex{},
+		charMode:  CharModeFullUnicode,
 	}
 	screen.tbMutex.Lock()
 	termbox.Init()
@@ -153,35 +167,40 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 	}
 }
 
-func (screen *Screen) IsPrintable(c rune) bool {
+func (screen *Screen) PrintableRune(c rune) (rune, int) {
 	if !unicode.IsPrint(c) {
-		return false
+		return c, 0
 	}
-	if c >= 768 && c <= 879 {
-		return false
+	if screen.charMode == CharModeAscii {
+		if c >= 127 {
+			c = '*'
+		}
 	}
-	if c >= 1155 && c <= 1161 {
-		return false
+	if screen.charMode == CharModeSomeUnicode {
+		if c >= 734 {
+			c = '*'
+		}
 	}
-	if c >= 1300 && c <= 1487 {
-		return false
+	if screen.charMode == CharModeNarrowUnicode {
+		w := runewidth.RuneWidth(c)
+		if w != 1 {
+			c = '*'
+		}
 	}
-	if c >= 1515 {
-		return false
-	}
-	return true
+	return c, runewidth.RuneWidth(c)
 }
 
 func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.Attribute) {
 	k := 0
 	for _, c := range s {
-		if !screen.IsPrintable(c) {
-			c = 183
+		r, n := screen.PrintableRune(c)
+		if n <= 0 {
+			continue
 		}
 		screen.tbMutex.Lock()
-		termbox.SetCell(col+k, row, c, fg, bg)
+		termbox.SetCell(col+k, row, r, fg, bg)
 		screen.tbMutex.Unlock()
-		k++
+		k += n
 	}
 }
 
@@ -220,4 +239,17 @@ func (screen *Screen) Highlight(row, col int) {
 	j := row*cols + col
 	cells[j].Bg |= termbox.AttrReverse
 	cells[j].Fg |= termbox.AttrReverse
+}
+
+func (screen *Screen) SetCharMode(c int) {
+	screen.charMode = CharMode(c)
+}
+
+func (screen *Screen) ListCharModes() []string {
+	return []string{
+		"ASCII only",
+		"Some unicode characters",
+		"Narrow unicode characters",
+		"Full unicode",
+	}
 }

@@ -238,6 +238,8 @@ func (editor *Editor) HandleCmd(cmd string, r rune) {
 		editor.file.ToggleAutoIndent()
 	case "altT":
 		editor.file.ToggleAutoTab()
+	case "alt6":
+		editor.SetCharMode()
 	case "unknown":
 		editor.screen.Notify("Unknown keypress")
 	case "char":
@@ -284,6 +286,15 @@ func (editor *Editor) SelectFile() {
 	idx := menu.Choose(names)
 	if idx >= 0 {
 		editor.SwitchFile(idx)
+	}
+}
+
+func (editor *Editor) SetCharMode() {
+	modes := editor.screen.ListCharModes()
+	menu := terminal.NewMenu(editor.screen)
+	idx := menu.Choose(modes)
+	if idx >= 0 {
+		editor.screen.SetCharMode(idx)
 	}
 }
 
