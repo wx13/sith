@@ -119,7 +119,8 @@ func (file *File) GetCursor(idx int) (int, int) {
 	file.EnforceColBounds()
 	row, col, _ := file.MultiCursor.GetCursorRCC(idx)
 	line := file.buffer.GetRow(row).Slice(0, col).Tabs2spaces()
-	return row - file.rowOffset, line.Length() - file.colOffset
+	n := file.screen.StringDispLen(line.ToString())
+	return row - file.rowOffset, n - file.colOffset
 }
 
 func (file *File) ScrollLeft() {

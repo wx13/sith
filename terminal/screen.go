@@ -190,6 +190,17 @@ func (screen *Screen) PrintableRune(c rune) (rune, int) {
 	return c, runewidth.RuneWidth(c)
 }
 
+func (screen *Screen) StringDispLen(s string) int {
+	N := 0
+	for _, c := range s {
+		_, n := screen.PrintableRune(c)
+		if n > 0 {
+			N += n
+		}
+	}
+	return N
+}
+
 func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.Attribute) {
 	k := 0
 	for _, c := range s {
