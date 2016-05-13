@@ -178,13 +178,13 @@ func (screen *Screen) PrintableRune(c rune) (rune, int) {
 	}
 	if screen.charMode == CharModeSomeUnicode {
 		if c >= 734 {
-			c = '*'
+			c = 183
 		}
 	}
 	if screen.charMode == CharModeNarrowUnicode {
 		w := runewidth.RuneWidth(c)
 		if w != 1 {
-			c = '*'
+			c = 183
 		}
 	}
 	return c, runewidth.RuneWidth(c)
