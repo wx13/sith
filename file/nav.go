@@ -3,6 +3,7 @@ package file
 import (
 	"regexp"
 	"strconv"
+	"unicode"
 
 	"github.com/nsf/termbox-go"
 )
@@ -201,34 +202,36 @@ func (file *File) EndOfLine() {
 }
 
 func (file *File) NextWord() {
-	for idx, cursor := range file.MultiCursor.Cursors() {
-		row := cursor.Row()
-		line := file.buffer.GetRow(row)
-		col := cursor.Col()
-		re := regexp.MustCompile("([ \t][^ \t])|([^a-zA-Z0-9][a-zA-Z0-9])")
-		offset := re.FindStringIndex(line.Slice(col, -1).ToString())
-		if offset == nil {
-			col = line.Length()
-		} else {
-			col += offset[0] + 1
-		}
-		file.MultiCursor.SetCol(idx, col)
-		file.MultiCursor.SetColwant(idx, -1)
-	}
+	file.PrevNextWord(1)
 }
 
 func (file *File) PrevWord() {
+	file.PrevNextWord(-1)
+}
+
+func isLetter(r rune) bool {
+	return !(unicode.IsPunct(r) || unicode.IsSpace(r))
+}
+
+func (file *File) PrevNextWord(incr int) {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row := cursor.Row()
-		line := file.buffer.GetRow(row)
 		col := cursor.Col()
-		re := regexp.MustCompile("([ \t][^ \t])|([^a-zA-Z0-9][a-zA-Z0-9])")
-		offsets := re.FindAllStringIndex(line.Slice(0, col).ToString(), -1)
-		if offsets == nil {
-			col = 0
-		} else {
-			offset := offsets[len(offsets)-1]
-			col = offset[0] + 1
+		line := file.buffer.GetRow(row)
+		r := line.GetChar(col)
+		if isLetter(r) {
+			for ; col <= line.Length() && col >= 0; col += incr {
+				r = line.GetChar(col)
+				if !isLetter(r) {
+					break
+				}
+			}
+		}
+		for ; col <= line.Length() && col >= 0; col += incr {
+			r = line.GetChar(col)
+			if isLetter(r) {
+				break
+			}
 		}
 		file.MultiCursor.SetCol(idx, col)
 		file.MultiCursor.SetColwant(idx, -1)

@@ -154,3 +154,14 @@ func (line *Line) SetChar(k int, c rune) error {
 	line.chars[k] = c
 	return nil
 }
+
+func (line *Line) GetChar(k int) rune {
+	if k < 0 || k >= line.Length() {
+		return 0
+	}
+	return line.chars[k]
+}
+
+func (line *Line) Chars() []rune {
+	return line.chars
+}
