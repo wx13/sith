@@ -2,11 +2,6 @@ Change Log
 ==========
 
 
-ToDo:
-- fix unicode cursor position bug
-- handle undo/redo cursor position changes better
-
-
 ## [unreleased]
 
 ### Bugfixes
@@ -17,6 +12,10 @@ ToDo:
     - This is a work-around for terminals which fall back to variable-width
       fonts for glyphs
   - Fix clipped unicode when shifted off edge of screen
+
+### Features
+- more stability in undo/redo cursor movement
+  - keep cursor on changed spot
 
 
 ## [0.4] 2016-05-02
