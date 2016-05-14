@@ -115,17 +115,8 @@ func (line Line) Tabs2spaces() Line {
 }
 
 func (line Line) StrSlice(startCol, endCol int) string {
-	strLine := line.Tabs2spaces().ToString()
-	if startCol >= len(strLine) {
-		return ""
-	}
-	if endCol >= len(strLine) {
-		endCol = len(strLine)
-	}
-	if endCol < 0 {
-		endCol += len(strLine) + 1
-	}
-	return strLine[startCol:endCol]
+	pline := line.Tabs2spaces()
+	return pline.Slice(startCol, endCol).ToString()
 }
 
 func (line Line) Slice(startCol, endCol int) Line {
