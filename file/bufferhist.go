@@ -90,11 +90,23 @@ func (bh *BufferHist) SnapshotSaved() {
 
 func (bh *BufferHist) snapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
 
+	curBuf, curMC := bh.Current()
+	curRow := curMC.GetRow(0)
+	newRow := mc.GetRow(0)
+	if curRow-newRow > 5 || newRow-curRow > 5 {
+		state := NewBufferState(curBuf, mc)
+		bh.elemMutex.Lock()
+		bh.element = bh.list.InsertAfter(state, bh.element)
+		bh.elemMutex.Unlock()
+	}
+
 	state := NewBufferState(buff, mc)
 	bh.elemMutex.Lock()
 	bh.element = bh.list.InsertAfter(state, bh.element)
 	bh.elemMutex.Unlock()
+
 	bh.Trim()
+
 }
 
 func (bh *BufferHist) Trim() {
