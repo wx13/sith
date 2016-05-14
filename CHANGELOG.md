@@ -7,6 +7,18 @@ ToDo:
 - handle undo/redo cursor position changes better
 
 
+## [unreleased]
+
+### Bugfixes
+- Fixed unicode handling
+  - Try to guess character width in terminal
+  - Allow user different character display modes: ascii, full unicode,
+    narrow unicode chars only, or low-order unicode characters
+    - This is a work-around for terminals which fall back to variable-width
+      fonts for glyphs
+  - Fix clipped unicode when shifted off edge of screen
+
+
 ## [0.4] 2016-05-02
 
 Big refactor.  Pushed buffer and cursor stuff into their own
@@ -88,68 +100,68 @@ search/replace, toggle between files, cut/paste history), but one
 uncovered problem (how to do async notifications).
 
 ### Bugfixes
- - Search doesn't match at end of line.
- - Use AttrReverse for multicursor, so that it works with new
-   terminal default colors
+- Search doesn't match at end of line.
+- Use AttrReverse for multicursor, so that it works with new
+  terminal default colors
 
 ### Features
- - Use terminal default colors
- - Autodetect indentation, supported by 'tab' and backspace.
- - Toggle between two files
- - Multi-file search and search/replace
-   - including "replace all"
- - Cut/Paste history
- - Detect line endings (\n, \r, etc.)
-   - display non-\n ending in status bar
- - Async save and gofmt, with async notifications
+- Use terminal default colors
+- Autodetect indentation, supported by 'tab' and backspace.
+- Toggle between two files
+- Multi-file search and search/replace
+  - including "replace all"
+- Cut/Paste history
+- Detect line endings (\n, \r, etc.)
+  - display non-\n ending in status bar
+- Async save and gofmt, with async notifications
 
 
 
 ## [0.2] "Editorish" 2015-10-21
 
 ### Bugfixes
- - Page up/down now does half a screen
- - Next/prev word now functions more like you would expect it to
- - Prompt now clears two spaces beyond writing
- - Don't report new file as modified
- - Desired column changes for end-of-line, next word, etc.
- - only do gofmt on go files
+- Page up/down now does half a screen
+- Next/prev word now functions more like you would expect it to
+- Prompt now clears two spaces beyond writing
+- Don't report new file as modified
+- Desired column changes for end-of-line, next word, etc.
+- only do gofmt on go files
 
 ### Features
- - Added syntax colors for html, javascript, coffeescript
- - go-to line number
- - if search answer is past last line, scroll up more than the offset
- - "smart" start of line
+- Added syntax colors for html, javascript, coffeescript
+- go-to line number
+- if search answer is past last line, scroll up more than the offset
+- "smart" start of line
 
 
 ## [0.1.2] 2015-10-07
 
 ### Bugfixes:
- - Conditional build for windows, because suspend doesn't work.
+- Conditional build for windows, because suspend doesn't work.
 
 
 ## [0.1.1] 2015-10-06
 
 ### Bugfixes:
- - Don't allow multicursor delete of newlines, otherwise weird stuff happens when
-   trying to delete indents.
- - Don't let multicursor insert characters in the first column if other rows are
-   at col > 0. This way we can indent multiple blocks of code separated by
-   blank lines.
- - Allow alternate alt-keys.  Some terminals don't make alt keys equal to esc.
-   If the character code is in the right range, use c-128 as the alt key code.
- - Fix opening of subdirectory files in menu selector.  I wasn't prepending
-   the directory path to the file name.
- - Toggling off auto indent now toggles off autoindent...  I had done everything
-   except the actually turning off of autoindent...
- - Multicursor in first column does not add whitespace to blank lines.  Now
-   it will add whitespace to blank line only if all lines are blank.
- - When selecting a file from the file selection menu, open the file by relative path,
-   not absolute.
- - Screen refresh will work now.  I now write garbage to the screen, then
-   write spaces to the screen.  This should clear it completely...
- - Make syntax coloring work on full line, not just the part of the line in the
-   current view.
+- Don't allow multicursor delete of newlines, otherwise weird stuff happens when
+  trying to delete indents.
+- Don't let multicursor insert characters in the first column if other rows are
+  at col > 0. This way we can indent multiple blocks of code separated by
+  blank lines.
+- Allow alternate alt-keys.  Some terminals don't make alt keys equal to esc.
+  If the character code is in the right range, use c-128 as the alt key code.
+- Fix opening of subdirectory files in menu selector.  I wasn't prepending
+  the directory path to the file name.
+- Toggling off auto indent now toggles off autoindent...  I had done everything
+  except the actually turning off of autoindent...
+- Multicursor in first column does not add whitespace to blank lines.  Now
+  it will add whitespace to blank line only if all lines are blank.
+- When selecting a file from the file selection menu, open the file by relative path,
+  not absolute.
+- Screen refresh will work now.  I now write garbage to the screen, then
+  write spaces to the screen.  This should clear it completely...
+- Make syntax coloring work on full line, not just the part of the line in the
+  current view.
 
 
 ## [0.1] "Almost Usable" 2015-09-30
@@ -159,19 +171,19 @@ to consider using it as my main editor. Almost. This release fixes a few
 bugs and introduces a bunch of new features.
 
 ### Bugfixes:
- - Was crashing in prompt, when navigating empty history
- - Search starting at end of line caused crash from slice index out-of-bounds.
- - Don't add an empty line to the bottom of the file
+- Was crashing in prompt, when navigating empty history
+- Search starting at end of line caused crash from slice index out-of-bounds.
+- Don't add an empty line to the bottom of the file
 
 ### Features:
- - Ctrl-L/K/U: cut line, to end-of-line, to start-of-line in prompt.
- - Select file window from menu
- - Open new file (with file browser menu)
- - go fmt
- - syntax coloring
- - justify
- - Autoindent (toggle-able)
- - undo/redo should keep cursor on changed line
+- Ctrl-L/K/U: cut line, to end-of-line, to start-of-line in prompt.
+- Select file window from menu
+- Open new file (with file browser menu)
+- go fmt
+- syntax coloring
+- justify
+- Autoindent (toggle-able)
+- undo/redo should keep cursor on changed line
 
 
 
