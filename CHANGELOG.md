@@ -2,7 +2,7 @@ Change Log
 ==========
 
 
-## [unreleased]
+## [0.4.1] 2016-05-15
 
 ### Bugfixes
 - Fixed unicode handling

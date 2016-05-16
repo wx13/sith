@@ -71,3 +71,4 @@ Commands
 | alt-R    | Multi-file search and replace
 | **Misc**
 | alt-L    | Refresh screen  | Redraw all pixels on screen.
+| alt-6    | Change character display mode  | Select from: full unicode, narrow unicode, partial unicode, or ascii.
