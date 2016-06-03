@@ -22,6 +22,7 @@ type Editor struct {
 	keyboard   *terminal.Keyboard
 	flushChan  chan struct{}
 	keymap     KeyMap
+	xKeymap    KeyMap
 
 	searchHist  []string
 	replaceHist []string
@@ -127,6 +128,7 @@ func (editor *Editor) Listen() {
 
 	editor.keyboard = terminal.NewKeyboard()
 	editor.keymap = editor.MakeKeyMap()
+	editor.xKeymap = editor.MakeExtraKeyMap()
 	for {
 		cmd, r := editor.keyboard.GetKey()
 		editor.HandleCmd(cmd, r)
@@ -151,13 +153,9 @@ func (editor *Editor) HandleCmd(cmd string, r rune) {
 func (editor *Editor) ExtraMode() {
 	p := terminal.MakePrompt(editor.screen)
 	r := p.GetRune("key:")
-	switch string(r) {
-	case "c":
-		editor.SetCharMode()
-	case "a":
-		editor.file.CursorAlign()
-	case "A":
-		editor.file.CursorUnalign()
+	ans := editor.xKeymap.Run(string(r))
+	if len(ans) > 0 {
+		editor.screen.Notify("Unknown command")
 	}
 }
 
@@ -211,26 +209,31 @@ func (editor *Editor) SetCharMode() {
 }
 
 func (editor *Editor) CmdMenu() {
-	keys := []string{}
-	for key, action := range editor.keymap {
-		if len(action.Name) > 0 {
-			keys = append(keys, key)
-		}
-	}
+
+	keys := editor.keymap.Keys()
 	sort.Strings(keys)
-	names := make([]string, len(keys))
-	for idx, key := range keys {
-		action := editor.keymap[key]
-		s := fmt.Sprintf("%-10s  %s", key, action.Name)
-		names[idx] = s
-	}
+	names := editor.keymap.DisplayNames(keys, "")
+
+	xkeys := editor.xKeymap.Keys()
+	sort.Strings(xkeys)
+	xnames := editor.xKeymap.DisplayNames(xkeys, "Alt-6 ")
+
+	names = append(names, xnames...)
+
 	menu := terminal.NewMenu(editor.screen)
 	idx := menu.Choose(names)
 	if idx < 0 {
 		return
 	}
-	key := keys[idx]
-	editor.keymap.Run(key)
+
+	if idx < len(keys) {
+		key := keys[idx]
+		editor.keymap.Run(key)
+	} else {
+		key := xkeys[idx-len(keys)]
+		editor.xKeymap.Run(key)
+	}
+
 }
 
 func (editor *Editor) Save() {

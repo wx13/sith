@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"fmt"
+
 	"github.com/wx13/sith/terminal"
 )
 
@@ -72,6 +74,14 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	return km
 }
 
+func (editor *Editor) MakeExtraKeyMap() KeyMap {
+	km := make(KeyMap)
+	km.Add("c", editor.SetCharMode, "Change character display mode")
+	km.Add("a", editor.file.CursorAlign, "Align cursor")
+	km.Add("A", editor.file.CursorUnalign, "Unalign cursor")
+	return km
+}
+
 func (km KeyMap) Add(key string, f func(), name string) {
 	km[key] = Action{f, name}
 }
@@ -86,4 +96,26 @@ func (km KeyMap) Run(key string) string {
 		return "char"
 	}
 	return "unknown"
+}
+
+func (km KeyMap) Keys() []string {
+	keys := []string{}
+	for key, action := range km {
+		if len(action.Name) > 0 {
+			keys = append(keys, key)
+		}
+	}
+	return keys
+}
+
+func (km KeyMap) DisplayNames(keys []string, prefix string) []string {
+	names := make([]string, len(keys))
+	for idx, key := range keys {
+		action, ok := km[key]
+		if ok {
+			names[idx] = fmt.Sprintf("%s%-10s  %s", prefix, key, action.Name)
+			continue
+		}
+	}
+	return names
 }
