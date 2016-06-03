@@ -2,6 +2,13 @@ Change Log
 ==========
 
 
+## [unreleased]
+
+- Choose command from menu
+- Align cursors: In multicursor mode, insert spaces before each cursor in order to
+  bring the cursors into alignment.
+
+
 ## [0.4.1] 2016-05-15
 
 ### Bugfixes

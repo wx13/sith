@@ -71,4 +71,6 @@ Commands
 | alt-R    | Multi-file search and replace
 | **Misc**
 | alt-L    | Refresh screen  | Redraw all pixels on screen.
-| alt-6    | Change character display mode  | Select from: full unicode, narrow unicode, partial unicode, or ascii.
+| alt-6 c  | Change character display mode  | Select from: full unicode, narrow unicode, partial unicode, or ascii.
+| alt-6 a  | Align cursors   | Insert spaces to align cursors vertically
+| ctrl-/   | Help menu       | Display menu of all keyboard shortcuts
