@@ -21,6 +21,23 @@ func MakePrompt(screen *Screen) Prompt {
 	return Prompt{screen: screen, row: row, keyboard: NewKeyboard()}
 }
 
+func (prompt *Prompt) GetRune(question string) rune {
+
+	prompt.screen.WriteMessage(question)
+	prompt.screen.Flush()
+
+	cmd, r := prompt.keyboard.GetKey()
+	switch cmd {
+	case "ctrlC":
+		return 0
+	case "char":
+		return r
+	default:
+		return 0
+	}
+
+}
+
 func (prompt *Prompt) AskYesNo(question string) (bool, error) {
 	prompt.screen.WriteMessage(question)
 	prompt.screen.Flush()

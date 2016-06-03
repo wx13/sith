@@ -239,13 +239,23 @@ func (editor *Editor) HandleCmd(cmd string, r rune) {
 	case "altT":
 		editor.file.ToggleAutoTab()
 	case "alt6":
-		editor.SetCharMode()
+		editor.ExtraMode()
 	case "unknown":
 		editor.screen.Notify("Unknown keypress")
 	case "char":
 		editor.file.InsertChar(r)
 	default:
 		editor.screen.Notify("Unknown keypress")
+	}
+}
+
+func (editor *Editor) ExtraMode() {
+	p := terminal.MakePrompt(editor.screen)
+	r := p.GetRune("key:")
+	switch string(r) {
+	case "c":
+		editor.SetCharMode()
+		return
 	}
 }
 
