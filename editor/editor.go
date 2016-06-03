@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/file"
@@ -207,6 +208,29 @@ func (editor *Editor) SetCharMode() {
 	if idx >= 0 {
 		editor.screen.SetCharMode(idx)
 	}
+}
+
+func (editor *Editor) CmdMenu() {
+	keys := []string{}
+	for key, action := range editor.keymap {
+		if len(action.Name) > 0 {
+			keys = append(keys, key)
+		}
+	}
+	sort.Strings(keys)
+	names := make([]string, len(keys))
+	for idx, key := range keys {
+		action := editor.keymap[key]
+		s := fmt.Sprintf("%-10s  %s", key, action.Name)
+		names[idx] = s
+	}
+	menu := terminal.NewMenu(editor.screen)
+	idx := menu.Choose(names)
+	if idx < 0 {
+		return
+	}
+	key := keys[idx]
+	editor.keymap.Run(key)
 }
 
 func (editor *Editor) Save() {

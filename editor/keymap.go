@@ -68,6 +68,7 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	km.Add("altI", editor.file.ToggleAutoIndent, "Toggle auto-indent")
 	km.Add("altT", editor.file.ToggleAutoTab, "Toggle Auto-tab")
 	km.Add("alt6", editor.ExtraMode, "Extra mode")
+	km.Add("ctrlSlash", editor.CmdMenu, "Display command menu")
 	return km
 }
 
