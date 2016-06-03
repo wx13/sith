@@ -315,3 +315,10 @@ func (buffer *Buffer) Equals(buffer2 *Buffer) bool {
 	}
 	return true
 }
+
+func (buffer *Buffer) CompressPriorSpaces(row, col int) int {
+	line := buffer.GetRow(row)
+	line, col = line.CompressPriorSpaces(col)
+	buffer.SetRow(row, line)
+	return col
+}

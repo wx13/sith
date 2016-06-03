@@ -245,4 +245,9 @@ func (file *File) CursorAlign() {
 }
 
 func (file *File) CursorUnalign() {
+	for idx, cursor := range file.MultiCursor.Cursors() {
+		row, col := cursor.RowCol()
+		col = file.buffer.CompressPriorSpaces(row, col)
+		file.MultiCursor.SetCursor(idx, row, col, col)
+	}
 }

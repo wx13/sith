@@ -108,6 +108,26 @@ func (line Line) RemoveTrailingWhitespace() Line {
 	return MakeLine(str)
 }
 
+func IsWhitespace(r rune) bool {
+	if r == ' ' || r == '\t' {
+		return true
+	}
+	return false
+}
+
+func (line Line) CompressPriorSpaces(col int) (Line, int) {
+	line = line.Dup()
+	for ; col > 1; col-- {
+		if !IsWhitespace(line.chars[col-1]) {
+			break
+		}
+		if IsWhitespace(line.chars[col-2]) {
+			line.chars = append(line.chars[:col-1], line.chars[col:]...)
+		}
+	}
+	return line, col + 1
+}
+
 func (line Line) Tabs2spaces() Line {
 	strLine := string(line.chars)
 	strLine = strings.Replace(strLine, "\t", "    ", -1)
