@@ -20,6 +20,7 @@ type Editor struct {
 	fileIdxPrv int
 	keyboard   *terminal.Keyboard
 	flushChan  chan struct{}
+	keymap     KeyMap
 
 	searchHist  []string
 	replaceHist []string
@@ -124,6 +125,7 @@ func (editor *Editor) CloseFile() bool {
 func (editor *Editor) Listen() {
 
 	editor.keyboard = terminal.NewKeyboard()
+	editor.keymap = editor.MakeKeyMap()
 	for {
 		cmd, r := editor.keyboard.GetKey()
 		editor.HandleCmd(cmd, r)
@@ -136,7 +138,7 @@ func (editor *Editor) Listen() {
 func (editor *Editor) HandleCmd(cmd string, r rune) {
 	switch cmd {
 	case "backspace":
-		editor.file.Backspace()
+		editor.keymap.Run("backspace")
 	case "delete", "ctrlD":
 		editor.file.Delete()
 	case "space":
