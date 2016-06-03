@@ -136,117 +136,13 @@ func (editor *Editor) Listen() {
 }
 
 func (editor *Editor) HandleCmd(cmd string, r rune) {
-	switch cmd {
-	case "backspace":
-		editor.keymap.Run("backspace")
-	case "delete", "ctrlD":
-		editor.file.Delete()
-	case "space":
-		editor.file.InsertChar(' ')
-	case "tab":
-		editor.file.InsertChar('\t')
-	case "enter":
-		editor.file.Newline()
-	case "arrowLeft":
-		editor.file.CursorLeft()
-	case "arrowRight":
-		editor.file.CursorRight()
-	case "arrowUp":
-		editor.file.CursorUp(1)
-	case "arrowDown":
-		editor.file.CursorDown(1)
-	case "ctrlJ":
-		editor.file.ScrollUp()
-	case "ctrlK":
-		editor.file.ScrollDown()
-	case "ctrlP":
-		editor.file.ScrollRight()
-	case "ctrlO":
-		editor.file.ScrollLeft()
-	case "pageDown", "ctrlN":
-		editor.file.PageDown()
-	case "pageUp", "ctrlB":
-		editor.file.PageUp()
-	case "ctrlG":
-		editor.file.GoToLine()
-	case "altL":
-		editor.file.Refresh()
-	case "altO":
-		editor.OpenNewFile()
-	case "altQ":
-		editor.Quit()
-	case "altW":
-		editor.CloseFile()
-	case "altS":
-		editor.Suspend()
-		editor.keyboard = terminal.NewKeyboard()
-	case "altN":
-		editor.NextFile()
-	case "altB":
-		editor.PrevFile()
-	case "altK":
-		editor.LastFile()
-	case "altM":
-		editor.SelectFile()
-	case "ctrlX":
-		editor.file.AddCursor()
-	case "altC":
-		editor.file.AddCursorCol()
-	case "altX":
-		editor.file.ClearCursors()
-	case "ctrlU":
-		editor.Undo()
-	case "ctrlY":
-		editor.Redo()
-	case "altU":
-		editor.UndoSaved()
-	case "altY":
-		editor.RedoSaved()
-	case "ctrlS":
-		editor.Save()
-	case "ctrlA":
-		editor.file.StartOfLine()
-	case "ctrlE":
-		editor.file.EndOfLine()
-	case "altA":
-		editor.file.CutToStartOfLine()
-	case "altE":
-		editor.file.CutToEndOfLine()
-	case "ctrlW":
-		editor.file.NextWord()
-	case "ctrlQ":
-		editor.file.PrevWord()
-	case "ctrlF":
-		editor.Search(false)
-	case "altF":
-		editor.SearchAndReplace(false)
-	case "ctrlR":
-		editor.Search(true)
-	case "altR":
-		editor.SearchAndReplace(true)
-	case "ctrlC":
-		editor.Cut()
-	case "ctrlV":
-		editor.Paste()
-	case "altV":
-		editor.PasteFromMenu()
-	case "altG":
-		editor.GoFmt()
-	case "altJ":
-		editor.file.Justify(72)
-	case "altH":
-		editor.file.Justify(0)
-	case "altI":
-		editor.file.ToggleAutoIndent()
-	case "altT":
-		editor.file.ToggleAutoTab()
-	case "alt6":
-		editor.ExtraMode()
-	case "unknown":
-		editor.screen.Notify("Unknown keypress")
-	case "char":
+	ans := editor.keymap.Run(cmd)
+	if ans == "" {
+		return
+	}
+	if ans == "char" {
 		editor.file.InsertChar(r)
-	default:
+	} else {
 		editor.screen.Notify("Unknown keypress")
 	}
 }
