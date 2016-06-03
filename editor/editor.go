@@ -257,6 +257,8 @@ func (editor *Editor) ExtraMode() {
 		editor.SetCharMode()
 	case "a":
 		editor.file.CursorAlign()
+	case "A":
+		editor.file.CursorUnalign()
 	}
 }
 

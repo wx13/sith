@@ -243,3 +243,6 @@ func (file *File) CursorAlign() {
 	}
 	file.Snapshot()
 }
+
+func (file *File) CursorUnalign() {
+}
