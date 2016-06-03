@@ -255,7 +255,8 @@ func (editor *Editor) ExtraMode() {
 	switch string(r) {
 	case "c":
 		editor.SetCharMode()
-		return
+	case "a":
+		editor.file.CursorAlign()
 	}
 }
 

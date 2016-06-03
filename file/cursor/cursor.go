@@ -156,6 +156,16 @@ func (mc *MultiCursor) OuterMost() {
 	mc.cursors = []Cursor{minCursor, maxCursor}
 }
 
+func (mc MultiCursor) MaxCol() int {
+	maxCol := 0
+	for _, cursor := range mc.cursors {
+		if cursor.col > maxCol {
+			maxCol = cursor.col
+		}
+	}
+	return maxCol
+}
+
 // Return the smallest and largest row from all the cursors.
 func (mc MultiCursor) MinMaxRow() (minRow, maxRow int) {
 	minRow = mc.cursors[0].row

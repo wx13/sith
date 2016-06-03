@@ -228,3 +228,18 @@ func (file *File) CutToEndOfLine() {
 	}
 	file.Snapshot()
 }
+
+func (file *File) CursorAlign() {
+	maxCol := file.MultiCursor.MaxCol()
+	for idx, cursor := range file.MultiCursor.Cursors() {
+		row, col := cursor.RowCol()
+		nSpaces := maxCol - col
+		spaces := strings.Repeat(" ", nSpaces)
+		line := file.buffer.GetRow(row)
+		newLine := buffer.MakeLine(line.Slice(0, col).ToString() + spaces + line.Slice(col, -1).ToString())
+		file.buffer.SetRow(row, newLine)
+		col += len(spaces)
+		file.MultiCursor.SetCursor(idx, row, col, col)
+	}
+	file.Snapshot()
+}
