@@ -1,5 +1,23 @@
 package editor
 
+func (editor *Editor) SearchLineFo() {
+	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	if searchTerm == "" {
+		editor.file.NotifyUser("Cancelled")
+		return
+	}
+	editor.file.SearchLineFo(searchTerm)
+}
+
+func (editor *Editor) SearchLineBa() {
+	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	if searchTerm == "" {
+		editor.file.NotifyUser("Cancelled")
+		return
+	}
+	editor.file.SearchLineBa(searchTerm)
+}
+
 func (editor *Editor) Search(multiFile bool) {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {

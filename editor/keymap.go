@@ -79,6 +79,8 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km.Add("c", editor.SetCharMode, "Change character display mode")
 	km.Add("a", func() { editor.file.CursorAlign() }, "Align cursor")
 	km.Add("A", func() { editor.file.CursorUnalign() }, "Unalign cursor")
+	km.Add("w", func() { editor.SearchLineFo() }, "Search from cursor to end of line")
+	km.Add("q", func() { editor.SearchLineBa() }, "Search from cursor to start of line")
 	return km
 }
 
