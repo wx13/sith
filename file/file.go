@@ -251,7 +251,7 @@ func (file *File) SearchLineBa(term string) {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()
 		line := file.buffer.GetRow(row)
-		c0, _ := line.Search(term, col, -1)
+		c0, _ := line.Search(term, col, 0)
 		if c0 > 0 {
 			file.MultiCursor.SetCol(idx, c0)
 		}

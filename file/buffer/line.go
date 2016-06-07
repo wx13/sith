@@ -69,10 +69,15 @@ func (line Line) Search(term string, start, end int) (int, int) {
 
 func isRegex(term string) bool {
 	n := len(term)
-	return (term[0:1] == "/" && term[n-1:n] == "/")
+	return (term[0:1] == "/" && term[n-1:n] == "/" && len(term) > 1)
 }
 
 func (line Line) search(term string, start, end int) (int, int) {
+
+	forward := end >= start
+	if !forward {
+		start, end = end, start
+	}
 
 	n := len(term)
 	var startCol, endCol int
@@ -83,7 +88,13 @@ func (line Line) search(term string, start, end int) (int, int) {
 		if err != nil {
 			return -1, -1
 		}
-		cols := re.FindStringIndex(target)
+		var cols []int
+		if forward {
+			cols = re.FindStringIndex(target)
+		} else {
+			colses := re.FindAllStringIndex(target, -1)
+			cols = colses[len(colses)-1]
+		}
 		if cols == nil {
 			return -1, -1
 		}
@@ -92,7 +103,11 @@ func (line Line) search(term string, start, end int) (int, int) {
 	} else {
 		strLine := strings.ToLower(target)
 		term = strings.ToLower(term)
-		startCol = strings.Index(strLine, term)
+		if forward {
+			startCol = strings.Index(strLine, term)
+		} else {
+			startCol = strings.LastIndex(strLine, term)
+		}
 		endCol = startCol + len(term)
 	}
 	if startCol < 0 {
