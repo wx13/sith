@@ -4,9 +4,11 @@ Change Log
 
 ## [unreleased]
 
+### Features
 - Choose command from menu
 - Align cursors: In multicursor mode, insert spaces before each cursor in order to
   bring the cursors into alignment.
+- Multicursor forward/backward search within a line
 
 
 ## [0.4.1] 2016-05-15
