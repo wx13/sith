@@ -140,7 +140,7 @@ func (mc *MultiCursor) Snapshot() {
 }
 
 func (mc *MultiCursor) OuterMost() {
-	if mc.Length() <= 2 {
+	if mc.Length() < 2 {
 		return
 	}
 	minCursor := mc.cursors[0].Dup()
