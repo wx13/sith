@@ -2,13 +2,18 @@ Change Log
 ==========
 
 
-## [unreleased]
+## [0.4.2] 2016-06-12
 
 ### Features
 - Choose command from menu
 - Align cursors: In multicursor mode, insert spaces before each cursor in order to
   bring the cursors into alignment.
 - Multicursor forward/backward search within a line
+  - useful, e.g., for aligning cursors a say an '='
+
+### Bugfixes
+- Marked search (and search/replace) work again.  Was a problem with the
+  'outermost' method not working on two cursors.
 
 
 ## [0.4.1] 2016-05-15
