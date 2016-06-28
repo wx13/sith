@@ -12,15 +12,16 @@ import (
 	"github.com/wx13/sith/syntaxcolor"
 )
 
-type CharMode int
+type charMode int
 
 const (
-	CharModeAscii CharMode = iota
-	CharModeSomeUnicode
-	CharModeNarrowUnicode
-	CharModeFullUnicode
+	charModeASCII charMode = iota
+	charModeSomeUnicode
+	charModeNarrowUnicode
+	charModeFullUnicode
 )
 
+// Screen is an interface the the terminal screen.
 type Screen struct {
 	row, col int
 	fg, bg   termbox.Attribute
@@ -31,9 +32,10 @@ type Screen struct {
 
 	tbMutex *sync.Mutex
 
-	charMode CharMode
+	charMode charMode
 }
 
+// NewScreen creates a new screen object.
 func NewScreen() *Screen {
 	screen := Screen{
 		row:       0,
@@ -43,7 +45,7 @@ func NewScreen() *Screen {
 		flushChan: make(chan struct{}, 1),
 		dieChan:   make(chan struct{}, 1),
 		tbMutex:   &sync.Mutex{},
-		charMode:  CharModeFullUnicode,
+		charMode:  charModeFullUnicode,
 	}
 	screen.tbMutex.Lock()
 	termbox.Init()
@@ -52,6 +54,8 @@ func NewScreen() *Screen {
 	return &screen
 }
 
+// Suspend suspends the screen interaction to let the user
+// access the terminal.
 func (screen *Screen) Suspend() {
 	screen.Clear()
 	screen.tbMutex.Lock()
@@ -60,6 +64,7 @@ func (screen *Screen) Suspend() {
 	screen.tbMutex.Unlock()
 }
 
+// Close ends the terminal session.
 func (screen *Screen) Close() {
 	select {
 	case screen.dieChan <- struct{}{}:
@@ -67,12 +72,14 @@ func (screen *Screen) Close() {
 	}
 }
 
+// Open starts the terminal session.
 func (screen *Screen) Open() {
 	screen.tbMutex.Lock()
 	termbox.Init()
 	screen.tbMutex.Unlock()
 }
 
+// Flush *requests* a terminal flush event (async).
 func (screen *Screen) Flush() {
 	select {
 	case screen.flushChan <- struct{}{}:
@@ -100,6 +107,7 @@ func (screen *Screen) handleRequests() {
 	}()
 }
 
+// SetCursor moves the cursor to a position.
 func (screen *Screen) SetCursor(r, c int) {
 	screen.row = r
 	screen.col = c
@@ -108,6 +116,7 @@ func (screen *Screen) SetCursor(r, c int) {
 	screen.tbMutex.Unlock()
 }
 
+// Clear clears the screen.
 func (screen *Screen) Clear() {
 	screen.tbMutex.Lock()
 	termbox.Clear(screen.fg, screen.bg)
@@ -118,6 +127,8 @@ func (screen *Screen) Clear() {
 	}
 }
 
+// ReallyClear writes a repeaded character to the screen and then
+// clears it, to make sure all terminal garbage is gone.
 func (screen *Screen) ReallyClear() {
 	cols, rows := termbox.Size()
 	for row := 0; row < rows; row++ {
@@ -132,6 +143,7 @@ func (screen *Screen) ReallyClear() {
 	screen.Flush()
 }
 
+// DecorateStatusLine colors the status line text.
 func (screen *Screen) DecorateStatusLine() {
 	cells := termbox.CellBuffer()
 	cols, rows := termbox.Size()
@@ -141,10 +153,12 @@ func (screen *Screen) DecorateStatusLine() {
 	}
 }
 
+// WriteString write a string to the screen in the default color scheme.
 func (screen *Screen) WriteString(row, col int, s string) {
 	screen.WriteStringColor(row, col, s, screen.fg, screen.bg)
 }
 
+// Colorize changes the color of text on the screen.
 func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset int) {
 	cells := termbox.CellBuffer()
 	screen.tbMutex.Lock()
@@ -167,21 +181,23 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 	}
 }
 
+// PrintableRune uses the charMode to convert the rune into
+// a printable rune.
 func (screen *Screen) PrintableRune(c rune) (rune, int) {
 	if !unicode.IsPrint(c) {
 		return c, 0
 	}
-	if screen.charMode == CharModeAscii {
+	if screen.charMode == charModeASCII {
 		if c >= 127 {
 			c = '*'
 		}
 	}
-	if screen.charMode == CharModeSomeUnicode {
+	if screen.charMode == charModeSomeUnicode {
 		if c >= 734 {
 			c = 183
 		}
 	}
-	if screen.charMode == CharModeNarrowUnicode {
+	if screen.charMode == charModeNarrowUnicode {
 		w := runewidth.RuneWidth(c)
 		if w != 1 {
 			c = 183
@@ -190,6 +206,7 @@ func (screen *Screen) PrintableRune(c rune) (rune, int) {
 	return c, runewidth.RuneWidth(c)
 }
 
+// StringDispLen estimates the display length of a string.
 func (screen *Screen) StringDispLen(s string) int {
 	N := 0
 	for _, c := range s {
@@ -201,6 +218,7 @@ func (screen *Screen) StringDispLen(s string) int {
 	return N
 }
 
+// WriteStringColor writes a colored string to the screen.
 func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.Attribute) {
 	k := 0
 	for _, c := range s {
@@ -215,6 +233,7 @@ func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.At
 	}
 }
 
+// WriteMessage writes a status-line message.
 func (screen *Screen) WriteMessage(msg string) {
 	if len(msg) == 0 {
 		return
@@ -223,25 +242,30 @@ func (screen *Screen) WriteMessage(msg string) {
 	screen.WriteString(rows-1, 0, msg+"  ")
 }
 
+// Notify writes a status-line notification.
 func (screen *Screen) Notify(msg string) {
 	cols, rows := termbox.Size()
 	screen.WriteString(rows-1, (cols-len(msg))/2, msg+"  ")
 }
 
+// Alert is the same as Notify.
 func (screen *Screen) Alert(msg string) {
 	screen.Notify(msg)
 }
 
+// AskYesNo uses a prompt to ask the user a question.
 func (screen *Screen) AskYesNo(question string) (bool, error) {
 	prompt := MakePrompt(screen)
 	return prompt.AskYesNo(question)
 }
 
+// Ask uses a prompt to ask the user a question.
 func (screen *Screen) Ask(question string, history []string) (string, error) {
 	prompt := MakePrompt(screen)
 	return prompt.Ask(question, history)
 }
 
+// Highlight reverses the screen color.
 func (screen *Screen) Highlight(row, col int) {
 	screen.tbMutex.Lock()
 	defer screen.tbMutex.Unlock()
@@ -252,10 +276,12 @@ func (screen *Screen) Highlight(row, col int) {
 	cells[j].Fg |= termbox.AttrReverse
 }
 
+// SetCharMode sets the character display mode.
 func (screen *Screen) SetCharMode(c int) {
-	screen.charMode = CharMode(c)
+	screen.charMode = charMode(c)
 }
 
+// ListCharModes lists the available character display modes.
 func (screen *Screen) ListCharModes() []string {
 	return []string{
 		"ASCII only",

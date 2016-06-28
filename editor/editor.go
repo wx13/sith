@@ -13,6 +13,8 @@ import (
 	"github.com/wx13/sith/terminal"
 )
 
+// Editor is the main editor object.  It orchestrates the terminal,
+// the buffer, etc.
 type Editor struct {
 	screen     *terminal.Screen
 	file       *file.File
@@ -32,6 +34,7 @@ type Editor struct {
 	copyHist   [][]string
 }
 
+// NewEditor creates a new Editor object.
 func NewEditor() *Editor {
 	return &Editor{
 		flushChan:  make(chan struct{}, 1),
@@ -42,6 +45,7 @@ func NewEditor() *Editor {
 	}
 }
 
+// OpenNewFile offers a file selection menu to choose a new file to open.
 func (editor *Editor) OpenNewFile() {
 	dir, _ := os.Getwd()
 	dir += "/"
@@ -83,12 +87,14 @@ func (editor *Editor) OpenNewFile() {
 	editor.file = editor.files[editor.fileIdx]
 }
 
+// OpenFile opens a specified file.
 func (editor *Editor) OpenFile(name string) {
 	file := file.NewFile(name, editor.flushChan, editor.screen)
 	file.SyntaxRules = syntaxcolor.NewSyntaxRules(name)
 	editor.files = append(editor.files, file)
 }
 
+// OpenFiles opens a set of specified files.
 func (editor *Editor) OpenFiles(fileNames []string) {
 	for _, name := range fileNames {
 		editor.OpenFile(name)
@@ -101,14 +107,16 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 	editor.file = editor.files[0]
 }
 
+// Quit closes all the files and exits the editor.
 func (editor *Editor) Quit() {
-	for _, _ = range editor.files {
+	for range editor.files {
 		if !editor.CloseFile() {
 			editor.NextFile()
 		}
 	}
 }
 
+// CloseFile closes the current file.
 func (editor *Editor) CloseFile() bool {
 	editor.Flush()
 	idx := editor.fileIdx
@@ -124,6 +132,7 @@ func (editor *Editor) CloseFile() bool {
 	return true
 }
 
+// Listen is the main editor loop.
 func (editor *Editor) Listen() {
 
 	editor.keyboard = terminal.NewKeyboard()
@@ -131,14 +140,14 @@ func (editor *Editor) Listen() {
 	editor.xKeymap = editor.MakeExtraKeyMap()
 	for {
 		cmd, r := editor.keyboard.GetKey()
-		editor.HandleCmd(cmd, r)
+		editor.handleCmd(cmd, r)
 		editor.copyContig--
 		editor.RequestFlush()
 	}
 
 }
 
-func (editor *Editor) HandleCmd(cmd string, r rune) {
+func (editor *Editor) handleCmd(cmd string, r rune) {
 	ans := editor.keymap.Run(cmd)
 	if ans == "" {
 		return
@@ -150,6 +159,7 @@ func (editor *Editor) HandleCmd(cmd string, r rune) {
 	}
 }
 
+// ExtraMode allows for additional keypresses.
 func (editor *Editor) ExtraMode() {
 	p := terminal.MakePrompt(editor.screen)
 	r := p.GetRune("key:")
@@ -159,34 +169,22 @@ func (editor *Editor) ExtraMode() {
 	}
 }
 
-func (editor *Editor) Undo() {
-	editor.file.Undo()
-}
-
-func (editor *Editor) Redo() {
-	editor.file.Redo()
-}
-
-func (editor *Editor) UndoSaved() {
-	editor.file.UndoSaved()
-}
-
-func (editor *Editor) RedoSaved() {
-	editor.file.RedoSaved()
-}
-
+// NextFile cycles to the next open file.
 func (editor *Editor) NextFile() {
 	editor.SwitchFile(editor.fileIdx + 1)
 }
 
+// PrevFile cycles to the previous open file.
 func (editor *Editor) PrevFile() {
 	editor.SwitchFile(editor.fileIdx - 1)
 }
 
+// LastFile toggles between the two most recent files.
 func (editor *Editor) LastFile() {
 	editor.SwitchFile(editor.fileIdxPrv)
 }
 
+// SelectFile offers a menu to select from open files.
 func (editor *Editor) SelectFile() {
 	names := []string{}
 	for _, file := range editor.files {
@@ -199,6 +197,8 @@ func (editor *Editor) SelectFile() {
 	}
 }
 
+// SetCharMode offers a menu for selecting the character
+// display mode.
 func (editor *Editor) SetCharMode() {
 	modes := editor.screen.ListCharModes()
 	menu := terminal.NewMenu(editor.screen)
@@ -208,6 +208,7 @@ func (editor *Editor) SetCharMode() {
 	}
 }
 
+// CmdMenu offers a menu of available commands.
 func (editor *Editor) CmdMenu() {
 
 	keys := editor.keymap.Keys()
@@ -236,6 +237,7 @@ func (editor *Editor) CmdMenu() {
 
 }
 
+// Save saves the buffer to the file.
 func (editor *Editor) Save() {
 	filetype := editor.file.SyntaxRules.GetFileType(editor.file.Name)
 	if filetype == "go" {
@@ -244,6 +246,7 @@ func (editor *Editor) Save() {
 	editor.file.RequestSave()
 }
 
+// GoFmt runs the Go formatter on the buffer text.
 func (editor *Editor) GoFmt() {
 	err := editor.file.GoFmt()
 	if err == nil {
@@ -255,13 +258,13 @@ func (editor *Editor) GoFmt() {
 }
 
 func intMod(a, n int) int {
-	if a >= 0 {
-		return a - n*(a/n)
-	} else {
+	if a < 0 {
 		return a - n*((a-n+1)/n)
 	}
+	return a - n*(a/n)
 }
 
+// SwitchFile changes to a new file buffer.
 func (editor *Editor) SwitchFile(n int) {
 	n = intMod(n, len(editor.files))
 	editor.fileIdxPrv = editor.fileIdx
@@ -269,10 +272,11 @@ func (editor *Editor) SwitchFile(n int) {
 	editor.file = editor.files[n]
 }
 
+// HighlightCursors highlights all the multi-cursors.
 func (editor *Editor) HighlightCursors() {
 	cells := termbox.CellBuffer()
 	cols, _ := termbox.Size()
-	for k, _ := range editor.file.MultiCursor.Cursors()[1:] {
+	for k := range editor.file.MultiCursor.Cursors()[1:] {
 		r, c := editor.file.GetCursor(k + 1)
 		j := r*cols + c
 		if j < 0 || j >= len(cells) {
@@ -283,6 +287,7 @@ func (editor *Editor) HighlightCursors() {
 	}
 }
 
+// Flush writes the current buffer to the screen.
 func (editor *Editor) Flush() {
 	editor.file.Flush()
 	editor.HighlightCursors()
@@ -290,6 +295,8 @@ func (editor *Editor) Flush() {
 	editor.screen.Flush()
 }
 
+// KeepFlushed waits for flush requests, and then flushes
+// to the screen.
 func (editor *Editor) KeepFlushed() {
 	go func() {
 		for {
@@ -299,6 +306,7 @@ func (editor *Editor) KeepFlushed() {
 	}()
 }
 
+// RequestFlush requests a flush event (async).
 func (editor *Editor) RequestFlush() {
 	select {
 	case editor.flushChan <- struct{}{}:
@@ -306,6 +314,7 @@ func (editor *Editor) RequestFlush() {
 	}
 }
 
+// UpdateStatus updates the status line.
 func (editor *Editor) UpdateStatus() {
 	cols, rows := termbox.Size()
 	maxNameLen := cols / 3

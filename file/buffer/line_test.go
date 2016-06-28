@@ -69,9 +69,9 @@ func TestSearch(t *testing.T) {
 func TestRemoveTrailingWhitespace(t *testing.T) {
 
 	tests := [][]string{
-		[]string{"  foo", "  foo"},
-		[]string{"  foo  ", "  foo"},
-		[]string{"  foo\t", "  foo"},
+		{"  foo", "  foo"},
+		{"  foo  ", "  foo"},
+		{"  foo\t", "  foo"},
 	}
 
 	for _, test := range tests {

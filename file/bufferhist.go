@@ -9,12 +9,16 @@ import (
 	"github.com/wx13/sith/file/cursor"
 )
 
+// BufferState contains a snapshot of the buffer state,
+// including multicursor positions.
 type BufferState struct {
 	buff  buffer.Buffer
 	mc    cursor.MultiCursor
 	saved bool
 }
 
+// NewBufferState creates a new buffer state snapshot from the
+// current state.
 func NewBufferState(buff buffer.Buffer, mc cursor.MultiCursor) *BufferState {
 	return &BufferState{
 		buff: buff,
@@ -22,21 +26,18 @@ func NewBufferState(buff buffer.Buffer, mc cursor.MultiCursor) *BufferState {
 	}
 }
 
+// BufferHist manages a history of buffer states.
 type BufferHist struct {
 	list      *list.List
 	element   *list.Element
 	elemMutex *sync.Mutex
 
 	snapChan chan struct{}
-	snapReq  SnapshotRequest
+	snapReq  BufferState
 	reqMutex *sync.Mutex
 }
 
-type SnapshotRequest struct {
-	Buffer buffer.Buffer
-	Cursor cursor.MultiCursor
-}
-
+// NewBufferHist creates a new BufferHist object initialized with the current state.
 func NewBufferHist(buffer buffer.Buffer, cursor cursor.MultiCursor) *BufferHist {
 	bh := BufferHist{}
 	state := NewBufferState(buffer, cursor)
@@ -49,14 +50,16 @@ func NewBufferHist(buffer buffer.Buffer, cursor cursor.MultiCursor) *BufferHist 
 	return &bh
 }
 
+// ForceSnapshot forces a snapshot rather than requesting one.
 func (bh *BufferHist) ForceSnapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
 	bh.snapshot(buff.Dup(), mc.Dup())
 }
 
+//  Snapshot places a snapshot request onto the snapshot queue.
 func (bh *BufferHist) Snapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
-	request := SnapshotRequest{
-		Buffer: buff.Dup(),
-		Cursor: mc.Dup(),
+	request := BufferState{
+		buff: buff.Dup(),
+		mc:   mc.Dup(),
 	}
 
 	bh.reqMutex.Lock()
@@ -75,13 +78,14 @@ func (bh *BufferHist) handleSnapshots() {
 			select {
 			case <-bh.snapChan:
 				bh.reqMutex.Lock()
-				bh.snapshot(bh.snapReq.Buffer, bh.snapReq.Cursor)
+				bh.snapshot(bh.snapReq.buff, bh.snapReq.mc)
 				bh.reqMutex.Unlock()
 			}
 		}
 	}()
 }
 
+// SnapshotSaved toggles on the "saved" attribute for the current state.
 func (bh *BufferHist) SnapshotSaved() {
 	bh.elemMutex.Lock()
 	bh.element.Value.(*BufferState).saved = true
@@ -105,11 +109,11 @@ func (bh *BufferHist) snapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
 	bh.element = bh.list.InsertAfter(state, bh.element)
 	bh.elemMutex.Unlock()
 
-	bh.Trim()
+	bh.trim()
 
 }
 
-func (bh *BufferHist) Trim() {
+func (bh *BufferHist) trim() {
 
 	if bh.list.Len() < 200 {
 		return
@@ -157,11 +161,13 @@ func (bh *BufferHist) Trim() {
 
 }
 
+// Current returns the current buffer snapshot..
 func (bh *BufferHist) Current() (buffer.Buffer, cursor.MultiCursor) {
 	state := bh.element.Value.(*BufferState)
 	return state.buff, state.mc.Dup()
 }
 
+// Next bumps the current pointer to the next state (redo).
 func (bh *BufferHist) Next() (buffer.Buffer, cursor.MultiCursor) {
 	next := bh.element.Next()
 	if next != nil {
@@ -170,6 +176,7 @@ func (bh *BufferHist) Next() (buffer.Buffer, cursor.MultiCursor) {
 	return bh.Current()
 }
 
+// Prev bumps the current pointer to the previous state (undo).
 func (bh *BufferHist) Prev() (buffer.Buffer, cursor.MultiCursor) {
 	bh.elemMutex.Lock()
 	prev := bh.element.Prev()
@@ -182,6 +189,7 @@ func (bh *BufferHist) Prev() (buffer.Buffer, cursor.MultiCursor) {
 	return bh.Current()
 }
 
+// NextSaved bumps the current pointer to the next saved state (macro redo).
 func (bh *BufferHist) NextSaved() (buffer.Buffer, cursor.MultiCursor) {
 	for el := bh.element.Next(); el != nil; el = el.Next() {
 		if el.Value.(*BufferState).saved {
@@ -195,6 +203,7 @@ func (bh *BufferHist) NextSaved() (buffer.Buffer, cursor.MultiCursor) {
 	return bh.Current()
 }
 
+// PrevSaved bumps the current pointer to the previous saved state (macro undo).
 func (bh *BufferHist) PrevSaved() (buffer.Buffer, cursor.MultiCursor) {
 	for el := bh.element.Prev(); el != nil; el = el.Prev() {
 		if el.Value.(*BufferState).saved {

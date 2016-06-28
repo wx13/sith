@@ -2,6 +2,7 @@ package terminal
 
 import "github.com/nsf/termbox-go"
 
+// Keyboard acts as an interface to the termbox keyboard.
 type Keyboard struct {
 	KeyMap    map[termbox.Key]string
 	AltKeyMap map[string]string
@@ -87,9 +88,8 @@ func (kb *Keyboard) altKeyToCmd(ev termbox.Event) (string, rune) {
 	cmd, ok := kb.AltKeyMap[string(ev.Ch)]
 	if ok {
 		return cmd, 0
-	} else {
-		return "unknown", 0
 	}
+	return "unknown", 0
 }
 
 func (kb *Keyboard) keyToCmd(ev termbox.Event) (string, rune) {
@@ -116,11 +116,12 @@ func (kb *Keyboard) GetCmdString(ev termbox.Event) (string, rune) {
 
 	if ev.Type == termbox.EventKey {
 		return kb.keyToCmd(ev)
-	} else {
-		return "unknown", 0
 	}
+	return "unknown", 0
 }
 
+// GetKey returns the human-readable name for a keypress,
+// or the rune if it is character.
 func (kb *Keyboard) GetKey() (string, rune) {
 	ev := termbox.PollEvent()
 	return kb.GetCmdString(ev)

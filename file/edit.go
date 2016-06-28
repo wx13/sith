@@ -211,7 +211,7 @@ func (file *File) Paste(strs []string) {
 }
 
 func (file *File) CutToStartOfLine() {
-	for idx, _ := range file.MultiCursor.Cursors() {
+	for idx := range file.MultiCursor.Cursors() {
 		row, col := file.MultiCursor.GetRowCol(idx)
 		line := file.buffer.GetRow(row).Slice(col, -1)
 		file.buffer.SetRow(row, line)
@@ -221,7 +221,7 @@ func (file *File) CutToStartOfLine() {
 }
 
 func (file *File) CutToEndOfLine() {
-	for idx, _ := range file.MultiCursor.Cursors() {
+	for idx := range file.MultiCursor.Cursors() {
 		row, col := file.MultiCursor.GetRowCol(idx)
 		line := file.buffer.GetRow(row).Slice(0, col)
 		file.buffer.SetRow(row, line)

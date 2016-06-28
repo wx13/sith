@@ -22,6 +22,8 @@ type SyntaxRule struct {
 // SyntaxRules is the full collection of all syntax rules.
 type SyntaxRules []SyntaxRule
 
+// NewSyntaxRules creates a new SyntaxRules object, and initializes
+// the syntax rule sets.
 func NewSyntaxRules(filename string) *SyntaxRules {
 	rules := SyntaxRules{}
 	filetype := rules.GetFileType(filename)

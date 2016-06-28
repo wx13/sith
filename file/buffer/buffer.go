@@ -221,7 +221,7 @@ func (buffer *Buffer) Search(searchTerm string, cursor cursor.Cursor, loop bool)
 	return cursor.Row(), cursor.Col(), errors.New("Not Found")
 }
 
-// Replace replaces occurances of a string within a line.
+// Replace replaces occurences of a string within a line.
 func (buffer *Buffer) ReplaceWord(searchTerm, replaceTerm string, row, col int) {
 	startCol, endCol := buffer.GetRow(row).Search(searchTerm, col, -1)
 	strLine := buffer.GetRow(row).ToString()
@@ -308,7 +308,7 @@ func (buffer *Buffer) Equals(buffer2 *Buffer) bool {
 	buffer2.mutex.Lock()
 	defer buffer2.mutex.Unlock()
 
-	for idx, _ := range buffer.lines {
+	for idx := range buffer.lines {
 		if buffer.lines[idx].ToString() != buffer2.lines[idx].ToString() {
 			return false
 		}

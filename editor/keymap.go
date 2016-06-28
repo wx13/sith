@@ -6,13 +6,16 @@ import (
 	"github.com/wx13/sith/terminal"
 )
 
+// Action defines a keyboard action.
 type Action struct {
 	Func func()
 	Name string
 }
 
+// KeyMap is a list of named actions.
 type KeyMap map[string]Action
 
+// MakeKeyMap initializes the KeyMap.
 func (editor *Editor) MakeKeyMap() KeyMap {
 	km := make(KeyMap)
 	km.Add("backspace", func() { editor.file.Backspace() }, "")
@@ -46,10 +49,10 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	km.Add("ctrlX", func() { editor.file.AddCursor() }, "Add cursor")
 	km.Add("altC", func() { editor.file.AddCursorCol() }, "Create column cursor")
 	km.Add("altX", func() { editor.file.ClearCursors() }, "Clear multi-cursor")
-	km.Add("ctrlU", editor.Undo, "Undo")
-	km.Add("ctrlY", editor.Redo, "Redo")
-	km.Add("altU", editor.UndoSaved, "Macro undo")
-	km.Add("altY", editor.RedoSaved, "Macro redo")
+	km.Add("ctrlU", func() { editor.file.Undo() }, "Undo")
+	km.Add("ctrlY", func() { editor.file.Redo() }, "Redo")
+	km.Add("altU", func() { editor.file.UndoSaved() }, "Macro undo")
+	km.Add("altY", func() { editor.file.RedoSaved() }, "Macro redo")
 	km.Add("ctrlS", editor.Save, "Save file")
 	km.Add("ctrlA", func() { editor.file.StartOfLine() }, "Move to start of line")
 	km.Add("ctrlE", func() { editor.file.EndOfLine() }, "Move to end of line")
@@ -74,6 +77,7 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	return km
 }
 
+// MakeExtraKeyMap initializes the "extra" keys map.
 func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km := make(KeyMap)
 	km.Add("c", editor.SetCharMode, "Change character display mode")
@@ -84,10 +88,12 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	return km
 }
 
+// Add inserts a new action into the keymap.
 func (km KeyMap) Add(key string, f func(), name string) {
 	km[key] = Action{f, name}
 }
 
+// Run runs the specified action.
 func (km KeyMap) Run(key string) string {
 	action, ok := km[key]
 	if ok {
@@ -100,6 +106,7 @@ func (km KeyMap) Run(key string) string {
 	return "unknown"
 }
 
+// Keys shows a list of available actions.
 func (km KeyMap) Keys() []string {
 	keys := []string{}
 	for key, action := range km {
@@ -110,6 +117,7 @@ func (km KeyMap) Keys() []string {
 	return keys
 }
 
+// DisplayNames returns pretty-formatted keymap action names.
 func (km KeyMap) DisplayNames(keys []string, prefix string) []string {
 	names := make([]string, len(keys))
 	for idx, key := range keys {

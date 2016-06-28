@@ -4,6 +4,7 @@ package editor
 
 import "syscall"
 
+// Suspend suspends the editor. Not available on windows.
 func (editor *Editor) Suspend() {
 	editor.screen.Suspend()
 	pid := syscall.Getpid()

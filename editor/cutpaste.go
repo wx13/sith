@@ -4,6 +4,7 @@ import (
 	"github.com/wx13/sith/terminal"
 )
 
+// Cut cuts the current line and sticks it in the copy buffer.
 func (editor *Editor) Cut() {
 	if editor.copyContig > 0 {
 		editor.copyBuffer = append(editor.copyBuffer, editor.file.Cut()...)
@@ -15,10 +16,12 @@ func (editor *Editor) Cut() {
 	editor.copyContig = 2
 }
 
+// Paste pastes the current copy buffer into the main buffer.
 func (editor *Editor) Paste() {
 	editor.file.Paste(editor.copyBuffer)
 }
 
+// PasteFromMenu allows the user to select from the paste history.
 func (editor *Editor) PasteFromMenu() {
 	menu := terminal.NewMenu(editor.screen)
 	items := []string{}

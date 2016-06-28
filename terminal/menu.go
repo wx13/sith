@@ -6,6 +6,7 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+// Menu helps create a searchable, flexible, on-screen menu.
 type Menu struct {
 	cols, rows  int
 	col0, row0  int
@@ -17,16 +18,17 @@ type Menu struct {
 	choices     []string
 }
 
+// NewMenu creates a new Menu object.
 func NewMenu(screen *Screen) *Menu {
 	menu := Menu{}
-	menu.SetDims()
+	menu.setDims()
 	menu.screen = screen
 	menu.keyboard = NewKeyboard()
 	menu.borderColor = termbox.ColorBlue
 	return &menu
 }
 
-func (menu *Menu) SetDims() {
+func (menu *Menu) setDims() {
 	cols, rows := termbox.Size()
 	menu.rows = rows - 8
 	menu.col0 = 4
@@ -45,6 +47,7 @@ func (menu *Menu) SetDims() {
 	}
 }
 
+// Clear clears the on-screen menu.
 func (menu *Menu) Clear() {
 	borderColor := menu.borderColor
 	menu.screen.WriteStringColor(menu.row0-1, menu.col0-2, strings.Repeat(" ", menu.cols+4), borderColor, borderColor)
@@ -56,11 +59,12 @@ func (menu *Menu) Clear() {
 	}
 }
 
-func (menu *Menu) ShowSearchStr(searchStr string) {
+func (menu *Menu) showSearchStr(searchStr string) {
 	borderColor := menu.borderColor
 	menu.screen.WriteStringColor(menu.row0-1, menu.col0, searchStr, termbox.ColorBlack, borderColor)
 }
 
+// Show displays a menu of choices on the screen.
 func (menu *Menu) Show(choices []string) {
 	menu.Clear()
 	if menu.selection >= menu.rows-1+menu.rowShift {
@@ -85,15 +89,16 @@ func (menu *Menu) Show(choices []string) {
 	}
 }
 
+// Choose is the main interaction loop for the menu.
 func (menu *Menu) Choose(choices []string) int {
 	menu.choices = choices
-	menu.SetDims()
+	menu.setDims()
 	menu.selection = 0
 	searchStr := ""
 loop:
 	for {
 		menu.Show(choices)
-		menu.ShowSearchStr(searchStr)
+		menu.showSearchStr(searchStr)
 		menu.screen.Flush()
 		cmd, r := menu.keyboard.GetKey()
 		switch cmd {
@@ -138,6 +143,7 @@ loop:
 	return menu.selection
 }
 
+// Search searches menu options for a partial string match.
 func (menu *Menu) Search(choices []string, searchStr string) int {
 	for index := 0; index < len(choices); index++ {
 		if strings.Contains(strings.ToLower(choices[index]), strings.ToLower(searchStr)) {
@@ -147,6 +153,7 @@ func (menu *Menu) Search(choices []string, searchStr string) int {
 	return menu.selection
 }
 
+// SearchNext searches menu options from the current option on.
 func (menu *Menu) SearchNext(choices []string, searchStr string) int {
 	index := menu.selection
 	for {

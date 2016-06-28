@@ -185,7 +185,7 @@ func (file *File) StartOfLine() {
 			file.MultiCursor.SetColwant(idx, -1)
 		}
 	} else {
-		for idx, _ := range file.MultiCursor.Cursors() {
+		for idx := range file.MultiCursor.Cursors() {
 			file.MultiCursor.SetCol(idx, 0)
 			file.MultiCursor.SetColwant(idx, -1)
 		}
@@ -193,7 +193,7 @@ func (file *File) StartOfLine() {
 }
 
 func (file *File) EndOfLine() {
-	for idx, _ := range file.MultiCursor.Cursors() {
+	for idx := range file.MultiCursor.Cursors() {
 		row := file.MultiCursor.GetRow(idx)
 		line := file.buffer.GetRow(row)
 		file.MultiCursor.SetCol(idx, line.Length())

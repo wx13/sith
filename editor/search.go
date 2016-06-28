@@ -1,5 +1,6 @@
 package editor
 
+// SearchLineFo searches the current line from cursor to the end.
 func (editor *Editor) SearchLineFo() {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
@@ -9,6 +10,7 @@ func (editor *Editor) SearchLineFo() {
 	editor.file.SearchLineFo(searchTerm)
 }
 
+// SearchLineBa searches the current line from cursor to the start.
 func (editor *Editor) SearchLineBa() {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
@@ -18,6 +20,7 @@ func (editor *Editor) SearchLineBa() {
 	editor.file.SearchLineBa(searchTerm)
 }
 
+// Search searches the entire buffer (or set of buffers if multiFile is true).
 func (editor *Editor) Search(multiFile bool) {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
@@ -27,6 +30,7 @@ func (editor *Editor) Search(multiFile bool) {
 	editor.MultiFileSearch(searchTerm, multiFile)
 }
 
+// MarkedSearch searches between the cursors.
 func (editor *Editor) MarkedSearch(searchTerm string) (int, int, error) {
 	loop := false
 	row, col, err := editor.file.MarkedSearch(searchTerm, loop)
@@ -38,6 +42,7 @@ func (editor *Editor) MarkedSearch(searchTerm string) (int, int, error) {
 	return row, col, err
 }
 
+// MultiFileSearch searches all the file buffers.
 func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, int, error) {
 
 	if editor.file.MultiCursor.Length() > 1 {
@@ -78,6 +83,7 @@ func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, i
 	return row, col, err
 }
 
+// SearchAndReplace searches and replaces.
 func (editor *Editor) SearchAndReplace(multiFile bool) {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
@@ -100,6 +106,7 @@ func (editor *Editor) SearchAndReplace(multiFile bool) {
 	}
 }
 
+// MarkedSearchAndReplace does search-and-replace between cursors.
 func (editor *Editor) MarkedSearchAndReplace(searchTerm, replaceTerm string, replaceAll bool) {
 	for {
 
@@ -119,6 +126,7 @@ func (editor *Editor) MarkedSearchAndReplace(searchTerm, replaceTerm string, rep
 	}
 }
 
+// MultiFileSearchAndReplace is just like SearchAndReplace but for all the file buffers.
 func (editor *Editor) MultiFileSearchAndReplace(searchTerm, replaceTerm string, multiFile, replaceAll bool) {
 
 	var idx0, row0, col0 int
