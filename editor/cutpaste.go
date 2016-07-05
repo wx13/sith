@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"strings"
+
 	"github.com/wx13/sith/terminal"
 )
 
@@ -26,7 +28,7 @@ func (editor *Editor) PasteFromMenu() {
 	menu := terminal.NewMenu(editor.screen)
 	items := []string{}
 	for _, buffer := range editor.copyHist {
-		str := buffer[0]
+		str := strings.Join(buffer, " || ")
 		items = append(items, str)
 	}
 	idx := menu.Choose(items)
