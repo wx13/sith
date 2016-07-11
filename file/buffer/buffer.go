@@ -221,7 +221,7 @@ func (buffer *Buffer) Search(searchTerm string, cursor cursor.Cursor, loop bool)
 	return cursor.Row(), cursor.Col(), errors.New("Not Found")
 }
 
-// Replace replaces occurences of a string within a line.
+// Replace replaces occurrences of a string within a line.
 func (buffer *Buffer) ReplaceWord(searchTerm, replaceTerm string, row, col int) {
 	startCol, endCol := buffer.GetRow(row).Search(searchTerm, col, -1)
 	strLine := buffer.GetRow(row).ToString()

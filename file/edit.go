@@ -9,6 +9,7 @@ import (
 	"github.com/wx13/sith/file/buffer"
 )
 
+// GoFmt runs the go formatter on the text buffer and updates the buffer.
 func (file *File) GoFmt() error {
 	filetype := file.SyntaxRules.GetFileType(file.Name)
 	if filetype != "go" {
@@ -25,7 +26,9 @@ func (file *File) GoFmt() error {
 	return nil
 }
 
+// InsertChar insters a character (rune) into the current cursor position.
 func (file *File) InsertChar(ch rune) {
+
 	maxCol := 0
 	maxLineLen := 0
 	for _, cursor := range file.MultiCursor.Cursors() {
@@ -36,6 +39,7 @@ func (file *File) InsertChar(ch rune) {
 			maxLineLen = file.buffer.RowLength(cursor.Row())
 		}
 	}
+
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()
 		if maxCol > 0 && col == 0 {
@@ -54,9 +58,12 @@ func (file *File) InsertChar(ch rune) {
 		col += len(insertStr)
 		file.MultiCursor.SetCursor(idx, row, col, col)
 	}
+
 	file.Snapshot()
+
 }
 
+// Backspace removes the character before the cursor.
 func (file *File) Backspace() {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()
@@ -67,7 +74,7 @@ func (file *File) Backspace() {
 			if row == 0 {
 				return
 			}
-			row -= 1
+			row--
 			if row+1 >= file.buffer.Length() {
 				return
 			}
@@ -99,16 +106,18 @@ func (file *File) Backspace() {
 			file.MultiCursor.SetCursor(idx, row, col, col)
 		}
 	}
-	file.EnforceRowBounds()
-	file.EnforceColBounds()
+	file.enforceRowBounds()
+	file.enforceColBounds()
 	file.Snapshot()
 }
 
+// Delete deletes the character under the cursor.
 func (file *File) Delete() {
 	file.CursorRight()
 	file.Backspace()
 }
 
+// Newline breaks the current line into two.
 func (file *File) Newline() {
 
 	rate := file.timer.Tick()
@@ -125,7 +134,7 @@ func (file *File) Newline() {
 		file.MultiCursor.SetCursor(idx, row+1, 0, 0)
 
 		if file.autoIndent && rate < file.maxRate && lineEnd.Length() == 0 {
-			file.DoAutoIndent(idx)
+			file.doAutoIndent(idx)
 		}
 
 		file.buffer.SetRow(row, lineStart.RemoveTrailingWhitespace())
@@ -135,7 +144,7 @@ func (file *File) Newline() {
 	file.Snapshot()
 }
 
-func (file *File) DoAutoIndent(idx int) {
+func (file *File) doAutoIndent(idx int) {
 
 	row := file.MultiCursor.GetRow(idx)
 	if row == 0 {
@@ -174,6 +183,7 @@ func (file *File) DoAutoIndent(idx int) {
 
 }
 
+// Justify justifies the marked text.
 func (file *File) Justify(lineLen int) {
 	minRow, maxRow := file.MultiCursor.MinMaxRow()
 	bigString := file.buffer.InclSlice(minRow, maxRow).ToString(" ")
@@ -183,6 +193,7 @@ func (file *File) Justify(lineLen int) {
 	file.Snapshot()
 }
 
+// Cut cuts the current line and adds to the copy buffer.
 func (file *File) Cut() []string {
 	row := file.MultiCursor.GetRow(0)
 	cutLines := file.buffer.InclSlice(row, row).Dup()
@@ -191,12 +202,13 @@ func (file *File) Cut() []string {
 		strs[idx] = line.ToString()
 	}
 	file.buffer.DeleteRow(row)
-	file.EnforceRowBounds()
-	file.EnforceColBounds()
+	file.enforceRowBounds()
+	file.enforceColBounds()
 	file.Snapshot()
 	return strs
 }
 
+// Paste inserts the copy buffer into buffer at the current line.
 func (file *File) Paste(strs []string) {
 	row := file.MultiCursor.GetRow(0)
 	pasteLines := make([]buffer.Line, len(strs))
@@ -205,11 +217,12 @@ func (file *File) Paste(strs []string) {
 	}
 	file.buffer.InsertAfter(row-1, pasteLines...)
 	file.CursorDown(len(pasteLines))
-	file.EnforceRowBounds()
-	file.EnforceColBounds()
+	file.enforceRowBounds()
+	file.enforceColBounds()
 	file.Snapshot()
 }
 
+// CutToStartOfLine cuts the text from the cursor to the start of the line.
 func (file *File) CutToStartOfLine() {
 	for idx := range file.MultiCursor.Cursors() {
 		row, col := file.MultiCursor.GetRowCol(idx)
@@ -220,6 +233,7 @@ func (file *File) CutToStartOfLine() {
 	file.Snapshot()
 }
 
+// CutToEndOfLine cuts the text from the cursor to the end of the line.
 func (file *File) CutToEndOfLine() {
 	for idx := range file.MultiCursor.Cursors() {
 		row, col := file.MultiCursor.GetRowCol(idx)
@@ -229,6 +243,8 @@ func (file *File) CutToEndOfLine() {
 	file.Snapshot()
 }
 
+// CursorAlign inserts spaces into each cursor position, in order to
+// align the cursors vertically.
 func (file *File) CursorAlign() {
 	maxCol := file.MultiCursor.MaxCol()
 	for idx, cursor := range file.MultiCursor.Cursors() {
@@ -244,6 +260,8 @@ func (file *File) CursorAlign() {
 	file.Snapshot()
 }
 
+// CursorUnalign removes whitespace (except for 1 space) immediately preceding
+// each cursor position.  Effectively, it undoes a CursorAlign.
 func (file *File) CursorUnalign() {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()

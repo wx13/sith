@@ -2,17 +2,21 @@ package file
 
 import "time"
 
+// Timer continually measures the rate at which things happen.
 type Timer struct {
 	t0   int64
 	Rate float64
 }
 
+// MakeTimer creates a new Timer instance.
 func MakeTimer() Timer {
 	timer := Timer{}
 	timer.t0 = time.Now().UnixNano()
 	return timer
 }
 
+// Tick updates the continually monitored rate and returns its
+// current value.
 func (timer *Timer) Tick() float64 {
 	t := time.Now().UnixNano()
 	dt := t - timer.t0

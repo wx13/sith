@@ -8,7 +8,7 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-func (file *File) EnforceColBounds() {
+func (file *File) enforceColBounds() {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		if cursor.Col() > file.buffer.RowLength(cursor.Row()) {
 			file.MultiCursor.SetCol(idx, file.buffer.RowLength(cursor.Row()))
@@ -19,7 +19,7 @@ func (file *File) EnforceColBounds() {
 	}
 }
 
-func (file *File) EnforceRowBounds() {
+func (file *File) enforceRowBounds() {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		if cursor.Row() >= file.buffer.Length() {
 			file.MultiCursor.SetRow(idx, file.buffer.Length()-1)
@@ -30,7 +30,7 @@ func (file *File) EnforceRowBounds() {
 	}
 }
 
-func (file *File) MakeCursorNotAtTopBottom() {
+func (file *File) makeCursorNotAtTopBottom() {
 	row := file.MultiCursor.GetRow(0)
 	_, rows := termbox.Size()
 	bottom := file.rowOffset + rows - 1
@@ -39,23 +39,27 @@ func (file *File) MakeCursorNotAtTopBottom() {
 	}
 }
 
+// CursorGoTo moves the cursor to a row, col position.
 func (file *File) CursorGoTo(row, col int) {
 	file.MultiCursor.Set(row, col, col)
-	file.EnforceRowBounds()
-	file.EnforceColBounds()
-	file.MakeCursorNotAtTopBottom()
+	file.enforceRowBounds()
+	file.enforceColBounds()
+	file.makeCursorNotAtTopBottom()
 }
 
+// PageDown moves the cursor half a screen down.
 func (file *File) PageDown() {
 	_, rows := termbox.Size()
 	file.CursorDown(rows/2 - 1)
 }
 
+// PageUp moves the cursor have a screen up.
 func (file *File) PageUp() {
 	_, rows := termbox.Size()
 	file.CursorUp(rows/2 - 1)
 }
 
+// CursorUp moves the cursor up n rows.
 func (file *File) CursorUp(n int) {
 	row, _, colwant := file.MultiCursor.GetCursorRCC(0)
 	row -= n
@@ -63,9 +67,10 @@ func (file *File) CursorUp(n int) {
 		row = 0
 	}
 	file.MultiCursor.SetCursor(0, row, colwant, colwant)
-	file.EnforceColBounds()
+	file.enforceColBounds()
 }
 
+// CursorDown moves the cursor down n rows.
 func (file *File) CursorDown(n int) {
 	row, _, colwant := file.MultiCursor.GetCursorRCC(0)
 	row += n
@@ -73,9 +78,10 @@ func (file *File) CursorDown(n int) {
 		row = file.buffer.Length() - 1
 	}
 	file.MultiCursor.SetCursor(0, row, colwant, colwant)
-	file.EnforceColBounds()
+	file.enforceColBounds()
 }
 
+// CursorRight moves the cursor one column to the right.
 func (file *File) CursorRight() {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()
@@ -92,10 +98,11 @@ func (file *File) CursorRight() {
 		}
 		file.MultiCursor.SetColwant(idx, -1)
 	}
-	file.EnforceRowBounds()
-	file.EnforceColBounds()
+	file.enforceRowBounds()
+	file.enforceColBounds()
 }
 
+// CursorLeft moves the cursor one column to the left.
 func (file *File) CursorLeft() {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()
@@ -106,7 +113,7 @@ func (file *File) CursorLeft() {
 				continue
 			}
 			if row > 0 {
-				row -= 1
+				row--
 				col = file.buffer.RowLength(row)
 				file.MultiCursor.SetCursor(idx, row, col, col)
 			}
@@ -115,38 +122,43 @@ func (file *File) CursorLeft() {
 	}
 }
 
+// GetCursor returns the row, col position for the specified multi-cursor index.
 func (file *File) GetCursor(idx int) (int, int) {
-	file.EnforceRowBounds()
-	file.EnforceColBounds()
+	file.enforceRowBounds()
+	file.enforceColBounds()
 	row, col, _ := file.MultiCursor.GetCursorRCC(idx)
 	line := file.buffer.GetRow(row).Slice(0, col).Tabs2spaces()
 	n := file.screen.StringDispLen(line.ToString())
 	return row - file.rowOffset, n - file.colOffset
 }
 
+// ScrollLeft shifts the view screen to the left.
 func (file *File) ScrollLeft() {
-	file.colOffset += 1
+	file.colOffset++
 }
 
+// ScrollRight shifts the view screen to the right.
 func (file *File) ScrollRight() {
 	if file.colOffset > 0 {
-		file.colOffset -= 1
+		file.colOffset--
 	}
 }
 
+// ScrollUp shifts the screen up one row.
 func (file *File) ScrollUp() {
 	if file.rowOffset < file.buffer.Length()-1 {
-		file.rowOffset += 1
+		file.rowOffset++
 	}
 }
 
+// ScrollDown shifts the screen down one row.
 func (file *File) ScrollDown() {
 	if file.rowOffset > 0 {
-		file.rowOffset -= 1
+		file.rowOffset--
 	}
 }
 
-func (file *File) UpdateOffsets(nRows, nCols int) {
+func (file *File) updateOffsets(nRows, nCols int) {
 
 	row := file.MultiCursor.GetRow(0)
 	if row < file.rowOffset {
@@ -167,6 +179,9 @@ func (file *File) UpdateOffsets(nRows, nCols int) {
 
 }
 
+// StartOfLine moves the cursors to the start of the line.
+// If they are already at the start, the moves them to the first
+// non-whitespace character.
 func (file *File) StartOfLine() {
 	allAtZero := true
 	for _, cursor := range file.MultiCursor.Cursors() {
@@ -192,6 +207,7 @@ func (file *File) StartOfLine() {
 	}
 }
 
+// EndOfLine moves the cursors to the end of the line.
 func (file *File) EndOfLine() {
 	for idx := range file.MultiCursor.Cursors() {
 		row := file.MultiCursor.GetRow(idx)
@@ -201,19 +217,21 @@ func (file *File) EndOfLine() {
 	}
 }
 
+// NextWord moves the cursor to the next word.
 func (file *File) NextWord() {
-	file.PrevNextWord(1)
+	file.prevNextWord(1)
 }
 
+// PrevWord moves the cursor to the previous word.
 func (file *File) PrevWord() {
-	file.PrevNextWord(-1)
+	file.prevNextWord(-1)
 }
 
 func isLetter(r rune) bool {
 	return !(unicode.IsPunct(r) || unicode.IsSpace(r))
 }
 
-func (file *File) PrevNextWord(incr int) {
+func (file *File) prevNextWord(incr int) {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row := cursor.Row()
 		col := cursor.Col()
@@ -238,6 +256,8 @@ func (file *File) PrevNextWord(incr int) {
 	}
 }
 
+// GoToLine prompts the user for a row number, and the puts the cursor
+// on that row.
 func (file *File) GoToLine() {
 	lineNo := file.screen.GetPromptAnswer("goto:", &file.gotoHist)
 	if lineNo == "" {

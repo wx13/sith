@@ -122,7 +122,7 @@ func (file *File) ToString() string {
 // Slice returns a 2D slice of the buffer.
 func (file *File) Slice(nRows, nCols int) []string {
 
-	file.UpdateOffsets(nRows, nCols)
+	file.updateOffsets(nRows, nCols)
 
 	startRow := file.rowOffset
 	endRow := nRows + file.rowOffset
