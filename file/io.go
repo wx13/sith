@@ -9,6 +9,7 @@ import (
 	"github.com/wx13/sith/file/buffer"
 )
 
+// Flush writes the buffer contents to the screen.
 func (file *File) Flush() {
 	file.ComputeIndent()
 	cols, rows := termbox.Size()
@@ -68,6 +69,7 @@ func (file *File) ReadFile(name string) {
 
 }
 
+// RequestFlush places a flush request on the flush channel.
 func (file *File) RequestFlush() {
 	select {
 	case file.flushChan <- struct{}{}:
@@ -75,6 +77,7 @@ func (file *File) RequestFlush() {
 	}
 }
 
+// RequestSave places a save request on the save channel.
 func (file *File) RequestSave() {
 	select {
 	case file.saveChan <- struct{}{}:
@@ -82,7 +85,7 @@ func (file *File) RequestSave() {
 	}
 }
 
-func (file *File) ProcessSaveRequests() {
+func (file *File) processSaveRequests() {
 	for {
 		<-file.saveChan
 		file.Save()

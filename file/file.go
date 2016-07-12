@@ -66,7 +66,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		statusMutex: &sync.Mutex{},
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
-	go file.ProcessSaveRequests()
+	go file.processSaveRequests()
 	go file.ReadFile(name)
 	switch path.Ext(name) {
 	case ".md", ".txt", ".csv", ".C":
