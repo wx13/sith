@@ -32,8 +32,8 @@ func (buffer *Buffer) Lines() []Line {
 
 // Dup creates a new buffer with the same lines.
 func (buffer *Buffer) Dup() Buffer {
-	linesCopy := make([]Line, buffer.Length())
 	buffer.mutex.Lock()
+	linesCopy := make([]Line, len(buffer.lines))
 	for row, line := range buffer.lines {
 		linesCopy[row] = line
 	}
@@ -46,8 +46,8 @@ func (buffer *Buffer) Dup() Buffer {
 
 // DeepDup creates a new buffer with copies of the lines.
 func (buffer *Buffer) DeepDup() Buffer {
-	linesCopy := make([]Line, buffer.Length())
 	buffer.mutex.Lock()
+	linesCopy := make([]Line, len(buffer.lines))
 	for row, line := range buffer.lines {
 		linesCopy[row] = line.Dup()
 	}
