@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"unicode"
 )
 
 type Line struct {
@@ -190,4 +191,37 @@ func (line *Line) GetChar(k int) rune {
 
 func (line *Line) Chars() []rune {
 	return line.chars
+}
+
+func isSpace(r rune) bool {
+	return unicode.IsSpace(r)
+}
+
+func isPunct(r rune) bool {
+	return unicode.IsPunct(r)
+}
+
+func isLetter(r rune) bool {
+	return !(unicode.IsPunct(r) || unicode.IsSpace(r))
+}
+
+// PrevNextWord returns the column position of the next/previous
+// word from the current column position.
+func (line *Line) PrevNextWord(col, incr int) int {
+	r := line.GetChar(col)
+	var charCheck func(r rune) bool
+	if isLetter(r) {
+		charCheck = isLetter
+	} else if isSpace(r) {
+		charCheck = isSpace
+	} else {
+		charCheck = isPunct
+	}
+	for ; col <= line.Length() && col >= 0; col += incr {
+		r = line.GetChar(col)
+		if !charCheck(r) {
+			return col
+		}
+	}
+	return col
 }

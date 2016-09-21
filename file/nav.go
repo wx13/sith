@@ -3,7 +3,6 @@ package file
 import (
 	"regexp"
 	"strconv"
-	"unicode"
 
 	"github.com/nsf/termbox-go"
 )
@@ -227,30 +226,12 @@ func (file *File) PrevWord() {
 	file.prevNextWord(-1)
 }
 
-func isLetter(r rune) bool {
-	return !(unicode.IsPunct(r) || unicode.IsSpace(r))
-}
-
 func (file *File) prevNextWord(incr int) {
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row := cursor.Row()
 		col := cursor.Col()
 		line := file.buffer.GetRow(row)
-		r := line.GetChar(col)
-		if isLetter(r) {
-			for ; col <= line.Length() && col >= 0; col += incr {
-				r = line.GetChar(col)
-				if !isLetter(r) {
-					break
-				}
-			}
-		}
-		for ; col <= line.Length() && col >= 0; col += incr {
-			r = line.GetChar(col)
-			if isLetter(r) {
-				break
-			}
-		}
+		col = line.PrevNextWord(col, incr)
 		file.MultiCursor.SetCol(idx, col)
 		file.MultiCursor.SetColwant(idx, -1)
 	}
