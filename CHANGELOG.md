@@ -2,6 +2,17 @@ Change Log
 ==========
 
 
+## [0.4.3] 2016-09-27
+
+### Features
+- In paste-from-menu, show concatenated lines, rather than just the first line.
+- Improved next/prev word navigation
+
+### Bugfixes
+- prevent condition where array length changes after measuring
+- fixed some golint issues
+
+
 ## [0.4.2] 2016-06-12
 
 ### Features
