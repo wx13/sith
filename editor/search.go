@@ -42,6 +42,17 @@ func (editor *Editor) MarkedSearch(searchTerm string) (int, int, error) {
 	return row, col, err
 }
 
+func (editor *Editor) otherIndexes(curr, max int) []int {
+	idxs := []int{}
+	for idx := curr + 1; idx < max; idx++ {
+		idxs = append(idxs, idx)
+	}
+	for idx := 0; idx < curr; idx++ {
+		idxs = append(idxs, idx)
+	}
+	return idxs
+}
+
 // MultiFileSearch searches all the file buffers.
 func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, int, error) {
 
@@ -57,11 +68,8 @@ func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, i
 	}
 
 	// Search other files.
-	if multiFile {
-		for idx := editor.fileIdx + 1; idx != editor.fileIdx; idx++ {
-			if idx >= len(editor.files) {
-				idx = 0
-			}
+	if multiFile && len(editor.files) > 0 {
+		for _, idx := range editor.otherIndexes(editor.fileIdx, len(editor.files)) {
 			theFile := editor.files[idx]
 			row, col, err := theFile.SearchFromStart(searchTerm)
 			if err == nil {
