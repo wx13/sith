@@ -23,7 +23,7 @@ func (file *File) GoFmt() error {
 		file.buffer.ReplaceBuffer(newBuffer)
 	}
 	file.Snapshot()
-	return nil
+	return err
 }
 
 // InsertChar insters a character (rune) into the current cursor position.
