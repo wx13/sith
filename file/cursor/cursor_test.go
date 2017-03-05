@@ -17,12 +17,38 @@ func TestCursorDup(t *testing.T) {
 	}
 }
 
+func makeMC() cursor.MultiCursor {
+	mc := cursor.MakeMultiCursor()
+	mc.ResetCursors(map[int][]int{
+		10: {12, 12, 15},
+		2:  {15, 15},
+	})
+	return mc
+}
+
+func TestGetRows(t *testing.T) {
+	mc := makeMC()
+	rows := mc.GetRows()
+	if len(rows) != 2 {
+		t.Errorf("GetRows failed: %#v %#v\n", mc, rows)
+	}
+}
+
+func TestMCOnePerLine(t *testing.T) {
+	mc := makeMC()
+	mc.OnePerLine()
+	cursors := mc.Cursors()
+	if len(cursors) != 2 {
+		t.Errorf("OnePerLine failed: %#v\n", cursors)
+	}
+}
+
 func TestMCClear(t *testing.T) {
 	mc := cursor.MakeMultiCursor()
 
 	mc.Snapshot()
 	mc.Snapshot()
-	if mc.Length() != 3 {
+	if mc.Length() != 1 {
 		t.Error("Wrong MC length:", mc.Length())
 	}
 
@@ -36,7 +62,7 @@ func TestMCClear(t *testing.T) {
 	mc.Snapshot()
 	mc.Snapshot()
 	mc.OuterMost()
-	if mc.Length() != 2 {
+	if mc.Length() != 1 {
 		t.Error("Outermost failed:", mc.Length())
 	}
 

@@ -159,6 +159,220 @@ func TestBufferEdits(t *testing.T) {
 	}
 }
 
+func TestBufferInsertStr(t *testing.T) {
+	var buf buffer.Buffer
+	var cols map[int][]int
+
+	buf = buffer.MakeBuffer([]string{"abc", "def", "ghi"})
+	cols = buf.InsertStr("//", map[int][]int{0: {0}, 1: {0}})
+	if buf.ToString("-") != "//abc-//def-ghi" {
+		t.Error("InsertStr at start of lines", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 2) || !intSliceEq(cols[1], 2) {
+		t.Error("InsertStr at start of lines", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "abcdef"})
+	cols = buf.InsertStr("//", map[int][]int{0: {0, 3}, 1: {0}})
+	if buf.ToString("-") != "//abc//def-//abcdef" {
+		t.Error("InsertStr at multiple places", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 2, 7) || !intSliceEq(cols[1], 2) {
+		t.Error("InsertStr at multiple", cols)
+	}
+
+}
+
+func TestDeleteNewlines(t *testing.T) {
+	var buf buffer.Buffer
+	var cols map[int][]int
+
+	buf = buffer.MakeBuffer([]string{"abc", "def", "ghi"})
+	cols = buf.DeleteNewlines(map[int][]int{1: {0}})
+	if buf.ToString("-") != "abcdef-ghi" {
+		t.Error("DeleteNewlines one cursor", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 3) {
+		t.Error("DeleteNewlines one cursor", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abc", "def", "ghi"})
+	cols = buf.DeleteNewlines(map[int][]int{1: {0}, 2: {0}})
+	if buf.ToString("-") != "abcdefghi" {
+		t.Error("DeleteNewlines two cursors", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 3, 6) {
+		t.Error("DeleteNewlines two cursors", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abc", "def", "ghi"})
+	cols = buf.DeleteNewlines(map[int][]int{0: {0}, 1: {0}, 2: {0}})
+	if buf.ToString("-") != "abcdefghi" {
+		t.Error("DeleteNewlines two cursors", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 0, 3, 6) {
+		t.Error("DeleteNewlines two cursors", cols)
+	}
+
+}
+
+func TestDeleteChars(t *testing.T) {
+	var buf buffer.Buffer
+	var cols map[int][]int
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "abcdef"})
+	cols = buf.DeleteChars(2, map[int][]int{0: {3}, 1: {3}})
+	if buf.ToString("-") != "abcf-abcf" {
+		t.Error("DeleteChars on two lines", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 3) || !intSliceEq(cols[1], 3) {
+		t.Error("DeleteChars on two lines", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "abcdef"})
+	cols = buf.DeleteChars(2, map[int][]int{0: {0, 3}, 1: {3}})
+	if buf.ToString("-") != "cf-abcf" {
+		t.Error("DeleteChars twice on same row", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 0, 1) || !intSliceEq(cols[1], 3) {
+		t.Error("DeleteChars twice on same row", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "abcdef"})
+	cols = buf.DeleteChars(-2, map[int][]int{0: {3}, 1: {3}})
+	if buf.ToString("-") != "adef-adef" {
+		t.Error("DeleteChars backwards on two lines", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 1) || !intSliceEq(cols[1], 1) {
+		t.Error("DeleteChars backwards on two lines", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"0123456789"})
+	cols = buf.DeleteChars(-3, map[int][]int{0: {5, 7}})
+	if buf.ToString("-") != "01789" {
+		t.Error("DeleteChars overlapping backspace", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 2) {
+		t.Error("DeleteChars overlapping backspace", cols)
+	}
+
+}
+
+func rowColEq(m1, m2 map[int][]int) bool {
+	if len(m1) != len(m2) {
+		return false
+	}
+	for k1, s1 := range m1 {
+		s2, ok := m2[k1]
+		if !ok {
+			return false
+		}
+		if !intSliceEq(s1, s2...) {
+			return false
+		}
+	}
+	for k2, _ := range m2 {
+		_, ok := m1[k2]
+		if !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func TestInsertNewlines(t *testing.T) {
+	var buf buffer.Buffer
+	var cols map[int][]int
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{0: {0}})
+	if buf.ToString("-") != "-abcdef-123456" {
+		t.Error("Single cursor at start of buffer.", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[1], 0) {
+		t.Error("Single cursor at start of buffer.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{0: {3}})
+	if buf.ToString("-") != "abc-def-123456" {
+		t.Error("Single cursor in middle of row.", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[1], 0) {
+		t.Error("Single cursor in middle of row.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{0: {6}})
+	if buf.ToString("-") != "abcdef--123456" {
+		t.Error("Single cursor at end row.", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[1], 0) {
+		t.Error("Single cursor at end row.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{1: {3}})
+	if buf.ToString("-") != "abcdef-123-456" {
+		t.Error("Single cursor in second row.", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[2], 0) {
+		t.Error("Single cursor in second row.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{0: {3}, 1: {2}})
+	if buf.ToString("-") != "abc-def-12-3456" {
+		t.Error("Two cursors in middle.", buf.ToString("-"))
+	}
+	if !rowColEq(cols, map[int][]int{1: {0}, 3: {0}}) {
+		t.Error("Two cursors in middle.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456", "ABCDEF", "654321"})
+	cols = buf.InsertNewlines(map[int][]int{0: {3}, 1: {3}, 3: {3}})
+	if buf.ToString("-") != "abc-def-123-456-ABCDEF-654-321" {
+		t.Error("Two cursors in middle.", buf.ToString("-"))
+	}
+	if !rowColEq(cols, map[int][]int{1: {0}, 3: {0}, 6: {0}}) {
+		t.Error("Two cursors in middle.", cols)
+	}
+
+}
+
+func TestAlign(t *testing.T) {
+	var buf buffer.Buffer
+	var cols map[int][]int
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.Align(map[int][]int{0: {0}})
+	if buf.ToString("-") != "abcdef-123456" {
+		t.Error("Single row, single col.", buf.ToString("-"))
+	}
+	if !rowColEq(cols, map[int][]int{0: {0}}) {
+		t.Error("Single row, single col.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.Align(map[int][]int{0: {3}, 1: {4}})
+	if buf.ToString("-") != "abc def-123456" {
+		t.Error("Two rows, one col.", buf.ToString("-"))
+	}
+	if !rowColEq(cols, map[int][]int{0: {4}, 1: {4}}) {
+		t.Error("Two rows, one col.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"ab,cdef,gh", "1234,56,78"})
+	cols = buf.Align(map[int][]int{0: {2, 7}, 1: {4, 7}})
+	if buf.ToString("-") != "ab  ,cdef,gh-1234,56  ,78" {
+		t.Error("Two rows, one col.", buf.ToString("-"))
+	}
+	if !rowColEq(cols, map[int][]int{0: {4, 9}, 1: {4, 9}}) {
+		t.Error("Two rows, two cols.", cols)
+	}
+
+}
+
 func TestBufferBracketMatch(t *testing.T) {
 
 	var buf buffer.Buffer

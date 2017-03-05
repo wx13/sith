@@ -3,6 +3,7 @@ package buffer
 import (
 	"errors"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 
@@ -152,6 +153,9 @@ func (buffer *Buffer) StrSlab(row1, row2, col1, col2 int) []string {
 
 // ToString concatenates the buffer into one long string.
 func (buffer *Buffer) ToString(newline string) string {
+	if buffer.Length() == 0 {
+		return ""
+	}
 	str := ""
 	for _, line := range buffer.Lines() {
 		str += line.ToString() + newline
@@ -180,9 +184,24 @@ func (buffer *Buffer) DeleteRow(row int) {
 }
 
 func (buffer *Buffer) ReplaceLine(line Line, row int) {
+	if row >= buffer.Length() {
+		return
+	}
 	buffer.mutex.Lock()
 	buffer.lines[row] = line
-	buffer.mutex.Unlock()
+	defer buffer.mutex.Unlock()
+}
+
+// MergeRows merges the current row into the previous.
+func (buffer *Buffer) MergeRows(row int) error {
+	if row <= 0 || row >= buffer.Length() {
+		return errors.New("bad MergeRows index")
+	}
+	str1 := buffer.GetRow(row - 1).ToString()
+	str2 := buffer.GetRow(row).ToString()
+	buffer.ReplaceLine(MakeLine(str1+str2), row-1)
+	buffer.DeleteRow(row)
+	return nil
 }
 
 // ReplaceLines replaces the lines from minRow to maxRow with lines.
@@ -231,12 +250,12 @@ func (buffer *Buffer) ReplaceWord(searchTerm, replaceTerm string, row, col int) 
 
 func (buffer *Buffer) GetRow(row int) Line {
 	buffer.mutex.Lock()
-	if row >= len(buffer.lines) {
-		row = len(buffer.lines) - 1
+	defer buffer.mutex.Unlock()
+	if row < 0 || row >= len(buffer.lines) {
+		return MakeLine("")
 	}
 	line := buffer.lines[row]
-	buffer.mutex.Unlock()
-	return line
+	return MakeLine(line.ToString())
 }
 
 func (buffer *Buffer) SetRow(row int, line Line) error {
@@ -319,13 +338,6 @@ func (buffer *Buffer) Equals(buffer2 *Buffer) bool {
 	return true
 }
 
-func (buffer *Buffer) CompressPriorSpaces(row, col int) int {
-	line := buffer.GetRow(row)
-	line, col = line.CompressPriorSpaces(col)
-	buffer.SetRow(row, line)
-	return col
-}
-
 // BracketMatch looks for matching partner rune in a set of lines.
 //
 //   row, col         where to start the search from
@@ -369,4 +381,224 @@ func (buffer *Buffer) BracketMatch(row, col, end_row int) (int, int, error) {
 	}
 
 	return row, col, errors.New("could not find bracket match")
+}
+
+// DeleteChars deletes count characters at each position in the rows map.
+func (buffer *Buffer) DeleteChars(count int, rows map[int][]int, indent ...int) map[int][]int {
+	for row, cols := range rows {
+		if row > buffer.Length() || row < 0 {
+			continue
+		}
+		line := buffer.GetRow(row)
+		if count >= 0 {
+			cols = line.DeleteFwd(count, cols...)
+		} else {
+
+			// Unindent
+			c := -count
+			if len(indent) > 0 {
+				col := cols[0]
+				if line.Slice(0, col).ToString() == strings.Repeat(" ", col) {
+					n := indent[0]
+					if n*(col/n) == col {
+						c = n
+					}
+				}
+			}
+
+			cols = line.DeleteBkwd(c, cols...)
+		}
+		buffer.SetRow(row, line)
+		rows[row] = cols
+	}
+	return rows
+}
+
+// InsertNewlines splits lines at cursors.
+func (buffer *Buffer) InsertNewlines(rowMap map[int][]int) map[int][]int {
+
+	// Sort everything.
+	rows := []int{}
+	for row, cols := range rowMap {
+		rows = append(rows, row)
+		sort.Ints(cols)
+		rowMap[row] = cols
+	}
+	sort.Ints(rows)
+
+	// Keep track of new lines that we'll insert.
+	newLines := map[int][]Line{}
+
+	// Create a new row map, that we'll return.
+	newRowMap := map[int][]int{}
+
+	// Loop over rows *in order*.
+	total := 0
+	for _, row := range rows {
+
+		line := buffer.GetRow(row)
+
+		lines := []Line{}
+		c0 := 0
+		for i, c := range rowMap[row] {
+			lines = append(lines, line.Slice(c0, c))
+			c0 = c
+			newRowMap[row+i+1+total] = []int{0}
+		}
+		total += len(lines)
+		if c0 <= line.Length() {
+			lines = append(lines, line.Slice(c0, -1))
+		}
+		newLines[row] = lines
+
+	}
+
+	// Insert into buffer.
+	total = 0
+	for _, row := range rows {
+		lines := newLines[row]
+		buffer.ReplaceLines(lines, row+total, row+total)
+		total += len(lines) - 1
+	}
+
+	return newRowMap
+
+}
+
+// DeleteNewlines deletes the newline chars at the start of each row specified.
+func (buffer *Buffer) DeleteNewlines(rowsMap map[int][]int) map[int][]int {
+
+	// Create ordered lists of rows and columns. Columns start
+	// out at 0, b/c we must be a the start of a line to delete
+	// the newline.
+	rows := []int{}
+	cols := []int{}
+	for row, _ := range rowsMap {
+		rows = append(rows, row)
+		cols = append(cols, 0)
+	}
+	sort.Ints(rows)
+
+	// Loop over rows and merge.
+	for k, _ := range rows {
+		row := rows[k]
+
+		// New col position is at end of previous line. Put in temp var
+		// because we won't keep it if merge fails.
+		col := buffer.GetRow(row - 1).Length()
+
+		// Merge rows.
+		err := buffer.MergeRows(row)
+		if err != nil {
+			continue
+		}
+
+		// Record our col position and adjust all subsequent rows.
+		cols[k] = col
+		for j := k; j < len(rows); j++ {
+			rows[j]--
+		}
+	}
+
+	// Reconstruct the rows map from rows/cols arrays.
+	rowsMap = map[int][]int{}
+	for _, row := range rows {
+		rowsMap[row] = []int{}
+	}
+	for k, row := range rows {
+		rowsMap[row] = append(rowsMap[row], cols[k])
+	}
+	return rowsMap
+}
+
+func (buffer *Buffer) InsertChar(ch rune, rows map[int][]int) map[int][]int {
+	return buffer.InsertStr(string(ch), rows)
+}
+
+// InsertStr inserts the specified string into each position in the rows map.
+func (buffer *Buffer) InsertStr(str string, rows map[int][]int) map[int][]int {
+	for row, cols := range rows {
+		if row > buffer.Length() || row < 0 {
+			continue
+		}
+		line := buffer.GetRow(row)
+		cols = line.InsertStr(str, cols...)
+		buffer.SetRow(row, line)
+		rows[row] = cols
+	}
+	return rows
+}
+
+// Align inserts spaces into cursor positions to align them.
+func (buffer *Buffer) Align(rows map[int][]int) map[int][]int {
+
+	// Sort all columns, and get the relative column positions.
+	numCols := 0
+	rowDeltas := map[int][]int{}
+	for row, cols := range rows {
+		sort.Ints(cols)
+		rows[row] = cols
+		if len(cols) > numCols {
+			numCols = len(cols)
+		}
+		rowDeltas[row] = []int{cols[0]}
+		for i := 1; i < len(cols); i++ {
+			rowDeltas[row] = append(rowDeltas[row], cols[i]-cols[i-1])
+		}
+	}
+
+	// Get desired column positions.
+	newCols := []int{}
+	for i := 0; i < numCols; i++ {
+		maxDelta := 0
+		for _, colDeltas := range rowDeltas {
+			if len(colDeltas) <= i {
+				continue
+			}
+			if colDeltas[i] > maxDelta {
+				maxDelta = colDeltas[i]
+			}
+		}
+		newCols = append(newCols, maxDelta)
+	}
+	for i := 1; i < len(newCols); i++ {
+		newCols[i] += newCols[i-1]
+	}
+
+	// Construct the new rows map
+	newRows := map[int][]int{}
+	for row, cols := range rows {
+		newRows[row] = []int{}
+		for i, _ := range cols {
+			newRows[row] = append(newRows[row], newCols[i])
+		}
+	}
+
+	// Alter the buffer based on the new rows map.
+	for row, cols := range rows {
+		lineStr := buffer.GetRow(row).ToString()
+		for k, _ := range cols {
+			col := cols[k]
+			newCol := newRows[row][k]
+			n := newCol - col
+			lineStr = lineStr[:col] + strings.Repeat(" ", n) + lineStr[col:]
+			for j := k + 1; j < len(cols); j++ {
+				cols[j] += n
+			}
+		}
+		buffer.SetRow(row, MakeLine(lineStr))
+	}
+
+	return newRows
+
+}
+
+// Unalign removes redundant whitespace preceding each cursor..
+func (buffer *Buffer) Unalign(rows map[int][]int) map[int][]int {
+	for row, cols := range rows {
+		line := buffer.GetRow(row)
+		rows[row] = line.CompressPriorSpaces(cols)
+		buffer.SetRow(row, line)
+	}
+	return rows
 }

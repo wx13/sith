@@ -282,23 +282,55 @@ func (file *File) SearchFromStart(searchTerm string) (row, col int, err error) {
 }
 
 func (file *File) SearchLineFo(term string) {
+	file.MultiCursor.OnePerLine()
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()
 		line := file.buffer.GetRow(row)
 		c0, _ := line.Search(term, col, -1)
-		if c0 > 0 {
+		if c0 >= 0 {
 			file.MultiCursor.SetCol(idx, c0)
 		}
 	}
 }
 
 func (file *File) SearchLineBa(term string) {
+	file.MultiCursor.OnePerLine()
 	for idx, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()
 		line := file.buffer.GetRow(row)
 		c0, _ := line.Search(term, col, 0)
-		if c0 > 0 {
+		if c0 >= 0 {
 			file.MultiCursor.SetCol(idx, c0)
 		}
+	}
+}
+
+func (file *File) AllLineFo(term string) {
+	file.MultiCursor.OnePerLine()
+	positions := make(map[int][]int)
+	found := 0
+	for _, cursor := range file.MultiCursor.Cursors() {
+		row, col := cursor.RowCol()
+		cols := file.buffer.GetRow(row).SearchAll(term, col, -1)
+		positions[row] = cols
+		found += len(cols)
+	}
+	if found > 0 {
+		file.MultiCursor.ResetRowsCols(positions)
+	}
+}
+
+func (file *File) AllLineBa(term string) {
+	file.MultiCursor.OnePerLine()
+	positions := make(map[int][]int)
+	found := 0
+	for _, cursor := range file.MultiCursor.Cursors() {
+		row, col := cursor.RowCol()
+		cols := file.buffer.GetRow(row).SearchAll(term, col, 0)
+		positions[row] = cols
+		found += len(cols)
+	}
+	if found > 0 {
+		file.MultiCursor.ResetRowsCols(positions)
 	}
 }

@@ -26,86 +26,92 @@ func (file *File) Fmt() error {
 	return err
 }
 
+func getMaxCol(rows map[int][]int) int {
+	maxCol := 0
+	for _, cols := range rows {
+		for _, col := range cols {
+			if col > maxCol {
+				maxCol = col
+			}
+		}
+	}
+	return maxCol
+}
+
+func (file File) allBlankLines(rows map[int][]int) bool {
+	for row, _ := range rows {
+		if file.buffer.GetRow(row).Length() > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func (file File) removeBlankLineCursors(rows map[int][]int) (map[int][]int, []int) {
+
+	if file.allBlankLines(rows) {
+		return rows, []int{}
+	}
+
+	blankRows := []int{}
+	for row, _ := range rows {
+		if file.buffer.GetRow(row).Length() == 0 {
+			blankRows = append(blankRows, row)
+			delete(rows, row)
+			continue
+		}
+	}
+
+	return rows, blankRows
+}
+
 // InsertChar insters a character (rune) into the current cursor position.
 func (file *File) InsertChar(ch rune) {
 
-	maxCol := 0
-	maxLineLen := 0
-	for _, cursor := range file.MultiCursor.Cursors() {
-		if cursor.Col() > maxCol {
-			maxCol = cursor.Col()
-		}
-		if file.buffer.RowLength(cursor.Row()) > maxLineLen {
-			maxLineLen = file.buffer.RowLength(cursor.Row())
-		}
+	str := string(ch)
+	if ch == '\t' && file.autoTab && file.tabString != "\t" {
+		str = file.tabString
 	}
 
-	for idx, cursor := range file.MultiCursor.Cursors() {
-		row, col := cursor.RowCol()
-		if maxCol > 0 && col == 0 {
-			continue
-		}
-		line := file.buffer.GetRow(row)
-		if (ch == ' ' || ch == '\t') && col == 0 && line.Length() == 0 && maxLineLen > 0 {
-			continue
-		}
-		insertStr := string(ch)
-		if ch == '\t' && file.autoTab && file.tabString != "\t" {
-			insertStr = file.tabString
-		}
-		newLine := buffer.MakeLine(line.Slice(0, col).ToString() + insertStr + line.Slice(col, -1).ToString())
-		file.buffer.SetRow(row, newLine)
-		col += len(insertStr)
-		file.MultiCursor.SetCursor(idx, row, col, col)
+	rows := file.MultiCursor.GetRowsCols()
+	var blankRows []int
+	rows, blankRows = file.removeBlankLineCursors(rows)
+	rows = file.buffer.InsertStr(str, rows)
+	for _, row := range blankRows {
+		rows[row] = []int{0}
 	}
+	file.MultiCursor.ResetCursors(rows)
 
 	file.Snapshot()
 
 }
 
-// Backspace removes the character before the cursor.
-func (file *File) Backspace() {
-	for idx, cursor := range file.MultiCursor.Cursors() {
-		row, col := cursor.RowCol()
-		if col == 0 {
-			if file.MultiCursor.Length() > 1 {
-				continue
+func allColsZero(rows map[int][]int) bool {
+	for _, cols := range rows {
+		for _, col := range cols {
+			if col > 0 {
+				return false
 			}
-			if row == 0 {
-				return
-			}
-			row--
-			if row+1 >= file.buffer.Length() {
-				return
-			}
-			col = file.buffer.RowLength(row)
-			newLine := buffer.MakeLine(file.buffer.GetRow(row).ToString() + file.buffer.GetRow(row+1).ToString())
-			file.buffer.ReplaceLine(newLine, row)
-			file.buffer.DeleteRow(row + 1)
-			file.MultiCursor.SetCursor(idx, row, col, col)
-		} else {
-			line := file.buffer.GetRow(row)
-			if col > line.Length() {
-				continue
-			}
-
-			// Handle multi-char indents.
-			nDel := 1
-			if file.autoTab && len(file.tabString) > 0 {
-				if line.Slice(0, col).ToString() == strings.Repeat(" ", col) {
-					n := len(file.tabString)
-					if n*(col/n) == col {
-						nDel = n
-					}
-				}
-			}
-
-			newLine := buffer.MakeLine(line.Slice(0, col-nDel).ToString() + line.Slice(col, -1).ToString())
-			file.buffer.SetRow(row, newLine)
-			col -= nDel
-			file.MultiCursor.SetCursor(idx, row, col, col)
 		}
 	}
+	return true
+}
+
+// Backspace removes the character before the cursor.
+func (file *File) Backspace() {
+
+	indent := 0
+	if file.autoTab {
+		indent = len(file.tabString)
+	}
+
+	rows := file.MultiCursor.GetRowsCols()
+	if allColsZero(rows) {
+		rows = file.buffer.DeleteNewlines(rows)
+	} else {
+		rows = file.buffer.DeleteChars(-1, rows, indent)
+	}
+	file.MultiCursor.ResetCursors(rows)
 	file.enforceRowBounds()
 	file.enforceColBounds()
 	file.Snapshot()
@@ -120,10 +126,9 @@ func (file *File) Delete() {
 // Newline breaks the current line into two.
 func (file *File) Newline() {
 
-	rate := file.timer.Tick()
-
-	for idx, cursor := range file.MultiCursor.Cursors() {
-
+	if len(file.MultiCursor.Cursors()) == 1 {
+		rate := file.timer.Tick()
+		cursor := file.MultiCursor.Cursors()[0]
 		row, col := cursor.RowCol()
 		lineStart := file.buffer.RowSlice(row, 0, col)
 		lineEnd := file.buffer.RowSlice(row, col, -1)
@@ -131,16 +136,22 @@ func (file *File) Newline() {
 
 		file.buffer.ReplaceLines(newLines, row, row)
 
-		file.MultiCursor.SetCursor(idx, row+1, 0, 0)
+		file.MultiCursor.SetCursor(0, row+1, 0, 0)
 
 		if file.autoIndent && rate < file.maxRate && lineEnd.Length() == 0 {
-			file.doAutoIndent(idx)
+			file.doAutoIndent(0)
 		}
 
 		file.buffer.SetRow(row, lineStart.RemoveTrailingWhitespace())
 
+	} else {
+		rows := file.MultiCursor.GetRowsCols()
+		rows = file.buffer.InsertNewlines(rows)
+		file.MultiCursor.ResetCursors(rows)
 	}
 
+	file.enforceRowBounds()
+	file.enforceColBounds()
 	file.Snapshot()
 }
 
@@ -246,26 +257,17 @@ func (file *File) CutToEndOfLine() {
 // CursorAlign inserts spaces into each cursor position, in order to
 // align the cursors vertically.
 func (file *File) CursorAlign() {
-	maxCol := file.MultiCursor.MaxCol()
-	for idx, cursor := range file.MultiCursor.Cursors() {
-		row, col := cursor.RowCol()
-		nSpaces := maxCol - col
-		spaces := strings.Repeat(" ", nSpaces)
-		line := file.buffer.GetRow(row)
-		newLine := buffer.MakeLine(line.Slice(0, col).ToString() + spaces + line.Slice(col, -1).ToString())
-		file.buffer.SetRow(row, newLine)
-		col += len(spaces)
-		file.MultiCursor.SetCursor(idx, row, col, col)
-	}
+	rows := file.MultiCursor.GetRowsCols()
+	rows = file.buffer.Align(rows)
+	file.MultiCursor.ResetCursors(rows)
 	file.Snapshot()
 }
 
 // CursorUnalign removes whitespace (except for 1 space) immediately preceding
 // each cursor position.  Effectively, it undoes a CursorAlign.
 func (file *File) CursorUnalign() {
-	for idx, cursor := range file.MultiCursor.Cursors() {
-		row, col := cursor.RowCol()
-		col = file.buffer.CompressPriorSpaces(row, col)
-		file.MultiCursor.SetCursor(idx, row, col, col)
-	}
+	rows := file.MultiCursor.GetRowsCols()
+	rows = file.buffer.Unalign(rows)
+	file.MultiCursor.ResetCursors(rows)
+	file.Snapshot()
 }

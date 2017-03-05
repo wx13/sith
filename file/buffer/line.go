@@ -3,6 +3,7 @@ package buffer
 import (
 	"errors"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"unicode"
@@ -68,6 +69,24 @@ func (line Line) Search(term string, start, end int) (int, int) {
 
 }
 
+// SearchAll returns a list of the start positions for search term matches.
+func (line Line) SearchAll(term string, start, end int) []int {
+	matches := []int{}
+	dir := 1
+	if end >= 0 && end < start {
+		dir = -1
+	}
+	for {
+		start, _ = line.Search(term, start, end)
+		if start < 0 {
+			break
+		}
+		matches = append(matches, start)
+		start += dir
+	}
+	return matches
+}
+
 func isRegex(term string) bool {
 	n := len(term)
 	return (term[0:1] == "/" && term[n-1:n] == "/" && len(term) > 1)
@@ -85,6 +104,9 @@ func (line Line) search(term string, start, end int) (int, int) {
 
 	n := len(term)
 	var startCol, endCol int
+	if end == line.Length() {
+		end--
+	}
 	target := string(line.chars[start : end+1])
 
 	if isRegex(term) {
@@ -137,17 +159,30 @@ func IsWhitespace(r rune) bool {
 	return false
 }
 
-func (line Line) CompressPriorSpaces(col int) (Line, int) {
-	line = line.Dup()
-	for ; col > 1; col-- {
-		if !IsWhitespace(line.chars[col-1]) {
-			break
+func (line *Line) CompressPriorSpaces(cols []int) []int {
+
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
+
+	sort.Ints(cols)
+
+	var c int
+	for k, col := range cols {
+		for c = col - 1; c > 0; c-- {
+			if !IsWhitespace(line.chars[c]) {
+				break
+			}
+			if IsWhitespace(line.chars[c-1]) {
+				line.chars = append(line.chars[:c], line.chars[c+1:]...)
+			}
 		}
-		if IsWhitespace(line.chars[col-2]) {
-			line.chars = append(line.chars[:col-1], line.chars[col:]...)
+		delta := col - c - 2
+		for j := k; j < len(cols); j++ {
+			cols[j] -= delta
 		}
 	}
-	return line, col + 1
+
+	return cols
 }
 
 func (line Line) Tabs2spaces() Line {
@@ -202,7 +237,129 @@ func (line *Line) GetChar(k int) rune {
 	return line.chars[k]
 }
 
+func uniqCols(cols []int) []int {
+	sort.Ints(cols)
+	prev_col := -1
+	newCols := []int{}
+	for _, col := range cols {
+		if col == prev_col {
+			continue
+		}
+		prev_col = col
+		newCols = append(newCols, col)
+	}
+	return newCols
+}
+
+// InsertStr inserts a string into a set of positions within a line. Return the
+// new cursor positions.
+func (line *Line) InsertStr(str string, cols ...int) []int {
+
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
+
+	cols = uniqCols(cols)
+	runes := []rune(str)
+
+	for i, col := range cols {
+
+		// Enforce bounds.
+		if col > len(line.chars) || col < 0 {
+			continue
+		}
+
+		if col == len(line.chars) {
+			// Special case: append.
+			line.chars = append(line.chars, runes...)
+		} else {
+			// Insert in middle.
+			line.chars = append(line.chars[:col], append(runes, line.chars[col:]...)...)
+		}
+		for j, _ := range cols[i:] {
+			cols[i+j] += len(runes)
+		}
+
+	}
+
+	return cols
+}
+
+// DeleteFwd deletes n characters starting at the cursor and going to the right.
+func (line *Line) DeleteFwd(count int, cols ...int) []int {
+
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
+
+	// Zero-out to-be-deleted elements.
+	for _, col := range cols {
+		for c := col; c < col+count && c < len(line.chars); c++ {
+			line.chars[c] = 0
+		}
+	}
+
+	// Set column positions.
+	cols = []int{}
+	n := 0
+	newChars := []rune{}
+	for _, ch := range line.chars {
+		if ch != 0 {
+			n++
+			newChars = append(newChars, ch)
+		} else {
+			if len(cols) == 0 || cols[len(cols)-1] != n {
+				cols = append(cols, n)
+			}
+		}
+	}
+	if len(cols) == 0 {
+		cols = []int{0}
+	}
+
+	line.chars = newChars
+
+	return cols
+}
+
+// DeleteBkwd deletes n characters starting at the cursor and going to the left.
+func (line *Line) DeleteBkwd(count int, cols ...int) []int {
+
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
+
+	// Zero-out to-be-deleted elements.
+	for _, col := range cols {
+		for c := col - 1; c >= col-count && c >= 0 && c < len(line.chars); c-- {
+			line.chars[c] = 0
+		}
+	}
+
+	// Set column positions.
+	cols = []int{}
+	n := 0
+	newChars := []rune{}
+	for _, ch := range line.chars {
+		if ch != 0 {
+			n++
+			newChars = append(newChars, ch)
+		} else {
+			if len(cols) == 0 || cols[len(cols)-1] != n {
+				cols = append(cols, n)
+			}
+		}
+	}
+	if len(cols) == 0 {
+		cols = []int{0}
+	}
+
+	line.chars = newChars
+
+	return cols
+
+}
+
 func (line *Line) Chars() []rune {
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
 	return line.chars
 }
 
