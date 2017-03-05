@@ -1,13 +1,19 @@
+// Package cursor handles all the cursor and multicursor stuff.
 package cursor
 
 import (
 	"sync"
 )
 
+// Cursor keeps track of the row, col of a cursor,
+// and also the wanted column (colwant) of the cursor.
+// The wanted column is the column the cursor would like
+// to be in, if the line were long enough.
 type Cursor struct {
 	row, col, colwant int
 }
 
+// MakeCursor creates a new Cursor object.
 func MakeCursor(row, col int) Cursor {
 	return Cursor{
 		row:     row,
@@ -16,6 +22,7 @@ func MakeCursor(row, col int) Cursor {
 	}
 }
 
+// Dup duplicates a cursor object.
 func (cursor Cursor) Dup() Cursor {
 	return Cursor{
 		row:     cursor.row,
@@ -36,6 +43,7 @@ func (cursor Cursor) Colwant() int {
 	return cursor.colwant
 }
 
+// RowCol returns the row and column of the cursor.
 func (cursor Cursor) RowCol() (int, int) {
 	return cursor.row, cursor.col
 }
@@ -46,11 +54,13 @@ func (cursor *Cursor) Set(row, col, colwant int) {
 	cursor.colwant = col
 }
 
+// MultiCursor is a set of Cursors.
 type MultiCursor struct {
 	cursors []Cursor
 	mutex   *sync.Mutex
 }
 
+// MakeMultiCursor Creates a new MultiCursor.
 func MakeMultiCursor() MultiCursor {
 	return MultiCursor{
 		cursors: []Cursor{MakeCursor(0, 0)},
@@ -58,10 +68,12 @@ func MakeMultiCursor() MultiCursor {
 	}
 }
 
+// GetCursor returns a cursor by index.
 func (mc MultiCursor) GetCursor(idx int) Cursor {
 	return mc.cursors[idx]
 }
 
+// GetCursorRCC gets the (row, col, colwant) of a cursor by index.
 func (mc MultiCursor) GetCursorRCC(idx int) (row, col, colwant int) {
 	c := mc.cursors[idx]
 	return c.row, c.col, c.colwant
@@ -105,10 +117,13 @@ func (mc *MultiCursor) SetColwant(idx, colwant int) {
 	}
 }
 
+// ReplaceMC sets the list of cursors to be the list of
+// cursors from another MC object.
 func (mc *MultiCursor) ReplaceMC(mc2 MultiCursor) {
 	mc.cursors = mc2.cursors
 }
 
+// Dup duplicates a MC object.
 func (mc MultiCursor) Dup() MultiCursor {
 	newCursors := make([]Cursor, mc.Length())
 	for k, cursor := range mc.cursors {
@@ -120,6 +135,7 @@ func (mc MultiCursor) Dup() MultiCursor {
 	}
 }
 
+// Length returns the number of cursors.
 func (mc MultiCursor) Length() int {
 	return len(mc.cursors)
 }
@@ -134,11 +150,16 @@ func (mc *MultiCursor) Append(cursor Cursor) {
 	mc.cursors = append(mc.cursors, cursor)
 }
 
+// Snapshot adds the current primary cursor row,col as a new
+// cursor to the list.  It is the primary way the user will
+// add cursors to the MC cursor list.
 func (mc *MultiCursor) Snapshot() {
 	cursor := mc.cursors[0].Dup()
 	mc.cursors = append(mc.cursors, cursor)
 }
 
+// OuterMost removes all cursors except the the most extreme.
+// Length will be 2 after this operation.
 func (mc *MultiCursor) OuterMost() {
 	if mc.Length() < 2 {
 		return
@@ -156,6 +177,7 @@ func (mc *MultiCursor) OuterMost() {
 	mc.cursors = []Cursor{minCursor, maxCursor}
 }
 
+// MaxCol returns the largest column value among cursors.
 func (mc MultiCursor) MaxCol() int {
 	maxCol := 0
 	for _, cursor := range mc.cursors {
