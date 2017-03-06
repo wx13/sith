@@ -2,6 +2,7 @@
 package cursor
 
 import (
+	"sort"
 	"sync"
 )
 
@@ -227,4 +228,37 @@ func (mc *MultiCursor) SetColumn() {
 
 func (mc MultiCursor) Cursors() []Cursor {
 	return mc.cursors
+}
+
+// SortedRowsCols returns a de-duplicated list of cursor row/col.
+// It returns a sorted list of rows, and a map from row to sorted list
+// of columns.
+func (mc MultiCursor) SortedRowsCols() (rows []int, cols map[int][]int) {
+
+	// Create a map of rows and columns, for deduplication.
+	rowcol := make(map[int]map[int]bool)
+	for _, cursor := range mc.cursors {
+		r, c := cursor.RowCol()
+		_, exist := rowcol[r]
+		if !exist {
+			rowcol[r] = make(map[int]bool)
+		}
+		rowcol[r][c] = true
+	}
+
+	// Convert the map into lists.
+	rows = []int{}
+	cols = make(map[int][]int)
+	for r, _ := range rowcol {
+		rows = append(rows, r)
+		cols[r] = []int{}
+		for c, _ := range rowcol[r] {
+			cols[r] = append(cols[r], c)
+		}
+		sort.Ints(cols[r])
+	}
+	sort.Ints(rows)
+
+	return rows, cols
+
 }
