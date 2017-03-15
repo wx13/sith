@@ -230,6 +230,30 @@ func (mc MultiCursor) Cursors() []Cursor {
 	return mc.cursors
 }
 
+// Dedup de-duplicates the set of cursors.
+func (mc *MultiCursor) Dedup() {
+
+	// Create a map of rows and columns, for deduplication.
+	rowcol := make(map[int]map[int]bool)
+	for _, cursor := range mc.cursors {
+		r, c := cursor.RowCol()
+		_, exist := rowcol[r]
+		if !exist {
+			rowcol[r] = make(map[int]bool)
+		}
+		rowcol[r][c] = true
+	}
+
+	// Recreate the cursors from the map.
+	mc.cursors = []Cursor{}
+	for row := range rowcol {
+		for col := range rowcol[row] {
+			mc.cursors = append(mc.cursors, MakeCursor(row, col))
+		}
+	}
+
+}
+
 // SortedRowsCols returns a de-duplicated list of cursor row/col.
 // It returns a sorted list of rows, and a map from row to sorted list
 // of columns.

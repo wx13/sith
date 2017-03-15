@@ -17,6 +17,24 @@ func TestCursorDup(t *testing.T) {
 	}
 }
 
+func TestCursorDedup(t *testing.T) {
+	mc := cursor.MakeMultiCursor()
+	mc.Set(10, 12, 12)
+	mc.Snapshot()
+	mc.Set(10, 12, 15)
+	mc.Snapshot()
+	mc.Set(10, 15, 15)
+	mc.Snapshot()
+	mc.Set(2, 15, 15)
+	mc.Snapshot()
+	mc.Set(2, 15, 20)
+	mc.Dedup()
+	cursors := mc.Cursors()
+	if len(cursors) != 3 {
+		t.Errorf("Dedup failed: %#v\n", cursors)
+	}
+}
+
 func TestMCClear(t *testing.T) {
 	mc := cursor.MakeMultiCursor()
 

@@ -20,6 +20,28 @@ func (editor *Editor) SearchLineBa() {
 	editor.file.SearchLineBa(searchTerm)
 }
 
+// AllLineFo searches the current line from cursor to the start, and makes multiple
+// cursors (one for each match).
+func (editor *Editor) AllLineFo() {
+	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	if searchTerm == "" {
+		editor.file.NotifyUser("Cancelled")
+		return
+	}
+	editor.file.AllLineFo(searchTerm)
+}
+
+// AllLineBa searches the current line from cursor to the start, and makes multiple
+// cursors (one for each match).
+func (editor *Editor) AllLineBa() {
+	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	if searchTerm == "" {
+		editor.file.NotifyUser("Cancelled")
+		return
+	}
+	editor.file.AllLineBa(searchTerm)
+}
+
 // Search searches the entire buffer (or set of buffers if multiFile is true).
 func (editor *Editor) Search(multiFile bool) {
 	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
