@@ -254,6 +254,30 @@ func (mc *MultiCursor) Dedup() {
 
 }
 
+// OnePerLine keeps only the first cursor on each line.
+func (mc *MultiCursor) OnePerLine() {
+
+	// Create a map of rows for deduplication.
+	cols := make(map[int]int)
+	for _, cursor := range mc.cursors {
+		r, c := cursor.RowCol()
+		_, exist := cols[r]
+		if !exist {
+			cols[r] = c
+		}
+		if c < cols[r] {
+			cols[r] = c
+		}
+	}
+
+	// Recreate the cursors from the map.
+	mc.cursors = []Cursor{}
+	for r, c := range cols {
+		mc.cursors = append(mc.cursors, MakeCursor(r, c))
+	}
+
+}
+
 // SortedRowsCols returns a de-duplicated list of cursor row/col.
 // It returns a sorted list of rows, and a map from row to sorted list
 // of columns.
