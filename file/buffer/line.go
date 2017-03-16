@@ -68,12 +68,34 @@ func (line Line) Search(term string, start, end int) (int, int) {
 
 }
 
+// SearchAll returns a list of the start positions for search term matches.
+func (line Line) SearchAll(term string, start, end int) []int {
+	matches := []int{}
+	dir := 1
+	if end >= 0 && end < start {
+		dir = -1
+	}
+	for {
+		start, _ = line.Search(term, start, end)
+		if start < 0 {
+			break
+		}
+		matches = append(matches, start)
+		start += dir
+	}
+	return matches
+}
+
 func isRegex(term string) bool {
 	n := len(term)
 	return (term[0:1] == "/" && term[n-1:n] == "/" && len(term) > 1)
 }
 
 func (line Line) search(term string, start, end int) (int, int) {
+
+	if start < 0 || end < 0 || start >= line.Length() || end >= line.Length() {
+		return -1, -1
+	}
 
 	forward := end >= start
 	if !forward {
@@ -85,6 +107,7 @@ func (line Line) search(term string, start, end int) (int, int) {
 
 	n := len(term)
 	var startCol, endCol int
+	println(line.Length(), ":", start, end+1)
 	target := string(line.chars[start : end+1])
 
 	if isRegex(term) {

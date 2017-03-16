@@ -17,17 +17,28 @@ func TestCursorDup(t *testing.T) {
 	}
 }
 
-func TestCursorDedup(t *testing.T) {
+func makeMC() cursor.MultiCursor {
 	mc := cursor.MakeMultiCursor()
-	mc.Set(10, 12, 12)
-	mc.Snapshot()
-	mc.Set(10, 12, 15)
-	mc.Snapshot()
-	mc.Set(10, 15, 15)
-	mc.Snapshot()
-	mc.Set(2, 15, 15)
-	mc.Snapshot()
-	mc.Set(2, 15, 20)
+	mc.ResetCursors([][]int{
+		{10, 12, 12},
+		{10, 12, 15},
+		{10, 15, 15},
+		{2, 15, 15},
+		{2, 15, 20},
+	})
+	return mc
+}
+
+func TestGetRows(t *testing.T) {
+	mc := makeMC()
+	rows := mc.GetRows()
+	if len(rows) != 2 {
+		t.Errorf("GetRows failed: %#v %#v\n", mc, rows)
+	}
+}
+
+func TestMCDedup(t *testing.T) {
+	mc := makeMC()
 	mc.Dedup()
 	cursors := mc.Cursors()
 	if len(cursors) != 3 {
@@ -35,17 +46,8 @@ func TestCursorDedup(t *testing.T) {
 	}
 }
 
-func TestCursorOnePerLine(t *testing.T) {
-	mc := cursor.MakeMultiCursor()
-	mc.Set(10, 12, 12)
-	mc.Snapshot()
-	mc.Set(10, 12, 15)
-	mc.Snapshot()
-	mc.Set(10, 15, 15)
-	mc.Snapshot()
-	mc.Set(2, 15, 15)
-	mc.Snapshot()
-	mc.Set(2, 15, 20)
+func TestMCOnePerLine(t *testing.T) {
+	mc := makeMC()
 	mc.OnePerLine()
 	cursors := mc.Cursors()
 	if len(cursors) != 2 {
@@ -87,15 +89,13 @@ func TestMCClear(t *testing.T) {
 
 func TestSortedRowsCols(t *testing.T) {
 	mc := cursor.MakeMultiCursor()
-	mc.Set(10, 12, 12)
-	mc.Snapshot()
-	mc.Set(10, 5, 5)
-	mc.Snapshot()
-	mc.Set(10, 15, 15)
-	mc.Snapshot()
-	mc.Set(2, 15, 15)
-	mc.Snapshot()
-	mc.Set(2, 1, 1)
+	mc.ResetCursors([][]int{
+		{10, 12, 12},
+		{10, 5, 5},
+		{10, 15, 15},
+		{2, 15, 15},
+		{2, 1, 1},
+	})
 	rows, cols := mc.SortedRowsCols()
 	if len(rows) != 2 || rows[0] != 2 || rows[1] != 10 {
 		t.Error("Rows:", rows)

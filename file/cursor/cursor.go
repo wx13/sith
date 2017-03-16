@@ -23,6 +23,23 @@ func MakeCursor(row, col int) Cursor {
 	}
 }
 
+// CursorFromSlice creates a new Cursor object, from a slice of ints.
+// The input slice is if the form [row, col, colwant].
+func CursorFromSlice(s []int) Cursor {
+	cursor := Cursor{}
+	switch len(s) {
+	case 3:
+		cursor.colwant = s[2]
+		fallthrough
+	case 2:
+		cursor.col = s[1]
+		fallthrough
+	case 1:
+		cursor.row = s[0]
+	}
+	return cursor
+}
+
 // Dup duplicates a cursor object.
 func (cursor Cursor) Dup() Cursor {
 	return Cursor{
@@ -92,10 +109,37 @@ func (mc MultiCursor) GetRowCol(idx int) (int, int) {
 	return mc.cursors[idx].RowCol()
 }
 
+// SetCursor sets the position of the cursor identified by index.
 func (mc *MultiCursor) SetCursor(idx, row, col, colwant int) {
 	mc.cursors[idx].row = row
 	mc.cursors[idx].col = col
 	mc.cursors[idx].colwant = colwant
+}
+
+// ResetCursors manually sets all the cursor positions.  This is useful
+// for a full cursor reset.
+func (mc *MultiCursor) ResetCursors(positions [][]int) {
+	mc.cursors = []Cursor{}
+	for _, pos := range positions {
+		mc.cursors = append(mc.cursors, CursorFromSlice(pos))
+	}
+	if len(mc.cursors) == 0 {
+		mc.cursors = []Cursor{MakeCursor(0, 0)}
+	}
+}
+
+// ResetRowsCols creates a new MultiCursor object
+// from a map of row, column positions.
+func (mc *MultiCursor) ResetRowsCols(rowcol map[int][]int) {
+	mc.cursors = []Cursor{}
+	for row, cols := range rowcol {
+		for _, col := range cols {
+			mc.cursors = append(mc.cursors, MakeCursor(row, col))
+		}
+	}
+	if len(mc.cursors) == 0 {
+		mc.cursors = []Cursor{MakeCursor(0, 0)}
+	}
 }
 
 func (mc *MultiCursor) Set(row, col, colwant int) {
@@ -134,6 +178,19 @@ func (mc MultiCursor) Dup() MultiCursor {
 		cursors: newCursors,
 		mutex:   &sync.Mutex{},
 	}
+}
+
+// GetRows returns a list of (integer) rows that contain cursors.
+func (mc MultiCursor) GetRows() []int {
+	rowmap := make(map[int]bool)
+	for _, cursor := range mc.cursors {
+		rowmap[cursor.Row()] = true
+	}
+	rows := []int{}
+	for row := range rowmap {
+		rows = append(rows, row)
+	}
+	return rows
 }
 
 // Length returns the number of cursors.
