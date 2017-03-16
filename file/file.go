@@ -308,21 +308,29 @@ func (file *File) SearchLineBa(term string) {
 func (file *File) AllLineFo(term string) {
 	file.MultiCursor.OnePerLine()
 	positions := make(map[int][]int)
+	found := 0
 	for _, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()
 		cols := file.buffer.GetRow(row).SearchAll(term, col, -1)
 		positions[row] = cols
+		found += len(cols)
 	}
-	file.MultiCursor.ResetRowsCols(positions)
+	if found > 0 {
+		file.MultiCursor.ResetRowsCols(positions)
+	}
 }
 
 func (file *File) AllLineBa(term string) {
 	file.MultiCursor.OnePerLine()
 	positions := make(map[int][]int)
+	found := 0
 	for _, cursor := range file.MultiCursor.Cursors() {
 		row, col := cursor.RowCol()
 		cols := file.buffer.GetRow(row).SearchAll(term, col, 0)
 		positions[row] = cols
+		found += len(cols)
 	}
-	file.MultiCursor.ResetRowsCols(positions)
+	if found > 0 {
+		file.MultiCursor.ResetRowsCols(positions)
+	}
 }
