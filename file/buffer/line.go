@@ -93,10 +93,6 @@ func isRegex(term string) bool {
 
 func (line Line) search(term string, start, end int) (int, int) {
 
-	if start < 0 || end < 0 || start >= line.Length() || end >= line.Length() {
-		return -1, -1
-	}
-
 	forward := end >= start
 	if !forward {
 		start, end = end, start
@@ -107,7 +103,9 @@ func (line Line) search(term string, start, end int) (int, int) {
 
 	n := len(term)
 	var startCol, endCol int
-	println(line.Length(), ":", start, end+1)
+	if end == line.Length() {
+		end--
+	}
 	target := string(line.chars[start : end+1])
 
 	if isRegex(term) {
