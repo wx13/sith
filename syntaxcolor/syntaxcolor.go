@@ -96,7 +96,7 @@ func (rules *SyntaxRules) addDoubleQuoteRule(fg termbox.Attribute) {
 func (rules SyntaxRules) GetFileType(filename string) string {
 	ext := rules.getFileExt(filename)
 	switch ext {
-	case "c", "C", "cpp", "c++":
+	case "c", "C", "cpp", "c++", "h", "hpp", "cc", "hh":
 		return "c"
 	case "sh", "csh":
 		return "sh"
