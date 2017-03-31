@@ -42,6 +42,7 @@ func (rules *SyntaxRules) addQuoteRules(filetype string) {
 	case "go":
 		rules.addSingleQuoteRule(termbox.ColorRed)
 		rules.addDoubleQuoteRule(termbox.ColorYellow)
+		rules.addBackticQuoteRule(termbox.ColorYellow)
 	}
 }
 
@@ -83,12 +84,16 @@ func (rules *SyntaxRules) addLineCommentRule(commStr string, fg termbox.Attribut
 	rules.addRule(reStr, Color{fg: fg})
 }
 
+func (rules *SyntaxRules) addBackticQuoteRule(fg termbox.Attribute) {
+	rules.addRule("`.*?`", Color{fg: fg})
+}
+
 func (rules *SyntaxRules) addSingleQuoteRule(fg termbox.Attribute) {
 	rules.addRule("'.*?'", Color{fg: fg})
 }
 
 func (rules *SyntaxRules) addDoubleQuoteRule(fg termbox.Attribute) {
-	rules.addRule("\".*?\"", Color{fg: fg})
+	rules.addRule(`".*?"`, Color{fg: fg})
 }
 
 // GetFileType maps common extensions onto a type (e.g. c, C, cpp, etc
