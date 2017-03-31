@@ -127,17 +127,39 @@ type LineColor struct {
 	Start, End int
 }
 
-// Colorize takes in a string and outputs an array of LineColor objects.
-func (rules SyntaxRules) Colorize(str string) []LineColor {
-	lc := []LineColor{}
+// NextMatch finds the next match accross all the rules.
+func (rules SyntaxRules) NextMatch(str string, idx int) (LineColor, error) {
+	subStr := str[idx:]
+	i0 := len(subStr) + 1
+	lc := LineColor{}
 	for _, rule := range rules {
-		matches := rule.re.FindAllStringIndex(str, -1)
-		if matches == nil {
+		match := rule.re.FindStringIndex(subStr)
+		if match == nil {
 			continue
 		}
-		for _, startEnd := range matches {
-			lc = append(lc, LineColor{Fg: rule.color.fg, Bg: rule.color.bg, Start: startEnd[0], End: startEnd[1]})
+		if match[0] < i0 {
+			i0 = match[0]
+			lc.Fg, lc.Bg = rule.color.fg, rule.color.bg
+			lc.Start, lc.End = idx+match[0], idx+match[1]
 		}
 	}
-	return lc
+	if i0 < len(subStr)+1 {
+		return lc, nil
+	}
+	return lc, fmt.Errorf("no match")
+}
+
+// Colorize takes in a string and outputs an array of LineColor objects.
+func (rules SyntaxRules) Colorize(str string) []LineColor {
+	lcs := []LineColor{}
+	idx := 0
+	for {
+		lc, err := rules.NextMatch(str, idx)
+		if err != nil {
+			break
+		}
+		lcs = append(lcs, lc)
+		idx = lc.End
+	}
+	return lcs
 }
