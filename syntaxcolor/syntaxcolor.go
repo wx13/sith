@@ -54,6 +54,7 @@ func (rules *SyntaxRules) addCommentRules(filetype string) {
 		rules.addLineCommentRule("#", termbox.ColorCyan)
 	case "c":
 		rules.addLineCommentRule("//", termbox.ColorCyan)
+		rules.addRule(`/\*.*?\*/`, Color{fg: termbox.ColorCyan})
 	case "js":
 		rules.addLineCommentRule("//", termbox.ColorCyan)
 	case "html":
