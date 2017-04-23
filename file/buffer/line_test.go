@@ -61,7 +61,7 @@ func TestSearch(t *testing.T) {
 
 	a, b = line.Search("/.o/", 0, -1)
 	if a != 3 || b != 5 {
-		t.Error("search:", line.ToString(), "llo", a, b)
+		t.Error("search:", line.ToString(), "/.o/", a, b)
 	}
 
 }

@@ -79,6 +79,9 @@ func (line Line) search(term string, start, end int) (int, int) {
 	if !forward {
 		start, end = end, start
 	}
+	if end >= line.Length() {
+		end -= 1
+	}
 
 	n := len(term)
 	var startCol, endCol int
