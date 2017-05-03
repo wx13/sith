@@ -114,11 +114,14 @@ func (line Line) search(term string, start, end int) (int, int) {
 		}
 		endCol = startCol + len(term)
 	}
+	// Ignore zero-length metches.
+	if startCol == endCol {
+		return -1, -1
+	}
 	if startCol < 0 {
 		return startCol, endCol
-	} else {
-		return startCol + start, endCol + start
 	}
+	return startCol + start, endCol + start
 }
 
 func (line Line) RemoveTrailingWhitespace() Line {
