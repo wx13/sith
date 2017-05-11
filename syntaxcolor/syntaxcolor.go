@@ -20,7 +20,10 @@ type SyntaxRule struct {
 }
 
 // SyntaxRules is the full collection of all syntax rules.
-type SyntaxRules []SyntaxRule
+type SyntaxRules struct {
+	list       []SyntaxRule
+	whitespace *regexp.Regexp
+}
 
 // NewSyntaxRules creates a new SyntaxRules object, and initializes
 // the syntax rule sets.
@@ -30,8 +33,12 @@ func NewSyntaxRules(filename string) *SyntaxRules {
 	rules.addQuoteRules(filetype)
 	rules.addCommentRules(filetype)
 	rules.addMiscRules(filetype)
-	rules.addWhitespaceRules(filetype)
+	rules.addWhitespaceRule()
 	return &rules
+}
+
+func (rules *SyntaxRules) addWhitespaceRule() {
+	rules.whitespace = regexp.MustCompile("[ \t]+$")
 }
 
 func (rules *SyntaxRules) addQuoteRules(filetype string) {
@@ -71,13 +78,9 @@ func (rules *SyntaxRules) addMiscRules(filetype string) {
 	}
 }
 
-func (rules *SyntaxRules) addWhitespaceRules(filetype string) {
-	rules.addRule("[ \t]+$", Color{bg: termbox.ColorYellow})
-}
-
 func (rules *SyntaxRules) addRule(reStr string, color Color) {
 	re, _ := regexp.Compile(reStr)
-	*rules = append(*rules, SyntaxRule{re, color})
+	rules.list = append(rules.list, SyntaxRule{re, color})
 }
 
 func (rules *SyntaxRules) addLineCommentRule(commStr string, fg termbox.Attribute) {
@@ -138,7 +141,7 @@ func (rules SyntaxRules) NextMatch(str string, idx int) (LineColor, error) {
 	subStr := str[idx:]
 	i0 := len(subStr) + 1
 	lc := LineColor{}
-	for _, rule := range rules {
+	for _, rule := range rules.list {
 		match := rule.re.FindStringIndex(subStr)
 		if match == nil {
 			continue
@@ -167,5 +170,16 @@ func (rules SyntaxRules) Colorize(str string) []LineColor {
 		lcs = append(lcs, lc)
 		idx = lc.End
 	}
+	match := rules.whitespace.FindStringIndex(str)
+	if match != nil {
+		lc := LineColor{}
+		lc.Bg = termbox.ColorYellow
+		lc.Start, lc.End = match[0], match[1]
+		lcs = append(lcs, lc)
+	}
 	return lcs
+}
+
+func (rules *SyntaxRules) addWhitespaceRules(filetype string) {
+	rules.addRule("[ \t]+$", Color{bg: termbox.ColorYellow})
 }
