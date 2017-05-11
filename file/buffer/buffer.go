@@ -285,7 +285,7 @@ func (buffer *Buffer) countLeadingSpacesAndTabs() []int {
 func (buffer *Buffer) scoreIndents(spaceHisto []int) (int, int) {
 	count := 0
 	nSpaces := 0
-	for indentSize := 1; indentSize < 9; indentSize++ {
+	for indentSize := 2; indentSize < 9; indentSize++ {
 		score := 0
 		for n := 1; n <= 4; n++ {
 			score += spaceHisto[n*indentSize]
