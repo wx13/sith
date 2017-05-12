@@ -61,7 +61,7 @@ func (menu *Menu) Clear() {
 
 func (menu *Menu) showSearchStr(searchStr string) {
 	borderColor := menu.borderColor
-	menu.screen.WriteStringColor(menu.row0-1, menu.col0, searchStr, termbox.ColorBlack, borderColor)
+	menu.screen.WriteStringColor(menu.row0-1, menu.col0, searchStr, termbox.ColorWhite|termbox.AttrBold, borderColor)
 }
 
 // Show displays a menu of choices on the screen.
