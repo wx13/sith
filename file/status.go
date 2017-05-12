@@ -42,6 +42,9 @@ func (file *File) WriteStatus(row, col int) {
 		} else {
 			status = fmt.Sprintf("%ds", len(file.tabString))
 		}
+		if !file.tabDetect {
+			status += "*"
+		}
 		file.addToStatus(status, row, &col, termbox.ColorGreen, termbox.ColorDefault)
 	}
 

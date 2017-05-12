@@ -28,6 +28,7 @@ type File struct {
 	autoIndent  bool
 
 	autoTab   bool
+	tabDetect bool
 	tabString string
 	tabHealth bool
 
@@ -58,6 +59,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		SyntaxRules: syntaxcolor.NewSyntaxRules(""),
 		autoIndent:  true,
 		autoTab:     true,
+		tabDetect:   true,
 		tabString:   "\t",
 		newline:     "\n",
 		tabHealth:   true,
@@ -93,9 +95,27 @@ func (file *File) ToggleAutoTab() {
 	file.autoTab = file.autoTab != true
 }
 
+// SetTabStr manually sets the tab string, and disables auto-tab-detection.
+func (file *File) SetTabStr() {
+	p := terminal.MakePrompt(file.screen)
+	str, err := p.Ask("tab string:", nil)
+	if err == nil {
+		file.tabString = str
+		file.tabDetect = false
+	}
+}
+
+// UnsetTabStr (re)enables auto-tab detaction.
+func (file *File) UnsetTabStr() {
+	file.tabDetect = true
+	file.ComputeIndent()
+}
+
 func (file *File) ComputeIndent() {
-	if file.autoTab {
+	if file.tabDetect {
 		file.tabString, file.tabHealth = file.buffer.GetIndent()
+	} else if file.autoTab {
+		_, file.tabHealth = file.buffer.GetIndent()
 	}
 }
 
