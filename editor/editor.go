@@ -67,7 +67,7 @@ func (editor *Editor) OpenNewFile() {
 			}
 		}
 		menu := terminal.NewMenu(editor.screen)
-		idx = menu.Choose(names)
+		idx = menu.Choose(names, 0)
 		editor.Flush()
 		if idx < 0 {
 			return
@@ -191,7 +191,7 @@ func (editor *Editor) SelectFile() {
 		names = append(names, file.Name)
 	}
 	menu := terminal.NewMenu(editor.screen)
-	idx := menu.Choose(names)
+	idx := menu.Choose(names, editor.fileIdx)
 	if idx >= 0 {
 		editor.SwitchFile(idx)
 	}
@@ -202,7 +202,7 @@ func (editor *Editor) SelectFile() {
 func (editor *Editor) SetCharMode() {
 	modes := editor.screen.ListCharModes()
 	menu := terminal.NewMenu(editor.screen)
-	idx := menu.Choose(modes)
+	idx := menu.Choose(modes, 0)
 	if idx >= 0 {
 		editor.screen.SetCharMode(idx)
 	}
@@ -222,7 +222,7 @@ func (editor *Editor) CmdMenu() {
 	names = append(names, xnames...)
 
 	menu := terminal.NewMenu(editor.screen)
-	idx := menu.Choose(names)
+	idx := menu.Choose(names, 0)
 	if idx < 0 {
 		return
 	}

@@ -31,7 +31,7 @@ func (editor *Editor) PasteFromMenu() {
 		str := strings.Join(buffer, " || ")
 		items = append(items, str)
 	}
-	idx := menu.Choose(items)
+	idx := menu.Choose(items, 0)
 	if idx < 0 || idx >= len(editor.copyHist) {
 		return
 	}

@@ -90,10 +90,10 @@ func (menu *Menu) Show(choices []string) {
 }
 
 // Choose is the main interaction loop for the menu.
-func (menu *Menu) Choose(choices []string) int {
+func (menu *Menu) Choose(choices []string, idx int) int {
 	menu.choices = choices
 	menu.setDims()
-	menu.selection = 0
+	menu.selection = idx
 	searchStr := ""
 loop:
 	for {
