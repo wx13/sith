@@ -12,21 +12,10 @@ func (file *File) IsModified() bool {
 	return !file.buffer.Equals(&file.savedBuffer)
 }
 
-func (file *File) modStatus() string {
-	if file.IsModified() {
-		return "Modified"
-	}
-	return ""
-}
-
 // WriteStatus writes the status line.
 func (file *File) WriteStatus(row, col int) {
 
-	status := file.modStatus()
-	if len(status) > 0 {
-		file.addToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
-	}
-
+	status := ""
 	if file.MultiCursor.Length() > 1 {
 		status = fmt.Sprintf("%dC", file.MultiCursor.Length())
 		file.addToStatus(status, row, &col, termbox.ColorBlack, termbox.ColorRed)

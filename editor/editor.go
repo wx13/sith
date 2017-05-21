@@ -314,15 +314,34 @@ func (editor *Editor) RequestFlush() {
 	}
 }
 
-// UpdateStatus updates the status line.
-func (editor *Editor) UpdateStatus() {
-	cols, rows := termbox.Size()
-	maxNameLen := cols / 3
+func (editor *Editor) getFilename(maxNameLen int) string {
 	name := editor.file.Name
 	nameLen := len(name)
 	if nameLen > maxNameLen {
 		name = name[0:maxNameLen/2] + "..." + name[nameLen-maxNameLen/2:nameLen]
 	}
+	return name
+}
+
+func (editor *Editor) writeModStatus(row, col int) int {
+	if editor.file.IsModified() {
+		editor.screen.WriteStringColor(row, col-3, "M  ", termbox.ColorRed, termbox.ColorDefault)
+		return 3
+	}
+	for _, file := range editor.files {
+		if file.IsModified() {
+			editor.screen.WriteStringColor(row, col-3, "M  ", termbox.ColorYellow, termbox.ColorDefault)
+			return 3
+		}
+	}
+	return 0
+}
+
+// UpdateStatus updates the status line.
+func (editor *Editor) UpdateStatus() {
+	cols, rows := termbox.Size()
+
+	name := editor.getFilename(cols / 3)
 	message := fmt.Sprintf("%s (%d/%d)   %d/%d,%d",
 		name,
 		editor.fileIdx,
@@ -335,6 +354,7 @@ func (editor *Editor) UpdateStatus() {
 	editor.screen.WriteString(rows-1, col, message)
 	editor.screen.WriteString(rows-1, 0, "[ Sith 0.4.4 ]")
 	editor.screen.DecorateStatusLine()
+	col -= editor.writeModStatus(rows-1, col)
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
 }
