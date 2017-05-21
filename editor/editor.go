@@ -188,7 +188,11 @@ func (editor *Editor) LastFile() {
 func (editor *Editor) SelectFile() {
 	names := []string{}
 	for _, file := range editor.files {
-		names = append(names, file.Name)
+		status := ""
+		if file.IsModified() {
+			status = "*"
+		}
+		names = append(names, status+file.Name)
 	}
 	menu := terminal.NewMenu(editor.screen)
 	idx := menu.Choose(names, editor.fileIdx)
