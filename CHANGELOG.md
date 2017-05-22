@@ -1,6 +1,26 @@
 Change Log
 ==========
 
+## [0.4.4] 2017-05-21
+
+### Bugfixes
+- Was getting caught in loop when multifile search yielded no results
+- Ignore zero-length search matches (regex)
+- Prevent index out-of-bounds in search
+
+### Features
+- Auto-tab improvements:
+  - Allow manual override of tab detection
+  - Never allow single-space indent string
+- Report gofmt error to user
+- Menu improvements:
+  - Make menu search string easier to see
+  - Make current buffer the default selection
+- Improved syntax-coloring:
+  - Better interaction between rules
+  - Backtic quotes for Go
+  - More C++ extensions
+
 
 ## [0.4.3] 2016-09-27
 
