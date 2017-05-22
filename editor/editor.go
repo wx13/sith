@@ -192,6 +192,9 @@ func (editor *Editor) SelectFile() {
 		if file.IsModified() {
 			status = "*"
 		}
+		if file.FileChanged() {
+			status += "+"
+		}
 		names = append(names, status+file.Name)
 	}
 	menu := terminal.NewMenu(editor.screen)
@@ -352,6 +355,20 @@ func (editor *Editor) writeModStatus(row, col int) int {
 	return 0
 }
 
+func (editor *Editor) writeSyncStatus(row, col int) int {
+	if editor.file.FileChanged() {
+		editor.screen.WriteStringColor(row, col-3, "S  ", termbox.ColorRed, termbox.ColorDefault)
+		return 3
+	}
+	for _, file := range editor.files {
+		if file.FileChanged() {
+			editor.screen.WriteStringColor(row, col-3, "S  ", termbox.ColorYellow, termbox.ColorDefault)
+			return 3
+		}
+	}
+	return 0
+}
+
 // UpdateStatus updates the status line.
 func (editor *Editor) UpdateStatus() {
 	cols, rows := termbox.Size()
@@ -370,6 +387,7 @@ func (editor *Editor) UpdateStatus() {
 	editor.screen.WriteString(rows-1, 0, "[ Sith 0.4.3 ]")
 	editor.screen.DecorateStatusLine()
 	col -= editor.writeModStatus(rows-1, col)
+	col -= editor.writeSyncStatus(rows-1, col)
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
 }

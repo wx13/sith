@@ -1,9 +1,11 @@
 package file
 
 import (
+	"crypto/md5"
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/file/buffer"
@@ -45,17 +47,22 @@ func (file *File) setNewline(bufferStr string) {
 // ReadFile reads in a file (if it exists).
 func (file *File) ReadFile(name string) {
 
+	file.md5sum = md5.Sum([]byte(""))
+
 	fileInfo, err := os.Stat(name)
 	if err != nil {
 		file.buffer.ReplaceBuffer(buffer.MakeBuffer([]string{""}))
+		file.modTime = time.Now()
 	} else {
 		file.fileMode = fileInfo.Mode()
+		file.modTime = fileInfo.ModTime()
 		stringBuf := []string{""}
 
 		byteBuf, err := ioutil.ReadFile(name)
 		if err == nil {
 			file.setNewline(string(byteBuf))
 			stringBuf = strings.Split(string(byteBuf), file.newline)
+			file.md5sum = md5.Sum(byteBuf)
 		}
 
 		file.buffer.ReplaceBuffer(buffer.MakeBuffer(stringBuf))
@@ -94,12 +101,14 @@ func (file *File) processSaveRequests() {
 
 func (file *File) Save() {
 	file.SnapshotSaved()
-	contents := file.ToString()
-	err := ioutil.WriteFile(file.Name, []byte(contents), file.fileMode)
+	contents := []byte(file.ToString())
+	err := ioutil.WriteFile(file.Name, contents, file.fileMode)
 	if err != nil {
 		file.NotifyUser("Could not save to file: " + file.Name)
 	} else {
 		file.savedBuffer.ReplaceBuffer(file.buffer.DeepDup())
 		file.NotifyUser("Saved to file: " + file.Name)
+		file.modTime = time.Now()
+		file.md5sum = md5.Sum(contents)
 	}
 }
