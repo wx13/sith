@@ -1,7 +1,10 @@
 package file
 
 import (
+	"crypto/md5"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/nsf/termbox-go"
@@ -10,6 +13,23 @@ import (
 // IsModified checks to see if a file has been modified.
 func (file *File) IsModified() bool {
 	return !file.buffer.Equals(&file.savedBuffer)
+}
+
+// DidFileChange checks to see if underlying file changed.
+func (file *File) FileChanged() bool {
+	fileInfo, err := os.Stat(file.Name)
+	if err != nil {
+		return false
+	}
+	if !fileInfo.ModTime().After(file.modTime) {
+		return false
+	}
+	byteBuf, err := ioutil.ReadFile(file.Name)
+	if err != nil {
+		return false
+	}
+	md5sum := md5.Sum(byteBuf)
+	return md5sum != file.md5sum
 }
 
 // WriteStatus writes the status line.

@@ -1,9 +1,11 @@
 package file
 
 import (
+	"crypto/md5"
 	"os"
 	"path"
 	"sync"
+	"time"
 
 	"github.com/wx13/sith/file/buffer"
 	"github.com/wx13/sith/file/cursor"
@@ -15,6 +17,10 @@ type File struct {
 	buffer      buffer.Buffer
 	MultiCursor cursor.MultiCursor
 	savedBuffer buffer.Buffer
+
+	// Check for file system changes.
+	md5sum  [16]byte
+	modTime time.Time
 
 	timer   Timer
 	maxRate float64
@@ -66,6 +72,8 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		timer:       MakeTimer(),
 		maxRate:     100.0,
 		statusMutex: &sync.Mutex{},
+		modTime:     time.Now(),
+		md5sum:      md5.Sum([]byte("")),
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
 	go file.processSaveRequests()
