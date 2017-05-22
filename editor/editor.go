@@ -107,6 +107,12 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 	editor.file = editor.files[0]
 }
 
+func (editor *Editor) ReloadAll() {
+	for _, file := range editor.files {
+		file.Reload()
+	}
+}
+
 // Quit closes all the files and exits the editor.
 func (editor *Editor) Quit() {
 	for range editor.files {

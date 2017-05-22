@@ -85,6 +85,16 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 	return file
 }
 
+func (file *File) Reload() {
+	if file.IsModified() {
+		ok, _ := file.screen.AskYesNo("Changes will be lost. Reload anyway?")
+		if !ok {
+			return
+		}
+	}
+	go file.ReadFile(file.Name)
+}
+
 func (file *File) Close() bool {
 	if file.IsModified() {
 		doClose, _ := file.screen.AskYesNo("File has been modified. Close anyway?")

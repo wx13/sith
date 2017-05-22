@@ -88,6 +88,8 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km.Add("t", func() { editor.file.SetTabStr() }, "Manually set the indentation string")
 	km.Add("T", func() { editor.file.UnsetTabStr() }, "(Re)Enable auto tab string detection")
 	km.Add("s", editor.SaveAll, "Save all files")
+	km.Add("r", func() { editor.file.Reload() }, "Reload file from disk")
+	km.Add("R", editor.ReloadAll, "Reload file from disk")
 	return km
 }
 
