@@ -87,6 +87,7 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km.Add("q", func() { editor.SearchLineBa() }, "Search from cursor to start of line")
 	km.Add("t", func() { editor.file.SetTabStr() }, "Manually set the indentation string")
 	km.Add("T", func() { editor.file.UnsetTabStr() }, "(Re)Enable auto tab string detection")
+	km.Add("s", editor.SaveAll, "Save all files")
 	return km
 }
 

@@ -250,6 +250,17 @@ func (editor *Editor) Save() {
 	editor.file.RequestSave()
 }
 
+// SaveAll saves all the open buffers.
+func (editor *Editor) SaveAll() {
+	for _, file := range editor.files {
+		filetype := file.SyntaxRules.GetFileType(file.Name)
+		if filetype == "go" {
+			editor.GoFmt()
+		}
+		file.RequestSave()
+	}
+}
+
 // GoFmt runs the Go formatter on the buffer text.
 func (editor *Editor) GoFmt() {
 	err := editor.file.GoFmt()
