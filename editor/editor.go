@@ -52,6 +52,7 @@ func (editor *Editor) OpenNewFile() {
 	names := []string{}
 	idx := 0
 	files := []os.FileInfo{}
+	filename := ""
 	for {
 		files, _ = ioutil.ReadDir(dir)
 		dotdot, err := os.Stat("../")
@@ -67,20 +68,32 @@ func (editor *Editor) OpenNewFile() {
 			}
 		}
 		menu := terminal.NewMenu(editor.screen)
-		idx = menu.Choose(names, 0)
+		key := ""
+		idx, key = menu.Choose(names, 0, "ctrlO")
 		editor.Flush()
-		if idx < 0 {
+		if idx < 0 || key == "cancel" {
 			return
+		}
+		if key == "ctrlO" {
+			var err error
+			p := terminal.MakePrompt(editor.screen)
+			filename, err = p.Ask(dir, nil)
+			if err != nil {
+				editor.screen.Notify("Unknown answer")
+				return
+			}
+			break
 		}
 		chosenFile := files[idx]
 		if chosenFile.IsDir() {
 			dir = filepath.Clean(dir+chosenFile.Name()) + "/"
 		} else {
+			filename = names[idx]
 			break
 		}
 	}
 	cwd, _ := os.Getwd()
-	chosenFile, _ := filepath.Rel(cwd, dir+names[idx])
+	chosenFile, _ := filepath.Rel(cwd, dir+filename)
 	editor.OpenFile(chosenFile)
 	editor.fileIdxPrv = editor.fileIdx
 	editor.fileIdx = len(editor.files) - 1
@@ -204,8 +217,8 @@ func (editor *Editor) SelectFile() {
 		names = append(names, status+file.Name)
 	}
 	menu := terminal.NewMenu(editor.screen)
-	idx := menu.Choose(names, editor.fileIdx)
-	if idx >= 0 {
+	idx, cmd := menu.Choose(names, editor.fileIdx)
+	if idx >= 0 && cmd == "" {
 		editor.SwitchFile(idx)
 	}
 }
@@ -215,8 +228,8 @@ func (editor *Editor) SelectFile() {
 func (editor *Editor) SetCharMode() {
 	modes := editor.screen.ListCharModes()
 	menu := terminal.NewMenu(editor.screen)
-	idx := menu.Choose(modes, 0)
-	if idx >= 0 {
+	idx, cmd := menu.Choose(modes, 0)
+	if idx >= 0 && cmd == "" {
 		editor.screen.SetCharMode(idx)
 	}
 }
@@ -235,8 +248,8 @@ func (editor *Editor) CmdMenu() {
 	names = append(names, xnames...)
 
 	menu := terminal.NewMenu(editor.screen)
-	idx := menu.Choose(names, 0)
-	if idx < 0 {
+	idx, cancel := menu.Choose(names, 0)
+	if idx < 0 || cancel != "" {
 		return
 	}
 

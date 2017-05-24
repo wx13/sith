@@ -89,13 +89,17 @@ func (menu *Menu) Show(choices []string) {
 	}
 }
 
-// Choose is the main interaction loop for the menu.
-func (menu *Menu) Choose(choices []string, idx int) int {
+// Choose is the main interaction loop for the menu. It takes two required
+// inputs: a list of choices (strings) and a current-selection-index (int).
+// Optionally you can also pass a list "keys" (strings) to listen for.
+//
+// The function returns two things: the integer index of the current selection,
+// and the string description of the key that caused the program to exit.
+func (menu *Menu) Choose(choices []string, idx int, keys ...string) (int, string) {
 	menu.choices = choices
 	menu.setDims()
 	menu.selection = idx
 	searchStr := ""
-loop:
 	for {
 		menu.Show(choices)
 		menu.showSearchStr(searchStr)
@@ -103,9 +107,9 @@ loop:
 		cmd, r := menu.keyboard.GetKey()
 		switch cmd {
 		case "enter":
-			break loop
+			return menu.selection, ""
 		case "ctrlC":
-			return -1
+			return menu.selection, "cancel"
 		case "arrowDown":
 			if menu.selection < len(choices)-1 {
 				menu.selection++
@@ -139,8 +143,14 @@ loop:
 			menu.selection = menu.SearchNext(choices, searchStr)
 		default:
 		}
+		// User keys
+		for _, key := range keys {
+			if cmd == key {
+				return menu.selection, key
+			}
+		}
 	}
-	return menu.selection
+	return menu.selection, ""
 }
 
 // Search searches menu options for a partial string match.
