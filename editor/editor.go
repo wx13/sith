@@ -283,6 +283,18 @@ func (editor *Editor) SaveAll() {
 	}
 }
 
+// SaveAs prompts for a file to save to.
+func (editor *Editor) SaveAs() {
+	p := terminal.MakePrompt(editor.screen)
+	filename, err := p.Ask("Save to:", nil)
+	if err != nil {
+		editor.screen.Notify("Cancelled")
+		return
+	}
+	editor.file.Name = filename
+	editor.Save()
+}
+
 // GoFmt runs the Go formatter on the buffer text.
 func (editor *Editor) GoFmt() {
 	err := editor.file.GoFmt()
