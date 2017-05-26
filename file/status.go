@@ -38,7 +38,9 @@ func (file *File) WriteStatus(row, col int) {
 	status := ""
 	if file.MultiCursor.Length() > 1 {
 		status = fmt.Sprintf("%dC", file.MultiCursor.Length())
-		file.addToStatus(status, row, &col, termbox.ColorBlack, termbox.ColorRed)
+		file.addToStatus(status, row, &col,
+			termbox.ColorGreen|termbox.AttrReverse|termbox.AttrBold,
+			termbox.ColorDefault|termbox.AttrReverse)
 	}
 
 	if file.autoIndent {
