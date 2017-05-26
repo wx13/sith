@@ -325,14 +325,20 @@ func (editor *Editor) SwitchFile(n int) {
 func (editor *Editor) HighlightCursors() {
 	cells := termbox.CellBuffer()
 	cols, _ := termbox.Size()
+	r0, c0 := editor.file.GetCursor(0)
 	for k := range editor.file.MultiCursor.Cursors()[1:] {
 		r, c := editor.file.GetCursor(k + 1)
 		j := r*cols + c
 		if j < 0 || j >= len(cells) {
 			continue
 		}
-		cells[j].Bg |= termbox.AttrReverse
-		cells[j].Fg |= termbox.AttrReverse
+		if r == r0 && c == c0 {
+			cells[j].Bg |= termbox.AttrBold
+			cells[j].Fg |= termbox.AttrBold | termbox.ColorYellow
+		} else {
+			cells[j].Bg |= termbox.AttrReverse
+			cells[j].Fg |= termbox.AttrReverse
+		}
 	}
 }
 
