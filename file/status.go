@@ -42,7 +42,7 @@ func (file *File) WriteStatus(row, col int) {
 	}
 
 	if file.autoIndent {
-		file.addToStatus("->", row, &col, termbox.ColorRed|termbox.AttrBold, termbox.ColorDefault)
+		file.addToStatus("->", row, &col, termbox.ColorGreen, termbox.ColorDefault)
 	}
 
 	if file.autoTab {
