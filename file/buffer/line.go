@@ -156,6 +156,13 @@ func (line Line) Tabs2spaces() Line {
 	return MakeLine(strLine)
 }
 
+// Expand tabs to spaces and return the cursor position.
+func (line Line) TabCursorPos(col int) int {
+	strLine := string(line.chars[:col])
+	strLine = strings.Replace(strLine, "\t", "    ", -1)
+	return len(strLine)
+}
+
 func (line Line) StrSlice(startCol, endCol int) string {
 	pline := line.Tabs2spaces()
 	return pline.Slice(startCol, endCol).ToString()
@@ -230,4 +237,31 @@ func (line *Line) PrevNextWord(col, incr int) int {
 		}
 	}
 	return col
+}
+
+// BracketMatch looks for matching partner rune in a line.
+//
+//   start, end       pair of runes, such as '(' and ')'
+//   idx              where to start the search from
+//   dir              1 or -1
+//   count            current level of bracketing (for continuation lines)
+//
+// Returns (idx, count); count == 0 means the closing bracket has been found.
+func (line *Line) BracketMatch(start, end rune, idx, dir, count int) (int, int) {
+	if idx < 0 {
+		idx += line.Length()
+	}
+	for ; idx >= 0 && idx < line.Length(); idx += dir {
+		r := line.GetChar(idx)
+		if r == end {
+			count--
+		}
+		if r == start {
+			count++
+		}
+		if count == 0 {
+			return idx, count
+		}
+	}
+	return idx, count
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/file/buffer"
+	"github.com/wx13/sith/syntaxcolor"
 )
 
 // Flush writes the buffer contents to the screen.
@@ -25,6 +26,27 @@ func (file *File) Flush() {
 	for row := len(slice); row < rows-1; row++ {
 		file.screen.WriteString(row, 0, "~")
 	}
+	file.ColorBracketMatch(rows)
+}
+
+// ColorBracketMatch colorizes a matching bracket character.
+func (file *File) ColorBracketMatch(rows int) {
+	cursor := file.MultiCursor.GetCursor(0)
+	row, col := cursor.RowCol()
+	row, col, err := file.buffer.BracketMatch(row, col, row+rows)
+	if err != nil {
+		return
+	}
+	col = file.buffer.GetRow(row).TabCursorPos(col)
+	lc := []syntaxcolor.LineColor{
+		{
+			Fg:    termbox.ColorRed | termbox.AttrBold,
+			Start: col,
+			End:   col + 1,
+		},
+	}
+
+	file.screen.Colorize(row-file.rowOffset, lc, file.colOffset)
 }
 
 func (file *File) setNewline(bufferStr string) {

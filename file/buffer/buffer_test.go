@@ -158,3 +158,35 @@ func TestBufferEdits(t *testing.T) {
 		t.Error("InsertAfter is broken", buf.ToString("-"))
 	}
 }
+
+func TestBufferBracketMatch(t *testing.T) {
+
+	var buf buffer.Buffer
+	var row, col int
+	var err error
+
+	buf = buffer.MakeBuffer([]string{"def foo(a, b) {}"})
+	row, col, err = buf.BracketMatch(0, 7, 0)
+	if err != nil || row != 0 || col != 12 {
+		t.Error("One line", row, col, err)
+	}
+
+	buf = buffer.MakeBuffer([]string{"foo {", "blah, blah", "}"})
+	row, col, err = buf.BracketMatch(0, 4, 2)
+	if err != nil || row != 2 || col != 0 {
+		t.Error("Multiline", row, col, err)
+	}
+
+	buf = buffer.MakeBuffer([]string{"foo {", "blah, blah", "}"})
+	row, col, err = buf.BracketMatch(2, 0, 0)
+	if err != nil || row != 0 || col != 4 {
+		t.Error("Backward", row, col, err)
+	}
+
+	buf = buffer.MakeBuffer([]string{"foo(bar(baz(", "  thing(), thing()))", ")"})
+	row, col, err = buf.BracketMatch(2, 0, 0)
+	if err != nil || row != 0 || col != 3 {
+		t.Error("Backward nested", row, col, err)
+	}
+
+}

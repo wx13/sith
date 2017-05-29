@@ -322,3 +322,48 @@ func (buffer *Buffer) CompressPriorSpaces(row, col int) int {
 	buffer.SetRow(row, line)
 	return col
 }
+
+// BracketMatch looks for matching partner rune in a set of lines.
+//
+//   row, col         where to start the search from
+//   end_row          last row to search
+func (buffer *Buffer) BracketMatch(row, col, end_row int) (int, int, error) {
+
+	// Get the rune under the cursor.
+	current_line := buffer.GetRow(row)
+	start := current_line.GetChar(col)
+
+	// Get the partner rune:
+	formap := map[rune]rune{'(': ')', '[': ']', '{': '}', '<': '>'}
+	backmap := map[rune]rune{}
+	for k, v := range formap {
+		backmap[v] = k
+	}
+	dir := 1
+	end, ok := formap[start]
+	if !ok {
+		end, ok = backmap[start]
+		if !ok {
+			return row, col, errors.New("not a bracket character")
+		}
+		dir = -1
+	}
+
+	// Start at one level, and move off the current char.
+	count := 1
+	col += dir
+	if col < 0 {
+		row += dir
+	}
+	for ; row >= 0 && row != end_row+dir && row < buffer.Length(); row += dir {
+		line := buffer.GetRow(row)
+		col, count = line.BracketMatch(start, end, col, dir, count)
+		if count == 0 {
+			return row, col, nil
+		}
+		// Reset column.
+		col = (dir - 1) / 2
+	}
+
+	return row, col, errors.New("could not find bracket match")
+}

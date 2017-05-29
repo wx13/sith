@@ -109,3 +109,40 @@ func TestSlice(t *testing.T) {
 	}
 
 }
+
+func TestBracketMatch(t *testing.T) {
+
+	var line buffer.Line
+	var idx, count int
+
+	line = buffer.MakeLine("foo(bar)")
+	idx, count = line.BracketMatch('(', ')', 4, 1, 1)
+	if count != 0 || idx != 7 {
+		t.Error("Simple match", idx, count)
+	}
+
+	line = buffer.MakeLine("blah)")
+	idx, count = line.BracketMatch('(', ')', 0, 1, 1)
+	if count != 0 || idx != 4 {
+		t.Error("Continued match, level 1", idx, count)
+	}
+
+	line = buffer.MakeLine("blah(foo), blah) {")
+	idx, count = line.BracketMatch('(', ')', 0, 1, 1)
+	if count != 0 || idx != 15 {
+		t.Error("Continued match, level 1, decoy", idx, count)
+	}
+
+	line = buffer.MakeLine("def foo(bar(")
+	idx, count = line.BracketMatch('(', ')', 8, 1, 1)
+	if count != 2 {
+		t.Error("No match", idx, count)
+	}
+
+	line = buffer.MakeLine("def foo(bar, baz()) {")
+	idx, count = line.BracketMatch(')', '(', 17, -1, 1)
+	if count != 0 || idx != 7 {
+		t.Error("Reverse match", idx, count)
+	}
+
+}
