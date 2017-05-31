@@ -121,7 +121,16 @@ func (file *File) processSaveRequests() {
 	}
 }
 
+// Save saves a file.
 func (file *File) Save() {
+	if file.autoFmt {
+		err := file.Fmt()
+		if err == nil {
+			file.NotifyUser("Fmt success")
+		} else {
+			file.NotifyUser(err.Error())
+		}
+	}
 	file.SnapshotSaved()
 	contents := []byte(file.ToString())
 	err := ioutil.WriteFile(file.Name, contents, file.fileMode)

@@ -68,7 +68,7 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	km.Add("ctrlC", editor.Cut, "Cut line")
 	km.Add("ctrlV", editor.Paste, "Paste")
 	km.Add("altV", editor.PasteFromMenu, "Paste from menu")
-	km.Add("altG", editor.GoFmt, "Go fmt")
+	km.Add("altG", editor.Fmt, "Run code formatter")
 	km.Add("altJ", func() { editor.file.Justify(72) }, "Justify")
 	km.Add("altH", func() { editor.file.Justify(0) }, "Unjustify")
 	km.Add("altI", func() { editor.file.ToggleAutoIndent() }, "Toggle auto-indent")
@@ -91,6 +91,7 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km.Add("s", editor.SaveAll, "Save all files")
 	km.Add("r", func() { editor.file.Reload() }, "Reload file from disk")
 	km.Add("R", editor.ReloadAll, "Reload file from disk")
+	km.Add("g", func() { editor.file.ToggleAutoFmt() }, "Toggle auto fmt on save")
 	return km
 }
 

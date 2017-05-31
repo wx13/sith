@@ -40,6 +40,8 @@ type File struct {
 
 	newline string
 
+	autoFmt bool
+
 	rowOffset int
 	colOffset int
 	screen    *terminal.Screen
@@ -74,6 +76,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		statusMutex: &sync.Mutex{},
 		modTime:     time.Now(),
 		md5sum:      md5.Sum([]byte("")),
+		autoFmt:     true,
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
 	go file.processSaveRequests()
@@ -111,6 +114,10 @@ func (file *File) ToggleAutoIndent() {
 
 func (file *File) ToggleAutoTab() {
 	file.autoTab = file.autoTab != true
+}
+
+func (file *File) ToggleAutoFmt() {
+	file.autoFmt = file.autoFmt != true
 }
 
 // SetTabStr manually sets the tab string, and disables auto-tab-detection.

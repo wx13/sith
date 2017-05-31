@@ -9,8 +9,8 @@ import (
 	"github.com/wx13/sith/file/buffer"
 )
 
-// GoFmt runs the go formatter on the text buffer and updates the buffer.
-func (file *File) GoFmt() error {
+// Fmt runs a code formatter on the text buffer and updates the buffer.
+func (file *File) Fmt() error {
 	filetype := file.SyntaxRules.GetFileType(file.Name)
 	if filetype != "go" {
 		return errors.New("Will not gofmt a non-go file.")

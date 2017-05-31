@@ -47,6 +47,13 @@ func (file *File) WriteStatus(row, col int) {
 		file.addToStatus("->", row, &col, termbox.ColorGreen, termbox.ColorDefault)
 	}
 
+	if file.autoFmt {
+		switch file.SyntaxRules.GetFileType(file.Name) {
+		case "c", "build", "go":
+			file.addToStatus("f", row, &col, termbox.ColorGreen, termbox.ColorDefault)
+		}
+	}
+
 	if file.autoTab {
 		if file.tabString == "\t" {
 			status = "1t"
@@ -87,7 +94,7 @@ func (file *File) WriteStatus(row, col int) {
 }
 
 func (file *File) addToStatus(msg string, row int, col *int, fg, bg termbox.Attribute) {
-	*col -= len(msg) + 2
+	*col -= len(msg) + 1
 	file.screen.WriteStringColor(row, *col, msg, fg, bg)
 }
 

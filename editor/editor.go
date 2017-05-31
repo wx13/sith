@@ -265,20 +265,12 @@ func (editor *Editor) CmdMenu() {
 
 // Save saves the buffer to the file.
 func (editor *Editor) Save() {
-	filetype := editor.file.SyntaxRules.GetFileType(editor.file.Name)
-	if filetype == "go" {
-		editor.GoFmt()
-	}
 	editor.file.RequestSave()
 }
 
 // SaveAll saves all the open buffers.
 func (editor *Editor) SaveAll() {
 	for _, file := range editor.files {
-		filetype := file.SyntaxRules.GetFileType(file.Name)
-		if filetype == "go" {
-			editor.GoFmt()
-		}
 		file.RequestSave()
 	}
 }
@@ -295,15 +287,9 @@ func (editor *Editor) SaveAs() {
 	editor.Save()
 }
 
-// GoFmt runs the Go formatter on the buffer text.
-func (editor *Editor) GoFmt() {
-	err := editor.file.GoFmt()
-	if err == nil {
-		editor.RequestFlush()
-		editor.file.NotifyUser("GoFmt done")
-	} else {
-		editor.file.NotifyUser(err.Error())
-	}
+// Fmt runs the code formatter on the buffer text.
+func (editor *Editor) Fmt() {
+	editor.file.Fmt()
 }
 
 func intMod(a, n int) int {
