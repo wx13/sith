@@ -193,6 +193,16 @@ func (mc MultiCursor) GetRows() []int {
 	return rows
 }
 
+// GetRowsCols returns a list of cursor positions.
+func (mc MultiCursor) GetRowsCols() [][]int {
+	rows := [][]int{}
+	for _, cursor := range mc.cursors {
+		r, c := cursor.RowCol()
+		rows = append(rows, []int{r, c})
+	}
+	return rows
+}
+
 // Length returns the number of cursors.
 func (mc MultiCursor) Length() int {
 	return len(mc.cursors)
@@ -335,10 +345,8 @@ func (mc *MultiCursor) OnePerLine() {
 
 }
 
-// SortedRowsCols returns a de-duplicated list of cursor row/col.
-// It returns a sorted list of rows, and a map from row to sorted list
-// of columns.
-func (mc MultiCursor) SortedRowsCols() (rows []int, cols map[int][]int) {
+// Sort sorts the cursors in descending order of row and col.
+func (mc *MultiCursor) Sort() {
 
 	// Create a map of rows and columns, for deduplication.
 	rowcol := make(map[int]map[int]bool)
@@ -351,19 +359,25 @@ func (mc MultiCursor) SortedRowsCols() (rows []int, cols map[int][]int) {
 		rowcol[r][c] = true
 	}
 
-	// Convert the map into lists.
-	rows = []int{}
-	cols = make(map[int][]int)
+	// Convert the map into lists for sorting.
+	rows := []int{}
+	cols := make(map[int][]int)
 	for r, _ := range rowcol {
 		rows = append(rows, r)
 		cols[r] = []int{}
 		for c, _ := range rowcol[r] {
 			cols[r] = append(cols[r], c)
 		}
-		sort.Ints(cols[r])
+		sort.Sort(sort.Reverse(sort.IntSlice(cols[r])))
 	}
-	sort.Ints(rows)
+	sort.Sort(sort.Reverse(sort.IntSlice(rows)))
 
-	return rows, cols
+	// Recreate the cursors from the lists.
+	mc.cursors = []Cursor{}
+	for _, row := range rows {
+		for _, col := range cols[row] {
+			mc.cursors = append(mc.cursors, MakeCursor(row, col))
+		}
+	}
 
 }

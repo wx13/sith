@@ -87,7 +87,7 @@ func TestMCClear(t *testing.T) {
 	}
 }
 
-func TestSortedRowsCols(t *testing.T) {
+func TestSort(t *testing.T) {
 	mc := cursor.MakeMultiCursor()
 	mc.ResetCursors([][]int{
 		{10, 12, 12},
@@ -96,11 +96,11 @@ func TestSortedRowsCols(t *testing.T) {
 		{2, 15, 15},
 		{2, 1, 1},
 	})
-	rows, cols := mc.SortedRowsCols()
-	if len(rows) != 2 || rows[0] != 2 || rows[1] != 10 {
-		t.Error("Rows:", rows)
-	}
-	if len(cols[10]) != 3 || cols[10][0] != 5 || cols[10][2] != 15 {
-		t.Error("Cols:", cols)
+	mc.Sort()
+	rc := mc.GetRowsCols()
+	if rc[0][0] != 10 || rc[0][1] != 15 ||
+		rc[1][0] != 10 || rc[1][1] != 12 ||
+		rc[3][0] != 2 || rc[4][1] != 1 {
+		t.Error(rc)
 	}
 }
