@@ -407,7 +407,7 @@ func (editor *Editor) UpdateStatus() {
 	)
 	col := cols - len(message)
 	editor.screen.WriteString(rows-1, col, message)
-	editor.screen.WriteString(rows-1, 0, "[ Sith 0.4.4 ]")
+	editor.screen.WriteString(rows-1, 0, "[ Sith 0.5.0 ]")
 	editor.screen.DecorateStatusLine()
 	col -= editor.writeModStatus(rows-1, col)
 	col -= editor.writeSyncStatus(rows-1, col)

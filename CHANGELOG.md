@@ -1,6 +1,21 @@
 Change Log
 ==========
 
+## [0.5.0] 2017-06-01
+
+### Features
+- Better file status awareness
+  - Status-line display if other open buffers are modified
+  - Modification status in buffer selection menu
+  - Checks if any files have changed (on disk) while open
+  - Can now reload a file from disk
+- Save-all and Save-as
+- Can create a new file from the open-file menu
+- Status bar formatting tweaks
+- Make overlapping cursors more visible
+- Highlight matching bracket character
+- Allow toggling of auto-format-on-save
+
 ## [0.4.4] 2017-05-21
 
 ### Bugfixes
