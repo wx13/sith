@@ -231,6 +231,9 @@ func (buffer *Buffer) ReplaceWord(searchTerm, replaceTerm string, row, col int) 
 
 func (buffer *Buffer) GetRow(row int) Line {
 	buffer.mutex.Lock()
+	if row >= len(buffer.lines) {
+		row = len(buffer.lines) - 1
+	}
 	line := buffer.lines[row]
 	buffer.mutex.Unlock()
 	return line
