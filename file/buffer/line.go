@@ -3,6 +3,7 @@ package buffer
 import (
 	"errors"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"unicode"
@@ -223,7 +224,129 @@ func (line *Line) GetChar(k int) rune {
 	return line.chars[k]
 }
 
+func uniqCols(cols []int) []int {
+	sort.Ints(cols)
+	prev_col := -1
+	newCols := []int{}
+	for _, col := range cols {
+		if col == prev_col {
+			continue
+		}
+		prev_col = col
+		newCols = append(newCols, col)
+	}
+	return newCols
+}
+
+// InsertStr inserts a string into a set of positions within a line. Return the
+// new cursor positions.
+func (line *Line) InsertStr(str string, cols ...int) []int {
+
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
+
+	cols = uniqCols(cols)
+	runes := []rune(str)
+
+	for i, col := range cols {
+
+		// Enforce bounds.
+		if col > len(line.chars) || col < 0 {
+			continue
+		}
+
+		if col == len(line.chars) {
+			// Special case: append.
+			line.chars = append(line.chars, runes...)
+		} else {
+			// Insert in middle.
+			line.chars = append(line.chars[:col], append(runes, line.chars[col:]...)...)
+		}
+		for j, _ := range cols[i:] {
+			cols[i+j] += len(runes)
+		}
+
+	}
+
+	return cols
+}
+
+// DeleteFwd deletes n characters starting at the cursor and going to the right.
+func (line *Line) DeleteFwd(count int, cols ...int) []int {
+
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
+
+	// Zero-out to-be-deleted elements.
+	for _, col := range cols {
+		for c := col; c < col+count && c < len(line.chars); c++ {
+			line.chars[c] = 0
+		}
+	}
+
+	// Set column positions.
+	cols = []int{}
+	n := 0
+	newChars := []rune{}
+	for _, ch := range line.chars {
+		if ch != 0 {
+			n++
+			newChars = append(newChars, ch)
+		} else {
+			if len(cols) == 0 || cols[len(cols)-1] != n {
+				cols = append(cols, n)
+			}
+		}
+	}
+	if len(cols) == 0 {
+		cols = []int{0}
+	}
+
+	line.chars = newChars
+
+	return cols
+}
+
+// DeleteBkwd deletes n characters starting at the cursor and going to the left.
+func (line *Line) DeleteBkwd(count int, cols ...int) []int {
+
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
+
+	// Zero-out to-be-deleted elements.
+	for _, col := range cols {
+		for c := col - 1; c >= col-count && c >= 0 && col < len(line.chars); c-- {
+			line.chars[c] = 0
+		}
+	}
+
+	// Set column positions.
+	cols = []int{}
+	n := 0
+	newChars := []rune{}
+	for _, ch := range line.chars {
+		if ch != 0 {
+			n++
+			newChars = append(newChars, ch)
+		} else {
+			if len(cols) == 0 || cols[len(cols)-1] != n {
+				cols = append(cols, n)
+			}
+		}
+	}
+	if len(cols) == 0 {
+		cols = []int{0}
+	}
+
+	line.chars = newChars
+
+	return cols
+
+}
+
 func (line *Line) Chars() []rune {
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
 	return line.chars
 }
 

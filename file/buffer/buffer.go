@@ -152,6 +152,9 @@ func (buffer *Buffer) StrSlab(row1, row2, col1, col2 int) []string {
 
 // ToString concatenates the buffer into one long string.
 func (buffer *Buffer) ToString(newline string) string {
+	if buffer.Length() == 0 {
+		return ""
+	}
 	str := ""
 	for _, line := range buffer.Lines() {
 		str += line.ToString() + newline
@@ -180,9 +183,12 @@ func (buffer *Buffer) DeleteRow(row int) {
 }
 
 func (buffer *Buffer) ReplaceLine(line Line, row int) {
+	if row >= buffer.Length() {
+		return
+	}
 	buffer.mutex.Lock()
 	buffer.lines[row] = line
-	buffer.mutex.Unlock()
+	defer buffer.mutex.Unlock()
 }
 
 // ReplaceLines replaces the lines from minRow to maxRow with lines.
@@ -233,7 +239,7 @@ func (buffer *Buffer) GetRow(row int) Line {
 	buffer.mutex.Lock()
 	line := buffer.lines[row]
 	buffer.mutex.Unlock()
-	return line
+	return MakeLine(line.ToString())
 }
 
 func (buffer *Buffer) SetRow(row int, line Line) error {
@@ -366,4 +372,40 @@ func (buffer *Buffer) BracketMatch(row, col, end_row int) (int, int, error) {
 	}
 
 	return row, col, errors.New("could not find bracket match")
+}
+
+// DeleteChars deletes count characters at each position in the rows map.
+func (buffer *Buffer) DeleteChars(count int, rows map[int][]int) map[int][]int {
+	for row, cols := range rows {
+		if row > buffer.Length() || row < 0 {
+			continue
+		}
+		line := buffer.GetRow(row)
+		if count >= 0 {
+			cols = line.DeleteFwd(count, cols...)
+		} else {
+			cols = line.DeleteBkwd(-count, cols...)
+		}
+		buffer.SetRow(row, line)
+		rows[row] = cols
+	}
+	return rows
+}
+
+func (buffer *Buffer) InsertChar(ch rune, rows map[int][]int) map[int][]int {
+	return buffer.InsertStr(string(ch), rows)
+}
+
+// InsertStr inserts the specified string into each position in the rows map.
+func (buffer *Buffer) InsertStr(str string, rows map[int][]int) map[int][]int {
+	for row, cols := range rows {
+		if row > buffer.Length() || row < 0 {
+			continue
+		}
+		line := buffer.GetRow(row)
+		cols = line.InsertStr(str, cols...)
+		buffer.SetRow(row, line)
+		rows[row] = cols
+	}
+	return rows
 }

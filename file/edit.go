@@ -26,9 +26,9 @@ func (file *File) Fmt() error {
 	return err
 }
 
-// InsertChar insters a character (rune) into the current cursor position.
-func (file *File) InsertChar(ch rune) {
-
+// getMaxColAndLine finds the max column position and max line length, so we can avoid
+// inserting things into blank lines.
+func (file *File) getMaxColAndLine() (int, int) {
 	maxCol := 0
 	maxLineLen := 0
 	for _, cursor := range file.MultiCursor.Cursors() {
@@ -39,25 +39,36 @@ func (file *File) InsertChar(ch rune) {
 			maxLineLen = file.buffer.RowLength(cursor.Row())
 		}
 	}
+	return maxCol, maxLineLen
+}
 
-	for idx, cursor := range file.MultiCursor.Cursors() {
-		row, col := cursor.RowCol()
-		if maxCol > 0 && col == 0 {
-			continue
-		}
-		line := file.buffer.GetRow(row)
-		if (ch == ' ' || ch == '\t') && col == 0 && line.Length() == 0 && maxLineLen > 0 {
-			continue
-		}
-		insertStr := string(ch)
-		if ch == '\t' && file.autoTab && file.tabString != "\t" {
-			insertStr = file.tabString
-		}
-		newLine := buffer.MakeLine(line.Slice(0, col).ToString() + insertStr + line.Slice(col, -1).ToString())
-		file.buffer.SetRow(row, newLine)
-		col += len(insertStr)
-		file.MultiCursor.SetCursor(idx, row, col, col)
-	}
+// InsertChar insters a character (rune) into the current cursor position.
+func (file *File) InsertChar(ch rune) {
+
+	rows := file.MultiCursor.GetRowsCols()
+	rows = file.buffer.InsertChar(ch, rows)
+	file.MultiCursor.ResetCursors(rows)
+
+	//maxCol, maxLineLen := file.getMaxColAndLine()
+
+	// for idx, cursor := range file.MultiCursor.Cursors() {
+	// 	row, col := cursor.RowCol()
+	// 	if maxCol > 0 && col == 0 {
+	// 		continue
+	// 	}
+	// 	line := file.buffer.GetRow(row)
+	// 	if (ch == ' ' || ch == '\t') && col == 0 && line.Length() == 0 && maxLineLen > 0 {
+	// 		continue
+	// 	}
+	// 	insertStr := string(ch)
+	// 	if ch == '\t' && file.autoTab && file.tabString != "\t" {
+	// 		insertStr = file.tabString
+	// 	}
+	// 	newLine := buffer.MakeLine(line.Slice(0, col).ToString() + insertStr + line.Slice(col, -1).ToString())
+	// 	file.buffer.SetRow(row, newLine)
+	// 	col += len(insertStr)
+	// 	file.MultiCursor.SetCursor(idx, row, col, col)
+	// }
 
 	file.Snapshot()
 
@@ -65,47 +76,50 @@ func (file *File) InsertChar(ch rune) {
 
 // Backspace removes the character before the cursor.
 func (file *File) Backspace() {
-	for idx, cursor := range file.MultiCursor.Cursors() {
-		row, col := cursor.RowCol()
-		if col == 0 {
-			if file.MultiCursor.Length() > 1 {
-				continue
-			}
-			if row == 0 {
-				return
-			}
-			row--
-			if row+1 >= file.buffer.Length() {
-				return
-			}
-			col = file.buffer.RowLength(row)
-			newLine := buffer.MakeLine(file.buffer.GetRow(row).ToString() + file.buffer.GetRow(row+1).ToString())
-			file.buffer.ReplaceLine(newLine, row)
-			file.buffer.DeleteRow(row + 1)
-			file.MultiCursor.SetCursor(idx, row, col, col)
-		} else {
-			line := file.buffer.GetRow(row)
-			if col > line.Length() {
-				continue
-			}
+	rows := file.MultiCursor.GetRowsCols()
+	rows = file.buffer.DeleteChars(-1, rows)
+	file.MultiCursor.ResetCursors(rows)
+	// for idx, cursor := range file.MultiCursor.Cursors() {
+	// 	row, col := cursor.RowCol()
+	// 	if col == 0 {
+	// 		if file.MultiCursor.Length() > 1 {
+	// 			continue
+	// 		}
+	// 		if row == 0 {
+	// 			return
+	// 		}
+	// 		row--
+	// 		if row+1 >= file.buffer.Length() {
+	// 			return
+	// 		}
+	// 		col = file.buffer.RowLength(row)
+	// 		newLine := buffer.MakeLine(file.buffer.GetRow(row).ToString() + file.buffer.GetRow(row+1).ToString())
+	// 		file.buffer.ReplaceLine(newLine, row)
+	// 		file.buffer.DeleteRow(row + 1)
+	// 		file.MultiCursor.SetCursor(idx, row, col, col)
+	// 	} else {
+	// 		line := file.buffer.GetRow(row)
+	// 		if col > line.Length() {
+	// 			continue
+	// 		}
 
-			// Handle multi-char indents.
-			nDel := 1
-			if file.autoTab && len(file.tabString) > 0 {
-				if line.Slice(0, col).ToString() == strings.Repeat(" ", col) {
-					n := len(file.tabString)
-					if n*(col/n) == col {
-						nDel = n
-					}
-				}
-			}
+	// 		// Handle multi-char indents.
+	// 		nDel := 1
+	// 		if file.autoTab && len(file.tabString) > 0 {
+	// 			if line.Slice(0, col).ToString() == strings.Repeat(" ", col) {
+	// 				n := len(file.tabString)
+	// 				if n*(col/n) == col {
+	// 					nDel = n
+	// 				}
+	// 			}
+	// 		}
 
-			newLine := buffer.MakeLine(line.Slice(0, col-nDel).ToString() + line.Slice(col, -1).ToString())
-			file.buffer.SetRow(row, newLine)
-			col -= nDel
-			file.MultiCursor.SetCursor(idx, row, col, col)
-		}
-	}
+	// 		newLine := buffer.MakeLine(line.Slice(0, col-nDel).ToString() + line.Slice(col, -1).ToString())
+	// 		file.buffer.SetRow(row, newLine)
+	// 		col -= nDel
+	// 		file.MultiCursor.SetCursor(idx, row, col, col)
+	// 	}
+	// }
 	file.enforceRowBounds()
 	file.enforceColBounds()
 	file.Snapshot()

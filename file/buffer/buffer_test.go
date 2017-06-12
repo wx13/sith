@@ -159,6 +159,72 @@ func TestBufferEdits(t *testing.T) {
 	}
 }
 
+func TestBufferInsertStr(t *testing.T) {
+	var buf buffer.Buffer
+	var cols map[int][]int
+
+	buf = buffer.MakeBuffer([]string{"abc", "def", "ghi"})
+	cols = buf.InsertStr("//", map[int][]int{0: {0}, 1: {0}})
+	if buf.ToString("-") != "//abc-//def-ghi" {
+		t.Error("InsertStr at start of lines", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 2) || !intSliceEq(cols[1], 2) {
+		t.Error("InsertStr at start of lines", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "abcdef"})
+	cols = buf.InsertStr("//", map[int][]int{0: {0, 3}, 1: {0}})
+	if buf.ToString("-") != "//abc//def-//abcdef" {
+		t.Error("InsertStr at multiple places", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 2, 7) || !intSliceEq(cols[1], 2) {
+		t.Error("InsertStr at multiple", cols)
+	}
+
+}
+
+func TestDeleteChars(t *testing.T) {
+	var buf buffer.Buffer
+	var cols map[int][]int
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "abcdef"})
+	cols = buf.DeleteChars(2, map[int][]int{0: {3}, 1: {3}})
+	if buf.ToString("-") != "abcf-abcf" {
+		t.Error("DeleteChars on two lines", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 3) || !intSliceEq(cols[1], 3) {
+		t.Error("DeleteChars on two lines", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "abcdef"})
+	cols = buf.DeleteChars(2, map[int][]int{0: {0, 3}, 1: {3}})
+	if buf.ToString("-") != "cf-abcf" {
+		t.Error("DeleteChars twice on same row", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 0, 1) || !intSliceEq(cols[1], 3) {
+		t.Error("DeleteChars twice on same row", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "abcdef"})
+	cols = buf.DeleteChars(-2, map[int][]int{0: {3}, 1: {3}})
+	if buf.ToString("-") != "adef-adef" {
+		t.Error("DeleteChars backwards on two lines", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 1) || !intSliceEq(cols[1], 1) {
+		t.Error("DeleteChars backwards on two lines", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"0123456789"})
+	cols = buf.DeleteChars(-3, map[int][]int{0: {5, 7}})
+	if buf.ToString("-") != "01789" {
+		t.Error("DeleteChars overlapping backspace", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 2) {
+		t.Error("DeleteChars overlapping backspace", cols)
+	}
+
+}
+
 func TestBufferBracketMatch(t *testing.T) {
 
 	var buf buffer.Buffer

@@ -2,7 +2,6 @@
 package cursor
 
 import (
-	"sort"
 	"sync"
 )
 
@@ -116,12 +115,14 @@ func (mc *MultiCursor) SetCursor(idx, row, col, colwant int) {
 	mc.cursors[idx].colwant = colwant
 }
 
-// ResetCursors manually sets all the cursor positions.  This is useful
+// ResetCursors manually sets all the cursor positions. This is useful
 // for a full cursor reset.
-func (mc *MultiCursor) ResetCursors(positions [][]int) {
+func (mc *MultiCursor) ResetCursors(rows map[int][]int) {
 	mc.cursors = []Cursor{}
-	for _, pos := range positions {
-		mc.cursors = append(mc.cursors, CursorFromSlice(pos))
+	for row, cols := range rows {
+		for _, col := range cols {
+			mc.cursors = append(mc.cursors, MakeCursor(row, col))
+		}
 	}
 	if len(mc.cursors) == 0 {
 		mc.cursors = []Cursor{MakeCursor(0, 0)}
@@ -193,12 +194,16 @@ func (mc MultiCursor) GetRows() []int {
 	return rows
 }
 
-// GetRowsCols returns a list of cursor positions.
-func (mc MultiCursor) GetRowsCols() [][]int {
-	rows := [][]int{}
+// GetRowsCols returns a map of cursor positions.
+func (mc MultiCursor) GetRowsCols() map[int][]int {
+	rows := map[int][]int{}
 	for _, cursor := range mc.cursors {
 		r, c := cursor.RowCol()
-		rows = append(rows, []int{r, c})
+		_, exist := rows[r]
+		if !exist {
+			rows[r] = []int{}
+		}
+		rows[r] = append(rows[r], c)
 	}
 	return rows
 }
@@ -297,30 +302,6 @@ func (mc MultiCursor) Cursors() []Cursor {
 	return mc.cursors
 }
 
-// Dedup de-duplicates the set of cursors.
-func (mc *MultiCursor) Dedup() {
-
-	// Create a map of rows and columns, for deduplication.
-	rowcol := make(map[int]map[int]bool)
-	for _, cursor := range mc.cursors {
-		r, c := cursor.RowCol()
-		_, exist := rowcol[r]
-		if !exist {
-			rowcol[r] = make(map[int]bool)
-		}
-		rowcol[r][c] = true
-	}
-
-	// Recreate the cursors from the map.
-	mc.cursors = []Cursor{}
-	for row := range rowcol {
-		for col := range rowcol[row] {
-			mc.cursors = append(mc.cursors, MakeCursor(row, col))
-		}
-	}
-
-}
-
 // OnePerLine keeps only the first cursor on each line.
 func (mc *MultiCursor) OnePerLine() {
 
@@ -341,43 +322,6 @@ func (mc *MultiCursor) OnePerLine() {
 	mc.cursors = []Cursor{}
 	for r, c := range cols {
 		mc.cursors = append(mc.cursors, MakeCursor(r, c))
-	}
-
-}
-
-// Sort sorts the cursors in descending order of row and col.
-func (mc *MultiCursor) Sort() {
-
-	// Create a map of rows and columns, for deduplication.
-	rowcol := make(map[int]map[int]bool)
-	for _, cursor := range mc.cursors {
-		r, c := cursor.RowCol()
-		_, exist := rowcol[r]
-		if !exist {
-			rowcol[r] = make(map[int]bool)
-		}
-		rowcol[r][c] = true
-	}
-
-	// Convert the map into lists for sorting.
-	rows := []int{}
-	cols := make(map[int][]int)
-	for r, _ := range rowcol {
-		rows = append(rows, r)
-		cols[r] = []int{}
-		for c, _ := range rowcol[r] {
-			cols[r] = append(cols[r], c)
-		}
-		sort.Sort(sort.Reverse(sort.IntSlice(cols[r])))
-	}
-	sort.Sort(sort.Reverse(sort.IntSlice(rows)))
-
-	// Recreate the cursors from the lists.
-	mc.cursors = []Cursor{}
-	for _, row := range rows {
-		for _, col := range cols[row] {
-			mc.cursors = append(mc.cursors, MakeCursor(row, col))
-		}
 	}
 
 }
