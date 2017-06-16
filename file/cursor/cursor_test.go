@@ -48,7 +48,7 @@ func TestMCClear(t *testing.T) {
 
 	mc.Snapshot()
 	mc.Snapshot()
-	if mc.Length() != 3 {
+	if mc.Length() != 1 {
 		t.Error("Wrong MC length:", mc.Length())
 	}
 
@@ -62,7 +62,7 @@ func TestMCClear(t *testing.T) {
 	mc.Snapshot()
 	mc.Snapshot()
 	mc.OuterMost()
-	if mc.Length() != 2 {
+	if mc.Length() != 1 {
 		t.Error("Outermost failed:", mc.Length())
 	}
 
