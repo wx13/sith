@@ -227,7 +227,30 @@ func (mc *MultiCursor) Append(cursor Cursor) {
 // cursor to the list.  It is the primary way the user will
 // add cursors to the MC cursor list.
 func (mc *MultiCursor) Snapshot() {
+	mc.mutex.Lock()
+	defer mc.mutex.Unlock()
 	cursor := mc.cursors[0].Dup()
+	// If cursor matches an existing cursor, remove it instead of
+	// adding a new one.
+	if len(mc.cursors) > 1 {
+		toggle := false
+		for k, c := range mc.cursors {
+			if k == 0 {
+				continue
+			}
+			if c.row == cursor.row && c.col == cursor.col {
+				toggle = true
+				if k < len(mc.cursors)-1 {
+					mc.cursors = append(mc.cursors[:k], mc.cursors[k+1:]...)
+				} else {
+					mc.cursors = mc.cursors[:k]
+				}
+			}
+		}
+		if toggle {
+			return
+		}
+	}
 	mc.cursors = append(mc.cursors, cursor)
 }
 

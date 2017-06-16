@@ -322,4 +322,13 @@ func TestDeleteBkwd(t *testing.T) {
 		t.Error("Delete to start of line", cols)
 	}
 
+	line = buffer.MakeLine("0")
+	cols = line.DeleteBkwd(1, 1)
+	if line.ToString() != "" {
+		t.Error("Delete only char:", line.ToString())
+	}
+	if !intSliceEq(cols, 0) {
+		t.Error("Delete only char:", cols)
+	}
+
 }

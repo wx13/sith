@@ -315,7 +315,7 @@ func (line *Line) DeleteBkwd(count int, cols ...int) []int {
 
 	// Zero-out to-be-deleted elements.
 	for _, col := range cols {
-		for c := col - 1; c >= col-count && c >= 0 && col < len(line.chars); c-- {
+		for c := col - 1; c >= col-count && c >= 0 && c < len(line.chars); c-- {
 			line.chars[c] = 0
 		}
 	}

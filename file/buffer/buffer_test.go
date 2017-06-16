@@ -183,6 +183,39 @@ func TestBufferInsertStr(t *testing.T) {
 
 }
 
+func TestDeleteNewlines(t *testing.T) {
+	var buf buffer.Buffer
+	var cols map[int][]int
+
+	buf = buffer.MakeBuffer([]string{"abc", "def", "ghi"})
+	cols = buf.DeleteNewlines(map[int][]int{1: {0}})
+	if buf.ToString("-") != "abcdef-ghi" {
+		t.Error("DeleteNewlines one cursor", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 3) {
+		t.Error("DeleteNewlines one cursor", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abc", "def", "ghi"})
+	cols = buf.DeleteNewlines(map[int][]int{1: {0}, 2: {0}})
+	if buf.ToString("-") != "abcdefghi" {
+		t.Error("DeleteNewlines two cursors", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 3, 6) {
+		t.Error("DeleteNewlines two cursors", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abc", "def", "ghi"})
+	cols = buf.DeleteNewlines(map[int][]int{0: {0}, 1: {0}, 2: {0}})
+	if buf.ToString("-") != "abcdefghi" {
+		t.Error("DeleteNewlines two cursors", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[0], 0, 3, 6) {
+		t.Error("DeleteNewlines two cursors", cols)
+	}
+
+}
+
 func TestDeleteChars(t *testing.T) {
 	var buf buffer.Buffer
 	var cols map[int][]int

@@ -3,6 +3,7 @@ package buffer
 import (
 	"errors"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 
@@ -191,6 +192,18 @@ func (buffer *Buffer) ReplaceLine(line Line, row int) {
 	defer buffer.mutex.Unlock()
 }
 
+// MergeRows merges the current row into the previous.
+func (buffer *Buffer) MergeRows(row int) error {
+	if row <= 0 || row >= buffer.Length() {
+		return errors.New("bad MergeRows index")
+	}
+	str1 := buffer.GetRow(row - 1).ToString()
+	str2 := buffer.GetRow(row).ToString()
+	buffer.ReplaceLine(MakeLine(str1+str2), row-1)
+	buffer.DeleteRow(row)
+	return nil
+}
+
 // ReplaceLines replaces the lines from minRow to maxRow with lines.
 func (buffer *Buffer) ReplaceLines(lines []Line, minRow, maxRow int) {
 	buffer.mutex.Lock()
@@ -237,8 +250,11 @@ func (buffer *Buffer) ReplaceWord(searchTerm, replaceTerm string, row, col int) 
 
 func (buffer *Buffer) GetRow(row int) Line {
 	buffer.mutex.Lock()
+	defer buffer.mutex.Unlock()
+	if row < 0 || row > len(buffer.lines) {
+		return MakeLine("")
+	}
 	line := buffer.lines[row]
-	buffer.mutex.Unlock()
 	return MakeLine(line.ToString())
 }
 
@@ -390,6 +406,52 @@ func (buffer *Buffer) DeleteChars(count int, rows map[int][]int) map[int][]int {
 		rows[row] = cols
 	}
 	return rows
+}
+
+// DeleteNewlines deletes the newline chars at the start of each row specified.
+func (buffer *Buffer) DeleteNewlines(rowsMap map[int][]int) map[int][]int {
+
+	// Create ordered lists of rows and columns. Columns start
+	// out at 0, b/c we must be a the start of a line to delete
+	// the newline.
+	rows := []int{}
+	cols := []int{}
+	for row, _ := range rowsMap {
+		rows = append(rows, row)
+		cols = append(cols, 0)
+	}
+	sort.Ints(rows)
+
+	// Loop over rows and merge.
+	for k, _ := range rows {
+		row := rows[k]
+
+		// New col position is at end of previous line. Put in temp var
+		// because we won't keep it if merge fails.
+		col := buffer.GetRow(row - 1).Length()
+
+		// Merge rows.
+		err := buffer.MergeRows(row)
+		if err != nil {
+			continue
+		}
+
+		// Record our col position and adjust all subsequent rows.
+		cols[k] = col
+		for j := k; j < len(rows); j++ {
+			rows[j]--
+		}
+	}
+
+	// Reconstruct the rows map from rows/cols arrays.
+	rowsMap = map[int][]int{}
+	for _, row := range rows {
+		rowsMap[row] = []int{}
+	}
+	for k, row := range rows {
+		rowsMap[row] = append(rowsMap[row], cols[k])
+	}
+	return rowsMap
 }
 
 func (buffer *Buffer) InsertChar(ch rune, rows map[int][]int) map[int][]int {
