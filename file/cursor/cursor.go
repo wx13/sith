@@ -181,6 +181,11 @@ func (mc MultiCursor) Dup() MultiCursor {
 	}
 }
 
+// Cursors returns the list of cursors.
+func (mc MultiCursor) Cursors() []Cursor {
+	return mc.cursors
+}
+
 // GetRows returns a list of (integer) rows that contain cursors.
 func (mc MultiCursor) GetRows() []int {
 	rowmap := make(map[int]bool)
@@ -194,7 +199,8 @@ func (mc MultiCursor) GetRows() []int {
 	return rows
 }
 
-// GetRowsCols returns a map of cursor positions.
+// GetRowsCols returns a map of cursor positions. The map keys are rows (integers),
+// and the values are lists of cursor positions.
 func (mc MultiCursor) GetRowsCols() map[int][]int {
 	rows := map[int][]int{}
 	for _, cursor := range mc.cursors {
@@ -319,10 +325,6 @@ func (mc *MultiCursor) SetColumn() {
 		cursor := Cursor{row: row, col: col, colwant: col}
 		mc.Append(cursor)
 	}
-}
-
-func (mc MultiCursor) Cursors() []Cursor {
-	return mc.cursors
 }
 
 // OnePerLine keeps only the first cursor on each line.

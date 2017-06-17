@@ -522,3 +522,52 @@ func (buffer *Buffer) InsertStr(str string, rows map[int][]int) map[int][]int {
 	}
 	return rows
 }
+
+// Align inserts spaces into cursor positions to align them.
+func (buffer *Buffer) Align(rows map[int][]int) map[int][]int {
+
+	// Sort all columns, and get the relative column positions.
+	numCols := 0
+	rowDeltas := map[int][]int{}
+	for row, cols := range rows {
+		sort.Ints(cols)
+		rows[row] = cols
+		if len(cols) > numCols {
+			numCols = len(cols)
+		}
+		rowDeltas[row] = []int{cols[0]}
+		for i := 1; i < len(cols); i++ {
+			rowDeltas[row] = append(rowDeltas[row], cols[i]-cols[i-1])
+		}
+	}
+
+	// Get desired column positions.
+	newCols := []int{}
+	for i := 0; i < numCols; i++ {
+		maxDelta := 0
+		for _, colDeltas := range rowDeltas {
+			if len(colDeltas) <= i {
+				continue
+			}
+			if colDeltas[i] > maxDelta {
+				maxDelta = colDeltas[i]
+			}
+		}
+		newCols = append(newCols, maxDelta)
+	}
+	for i := 1; i < len(newCols); i++ {
+		newCols[i] += newCols[i-1]
+	}
+
+	// Construct the new rows map
+	newRows := map[int][]int{}
+	for row, cols := range rows {
+		newRows[row] = []int{}
+		for i, _ := range cols {
+			newRows[row] = append(newRows[row], newCols[i])
+		}
+	}
+
+	return newRows
+
+}
