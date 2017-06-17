@@ -568,6 +568,21 @@ func (buffer *Buffer) Align(rows map[int][]int) map[int][]int {
 		}
 	}
 
+	// Alter the buffer based on the new rows map.
+	for row, cols := range rows {
+		lineStr := buffer.GetRow(row).ToString()
+		for k, _ := range cols {
+			col := cols[k]
+			newCol := newRows[row][k]
+			n := newCol - col
+			lineStr = lineStr[:col] + strings.Repeat(" ", n) + lineStr[col:]
+			for j := k + 1; j < len(cols); j++ {
+				cols[j] += n
+			}
+		}
+		buffer.SetRow(row, MakeLine(lineStr))
+	}
+
 	return newRows
 
 }

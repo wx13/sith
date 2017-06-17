@@ -346,21 +346,27 @@ func TestAlign(t *testing.T) {
 
 	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
 	cols = buf.Align(map[int][]int{0: {0}})
-	//if buf.ToString("-") != "-abcdef-123456" {
-	//	t.Error("Single cursor at start of buffer.", buf.ToString("-"))
-	//}
+	if buf.ToString("-") != "abcdef-123456" {
+		t.Error("Single row, single col.", buf.ToString("-"))
+	}
 	if !rowColEq(cols, map[int][]int{0: {0}}) {
 		t.Error("Single row, single col.", cols)
 	}
 
 	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
 	cols = buf.Align(map[int][]int{0: {3}, 1: {4}})
+	if buf.ToString("-") != "abc def-123456" {
+		t.Error("Two rows, one col.", buf.ToString("-"))
+	}
 	if !rowColEq(cols, map[int][]int{0: {4}, 1: {4}}) {
 		t.Error("Two rows, one col.", cols)
 	}
 
 	buf = buffer.MakeBuffer([]string{"ab,cdef,gh", "1234,56,78"})
 	cols = buf.Align(map[int][]int{0: {2, 7}, 1: {4, 7}})
+	if buf.ToString("-") != "ab  ,cdef,gh-1234,56  ,78" {
+		t.Error("Two rows, one col.", buf.ToString("-"))
+	}
 	if !rowColEq(cols, map[int][]int{0: {4, 9}, 1: {4, 9}}) {
 		t.Error("Two rows, two cols.", cols)
 	}
