@@ -48,8 +48,8 @@ func (file *File) WriteStatus(row, col int) {
 	}
 
 	if file.autoFmt {
-		switch file.SyntaxRules.GetFileType(file.Name) {
-		case "c", "build", "go":
+		ext := GetFileExt(file.Name)
+		if file.fmtCmd != "" || ext == "go" {
 			file.addToStatus("f", row, &col, termbox.ColorGreen, termbox.ColorDefault)
 		}
 	}

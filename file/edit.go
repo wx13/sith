@@ -1,8 +1,9 @@
 package file
 
 import (
-	"errors"
 	"go/format"
+	"io"
+	"os/exec"
 	"regexp"
 	"strings"
 
@@ -11,19 +12,54 @@ import (
 
 // Fmt runs a code formatter on the text buffer and updates the buffer.
 func (file *File) Fmt() error {
-	filetype := file.SyntaxRules.GetFileType(file.Name)
-	if filetype != "go" {
-		return errors.New("Will not gofmt a non-go file.")
+
+	ext := GetFileExt(file.Name)
+	if file.fmtCmd == "" && ext != "go" {
+		return nil
 	}
+
 	contents := file.ToString()
-	bytes, err := format.Source([]byte(contents))
+	var err error
+	if ext == "go" {
+		contents, err = file.goFmt(contents)
+	} else {
+		contents, err = file.runFmt(contents)
+	}
 	if err == nil {
-		stringBuf := strings.Split(string(bytes), file.newline)
+		stringBuf := strings.Split(contents, file.newline)
 		newBuffer := buffer.MakeBuffer(stringBuf)
 		file.buffer.ReplaceBuffer(newBuffer)
+		file.Snapshot()
 	}
-	file.Snapshot()
 	return err
+}
+
+func (file *File) runFmt(contents string) (string, error) {
+
+	if file.fmtCmd == "" {
+		return contents, nil
+	}
+
+	cmd := exec.Command(file.fmtCmd)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return contents, err
+	}
+	go func() {
+		defer stdin.Close()
+		io.WriteString(stdin, contents)
+	}()
+	out, err := cmd.Output()
+	if err != nil {
+		return contents, err
+	}
+	return string(out), nil
+
+}
+
+func (file *File) goFmt(contents string) (string, error) {
+	bytes, err := format.Source([]byte(contents))
+	return string(bytes), err
 }
 
 func getMaxCol(rows map[int][]int) int {

@@ -8,12 +8,12 @@ import (
 	"sort"
 
 	"github.com/nsf/termbox-go"
+	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file"
-	"github.com/wx13/sith/syntaxcolor"
 	"github.com/wx13/sith/terminal"
 )
 
-// Editor is the main editor object.  It orchestrates the terminal,
+// Editor is the main editor object. It orchestrates the terminal,
 // the buffer, etc.
 type Editor struct {
 	screen     *terminal.Screen
@@ -32,6 +32,8 @@ type Editor struct {
 	copyBuffer []string
 	copyContig int
 	copyHist   [][]string
+
+	cfg config.Config
 }
 
 // NewEditor creates a new Editor object.
@@ -42,6 +44,7 @@ func NewEditor() *Editor {
 		copyBuffer: []string{},
 		copyContig: 0,
 		copyHist:   [][]string{},
+		cfg:        config.CreateConfig(),
 	}
 }
 
@@ -102,8 +105,7 @@ func (editor *Editor) OpenNewFile() {
 
 // OpenFile opens a specified file.
 func (editor *Editor) OpenFile(name string) {
-	file := file.NewFile(name, editor.flushChan, editor.screen)
-	file.SyntaxRules = syntaxcolor.NewSyntaxRules(name)
+	file := file.NewFile(name, editor.flushChan, editor.screen, editor.cfg)
 	editor.files = append(editor.files, file)
 }
 
@@ -113,7 +115,7 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 		editor.OpenFile(name)
 	}
 	if len(editor.files) == 0 {
-		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen))
+		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen, editor.cfg))
 	}
 	editor.fileIdx = 0
 	editor.fileIdxPrv = 0

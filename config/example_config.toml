@@ -1,0 +1,22 @@
+# Example of configuration options. All setting case insensitive.
+
+# General settings.
+tabwidth = 12      # Display width of a tab character
+autoTab = true    # Insert indentation string in lieu of tab character
+tabDetect = true  # Detect indentation character
+tabString = "\t"  # Default indentaion string
+
+# File extension map maps file extensions to a canonical filetype.
+# Below we define any file.Foo or file.FOO to be a "foo" file.
+[extMap]
+  "Foo" = "foo"
+  "FOO" = "foo"
+
+# Filetype-specific settings. These override default settings and
+# optionally import from a parent.
+[fileconfigs.foo]
+  parent = "sh"
+  syntaxRules = [
+    {pattern="foo", fg="red"},
+  ]
+  tabWidth = 2

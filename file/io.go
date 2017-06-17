@@ -20,7 +20,7 @@ func (file *File) Flush() {
 	file.screen.Clear()
 	for row, str := range slice {
 		file.screen.WriteString(row, 0, str)
-		fullStr := file.buffer.GetRow(row + file.rowOffset).Tabs2spaces().ToString()
+		fullStr := file.buffer.GetRow(row + file.rowOffset).Tabs2spaces(file.tabWidth).ToString()
 		file.screen.Colorize(row, file.SyntaxRules.Colorize(fullStr), file.colOffset)
 	}
 	for row := len(slice); row < rows-1; row++ {
@@ -37,7 +37,7 @@ func (file *File) ColorBracketMatch(rows int) {
 	if err != nil {
 		return
 	}
-	col = file.buffer.GetRow(row).TabCursorPos(col)
+	col = file.buffer.GetRow(row).TabCursorPos(col, file.tabWidth)
 	lc := []syntaxcolor.LineColor{
 		{
 			Fg:    termbox.ColorRed | termbox.AttrBold,
@@ -125,9 +125,7 @@ func (file *File) processSaveRequests() {
 func (file *File) Save() {
 	if file.autoFmt {
 		err := file.Fmt()
-		if err == nil {
-			file.NotifyUser("Fmt success")
-		} else {
+		if err != nil {
 			file.NotifyUser(err.Error())
 		}
 	}

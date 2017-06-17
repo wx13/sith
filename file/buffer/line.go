@@ -185,21 +185,21 @@ func (line *Line) CompressPriorSpaces(cols []int) []int {
 	return cols
 }
 
-func (line Line) Tabs2spaces() Line {
+func (line Line) Tabs2spaces(tabwidth int) Line {
 	strLine := string(line.chars)
-	strLine = strings.Replace(strLine, "\t", "    ", -1)
+	strLine = strings.Replace(strLine, "\t", strings.Repeat(" ", tabwidth), -1)
 	return MakeLine(strLine)
 }
 
 // Expand tabs to spaces and return the cursor position.
-func (line Line) TabCursorPos(col int) int {
+func (line Line) TabCursorPos(col int, tabwidth int) int {
 	strLine := string(line.chars[:col])
-	strLine = strings.Replace(strLine, "\t", "    ", -1)
+	strLine = strings.Replace(strLine, "\t", strings.Repeat(" ", tabwidth), -1)
 	return len(strLine)
 }
 
-func (line Line) StrSlice(startCol, endCol int) string {
-	pline := line.Tabs2spaces()
+func (line Line) StrSlice(startCol, endCol int, tabwidth int) string {
+	pline := line.Tabs2spaces(tabwidth)
 	return pline.Slice(startCol, endCol).ToString()
 }
 

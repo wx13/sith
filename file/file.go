@@ -4,9 +4,12 @@ import (
 	"crypto/md5"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file/buffer"
 	"github.com/wx13/sith/file/cursor"
 	"github.com/wx13/sith/syntaxcolor"
@@ -37,10 +40,12 @@ type File struct {
 	tabDetect bool
 	tabString string
 	tabHealth bool
+	tabWidth  int
 
 	newline string
 
 	autoFmt bool
+	fmtCmd  string
 
 	rowOffset int
 	colOffset int
@@ -54,7 +59,7 @@ type File struct {
 	statusMutex *sync.Mutex
 }
 
-func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *File {
+func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen, cfg config.Config) *File {
 	file := &File{
 		Name:        name,
 		screen:      screen,
@@ -64,11 +69,11 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		MultiCursor: cursor.MakeMultiCursor(),
 		flushChan:   flushChan,
 		saveChan:    make(chan struct{}, 1),
-		SyntaxRules: syntaxcolor.NewSyntaxRules(""),
 		autoIndent:  true,
 		autoTab:     true,
 		tabDetect:   true,
 		tabString:   "\t",
+		tabWidth:    4,
 		newline:     "\n",
 		tabHealth:   true,
 		timer:       MakeTimer(),
@@ -79,13 +84,34 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		autoFmt:     true,
 	}
 	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
+	file.ingestConfig(cfg)
 	go file.processSaveRequests()
 	go file.ReadFile(name)
-	switch path.Ext(name) {
-	case ".md", ".txt", ".csv", ".C":
-		file.autoIndent = false
-	}
 	return file
+}
+
+func GetFileExt(filename string) string {
+	ext := path.Ext(filename)
+	if len(ext) == 0 {
+		basename := path.Base(filename)
+		if basename == "COMMIT_EDITMSG" {
+			basename = "git"
+		}
+		return strings.ToLower(basename)
+	}
+	ext = ext[1:]
+	return ext
+}
+
+func (file *File) ingestConfig(cfg config.Config) {
+	ext := GetFileExt(file.Name)
+	cfg = cfg.ForExt(ext)
+	file.autoTab = cfg.AutoTab
+	file.tabDetect = cfg.TabDetect
+	file.tabWidth = cfg.TabWidth
+	file.tabString = cfg.TabString
+	file.SyntaxRules = syntaxcolor.NewSyntaxRules(cfg)
+	file.fmtCmd = cfg.FmtCmd
 }
 
 func (file *File) Reload() {
@@ -118,6 +144,19 @@ func (file *File) ToggleAutoTab() {
 
 func (file *File) ToggleAutoFmt() {
 	file.autoFmt = file.autoFmt != true
+}
+
+// SetTabWidth sets the tab display width.
+func (file *File) SetTabWidth() {
+	p := terminal.MakePrompt(file.screen)
+	str, err := p.Ask("tab width:", nil)
+	if err != nil {
+		return
+	}
+	width, err := strconv.Atoi(str)
+	if err == nil {
+		file.tabWidth = width
+	}
 }
 
 // SetTabStr manually sets the tab string, and disables auto-tab-detection.
@@ -180,7 +219,7 @@ func (file *File) Slice(nRows, nCols int) []string {
 		return []string{}
 	}
 
-	return file.buffer.StrSlab(startRow, endRow, startCol, endCol)
+	return file.buffer.StrSlab(startRow, endRow, startCol, endCol, file.tabWidth)
 
 }
 
