@@ -54,6 +54,19 @@ type File struct {
 	statusMutex *sync.Mutex
 }
 
+// Config holds all configuration data. It will be read in from a config file.
+type Config struct {
+	TabString string
+	TabWidth  int
+}
+
+func DefaultConfig() Config {
+	return Config{
+		TabString: "\t",
+		TabWidth:  4,
+	}
+}
+
 func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *File {
 	file := &File{
 		Name:        name,

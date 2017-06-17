@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"sort"
 
+	"github.com/BurntSushi/toml"
 	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/file"
 	"github.com/wx13/sith/syntaxcolor"
@@ -32,6 +34,22 @@ type Editor struct {
 	copyBuffer []string
 	copyContig int
 	copyHist   [][]string
+
+	config Config
+}
+
+// Config holds all configuration data. It will be read in from a config file.
+type Config struct {
+	File file.Config
+}
+
+func readConfig() Config {
+	user, _ := user.Current()
+	home := user.HomeDir
+	config := Config{File: file.DefaultConfig()}
+	toml.DecodeFile(filepath.Join(home, ".sith.toml"), &config)
+	toml.DecodeFile(filepath.Join(home, ".sith/config.toml"), &config)
+	return config
 }
 
 // NewEditor creates a new Editor object.
@@ -42,6 +60,7 @@ func NewEditor() *Editor {
 		copyBuffer: []string{},
 		copyContig: 0,
 		copyHist:   [][]string{},
+		config:     readConfig(),
 	}
 }
 
