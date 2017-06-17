@@ -121,7 +121,7 @@ func (editor *Editor) OpenNewFile() {
 
 // OpenFile opens a specified file.
 func (editor *Editor) OpenFile(name string) {
-	file := file.NewFile(name, editor.flushChan, editor.screen)
+	file := file.NewFile(name, editor.flushChan, editor.screen, editor.config.File)
 	file.SyntaxRules = syntaxcolor.NewSyntaxRules(name)
 	editor.files = append(editor.files, file)
 }
@@ -132,7 +132,7 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 		editor.OpenFile(name)
 	}
 	if len(editor.files) == 0 {
-		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen))
+		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen, editor.config.File))
 	}
 	editor.fileIdx = 0
 	editor.fileIdxPrv = 0

@@ -126,7 +126,7 @@ func (file *File) GetCursor(idx int) (int, int) {
 	file.enforceRowBounds()
 	file.enforceColBounds()
 	row, col, _ := file.MultiCursor.GetCursorRCC(idx)
-	line := file.buffer.GetRow(row).Slice(0, col).Tabs2spaces()
+	line := file.buffer.GetRow(row).Slice(0, col).Tabs2spaces(file.tabWidth)
 	n := file.screen.StringDispLen(line.ToString())
 	return row - file.rowOffset, n - file.colOffset
 }

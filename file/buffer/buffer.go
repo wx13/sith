@@ -142,11 +142,11 @@ func (buffer *Buffer) RowSlice(row, startCol, endCol int) Line {
 	return line
 }
 
-func (buffer *Buffer) StrSlab(row1, row2, col1, col2 int) []string {
+func (buffer *Buffer) StrSlab(row1, row2, col1, col2, tabwidth int) []string {
 	lines := buffer.Lines()[row1:row2]
 	strs := make([]string, len(lines))
 	for idx, line := range lines {
-		strs[idx] = line.StrSlice(col1, col2)
+		strs[idx] = line.StrSlice(col1, col2, tabwidth)
 	}
 	return strs
 }

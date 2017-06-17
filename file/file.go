@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"os"
 	"path"
+	"strconv"
 	"sync"
 	"time"
 
@@ -37,6 +38,7 @@ type File struct {
 	tabDetect bool
 	tabString string
 	tabHealth bool
+	tabWidth  int
 
 	newline string
 
@@ -67,7 +69,7 @@ func DefaultConfig() Config {
 	}
 }
 
-func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *File {
+func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen, config Config) *File {
 	file := &File{
 		Name:        name,
 		screen:      screen,
@@ -81,7 +83,8 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen) *Fil
 		autoIndent:  true,
 		autoTab:     true,
 		tabDetect:   true,
-		tabString:   "\t",
+		tabString:   config.TabString,
+		tabWidth:    config.TabWidth,
 		newline:     "\n",
 		tabHealth:   true,
 		timer:       MakeTimer(),
@@ -131,6 +134,19 @@ func (file *File) ToggleAutoTab() {
 
 func (file *File) ToggleAutoFmt() {
 	file.autoFmt = file.autoFmt != true
+}
+
+// SetTabWidth sets the tab display width.
+func (file *File) SetTabWidth() {
+	p := terminal.MakePrompt(file.screen)
+	str, err := p.Ask("tab width:", nil)
+	if err != nil {
+		return
+	}
+	width, err := strconv.Atoi(str)
+	if err == nil {
+		file.tabWidth = width
+	}
 }
 
 // SetTabStr manually sets the tab string, and disables auto-tab-detection.
@@ -193,7 +209,7 @@ func (file *File) Slice(nRows, nCols int) []string {
 		return []string{}
 	}
 
-	return file.buffer.StrSlab(startRow, endRow, startCol, endCol)
+	return file.buffer.StrSlab(startRow, endRow, startCol, endCol, file.tabWidth)
 
 }
 

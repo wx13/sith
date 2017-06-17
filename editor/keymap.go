@@ -90,6 +90,7 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km.Add("Q", func() { editor.AllLineBa() }, "Multiply cursors to all matches through start of line")
 	km.Add("t", func() { editor.file.SetTabStr() }, "Manually set the indentation string")
 	km.Add("T", func() { editor.file.UnsetTabStr() }, "(Re)Enable auto tab string detection")
+	km.Add("i", func() { editor.file.SetTabWidth() }, "Set the tab display width")
 	km.Add("s", editor.SaveAll, "Save all files")
 	km.Add("r", func() { editor.file.Reload() }, "Reload file from disk")
 	km.Add("R", editor.ReloadAll, "Reload file from disk")
