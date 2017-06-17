@@ -258,6 +258,88 @@ func TestDeleteChars(t *testing.T) {
 
 }
 
+func rowColEq(m1, m2 map[int][]int) bool {
+	if len(m1) != len(m2) {
+		return false
+	}
+	for k1, s1 := range m1 {
+		s2, ok := m2[k1]
+		if !ok {
+			return false
+		}
+		if !intSliceEq(s1, s2...) {
+			return false
+		}
+	}
+	for k2, _ := range m2 {
+		_, ok := m1[k2]
+		if !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func TestInsertNewlines(t *testing.T) {
+	var buf buffer.Buffer
+	var cols map[int][]int
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{0: {0}})
+	if buf.ToString("-") != "-abcdef-123456" {
+		t.Error("Single cursor at start of buffer.", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[1], 0) {
+		t.Error("Single cursor at start of buffer.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{0: {3}})
+	if buf.ToString("-") != "abc-def-123456" {
+		t.Error("Single cursor in middle of row.", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[1], 0) {
+		t.Error("Single cursor in middle of row.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{0: {6}})
+	if buf.ToString("-") != "abcdef--123456" {
+		t.Error("Single cursor at end row.", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[1], 0) {
+		t.Error("Single cursor at end row.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{1: {3}})
+	if buf.ToString("-") != "abcdef-123-456" {
+		t.Error("Single cursor in second row.", buf.ToString("-"))
+	}
+	if !intSliceEq(cols[2], 0) {
+		t.Error("Single cursor in second row.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456"})
+	cols = buf.InsertNewlines(map[int][]int{0: {3}, 1: {2}})
+	if buf.ToString("-") != "abc-def-12-3456" {
+		t.Error("Two cursors in middle.", buf.ToString("-"))
+	}
+	if !rowColEq(cols, map[int][]int{1: {0}, 3: {0}}) {
+		t.Error("Two cursors in middle.", cols)
+	}
+
+	buf = buffer.MakeBuffer([]string{"abcdef", "123456", "ABCDEF", "654321"})
+	cols = buf.InsertNewlines(map[int][]int{0: {3}, 1: {3}, 3: {3}})
+	if buf.ToString("-") != "abc-def-123-456-ABCDEF-654-321" {
+		t.Error("Two cursors in middle.", buf.ToString("-"))
+	}
+	if !rowColEq(cols, map[int][]int{1: {0}, 3: {0}, 6: {0}}) {
+		t.Error("Two cursors in middle.", cols)
+	}
+
+}
+
 func TestBufferBracketMatch(t *testing.T) {
 
 	var buf buffer.Buffer

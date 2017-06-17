@@ -408,6 +408,56 @@ func (buffer *Buffer) DeleteChars(count int, rows map[int][]int) map[int][]int {
 	return rows
 }
 
+// InsertNewlines splits lines at cursors.
+func (buffer *Buffer) InsertNewlines(rowMap map[int][]int) map[int][]int {
+
+	// Sort everything.
+	rows := []int{}
+	for row, cols := range rowMap {
+		rows = append(rows, row)
+		sort.Ints(cols)
+		rowMap[row] = cols
+	}
+
+	// Keep track of new lines that we'll insert.
+	newLines := map[int][]Line{}
+
+	// Create a new row map, that we'll return.
+	newRowMap := map[int][]int{}
+
+	// Loop over rows *in order*.
+	total := 0
+	for _, row := range rows {
+
+		line := buffer.GetRow(row)
+
+		lines := []Line{}
+		c0 := 0
+		for i, c := range rowMap[row] {
+			lines = append(lines, line.Slice(c0, c))
+			c0 = c
+			newRowMap[row+i+1+total] = []int{0}
+		}
+		total += len(lines)
+		if c0 <= line.Length() {
+			lines = append(lines, line.Slice(c0, -1))
+		}
+		newLines[row] = lines
+
+	}
+
+	// Insert into buffer.
+	total = 0
+	for _, row := range rows {
+		lines := newLines[row]
+		buffer.ReplaceLines(lines, row+total, row+total)
+		total += len(lines) - 1
+	}
+
+	return newRowMap
+
+}
+
 // DeleteNewlines deletes the newline chars at the start of each row specified.
 func (buffer *Buffer) DeleteNewlines(rowsMap map[int][]int) map[int][]int {
 
