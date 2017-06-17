@@ -260,9 +260,8 @@ func (file *File) CursorAlign() {
 // CursorUnalign removes whitespace (except for 1 space) immediately preceding
 // each cursor position.  Effectively, it undoes a CursorAlign.
 func (file *File) CursorUnalign() {
-	for idx, cursor := range file.MultiCursor.Cursors() {
-		row, col := cursor.RowCol()
-		col = file.buffer.CompressPriorSpaces(row, col)
-		file.MultiCursor.SetCursor(idx, row, col, col)
-	}
+	rows := file.MultiCursor.GetRowsCols()
+	rows = file.buffer.Unalign(rows)
+	file.MultiCursor.ResetCursors(rows)
+	file.Snapshot()
 }

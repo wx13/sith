@@ -159,17 +159,30 @@ func IsWhitespace(r rune) bool {
 	return false
 }
 
-func (line Line) CompressPriorSpaces(col int) (Line, int) {
-	line = line.Dup()
-	for ; col > 1; col-- {
-		if !IsWhitespace(line.chars[col-1]) {
-			break
+func (line *Line) CompressPriorSpaces(cols []int) []int {
+
+	line.mutex.Lock()
+	defer line.mutex.Unlock()
+
+	sort.Ints(cols)
+
+	var c int
+	for k, col := range cols {
+		for c = col - 1; c > 0; c-- {
+			if !IsWhitespace(line.chars[c]) {
+				break
+			}
+			if IsWhitespace(line.chars[c-1]) {
+				line.chars = append(line.chars[:c], line.chars[c+1:]...)
+			}
 		}
-		if IsWhitespace(line.chars[col-2]) {
-			line.chars = append(line.chars[:col-1], line.chars[col:]...)
+		delta := col - c - 2
+		for j := k; j < len(cols); j++ {
+			cols[j] -= delta
 		}
 	}
-	return line, col + 1
+
+	return cols
 }
 
 func (line Line) Tabs2spaces() Line {

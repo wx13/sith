@@ -332,3 +332,28 @@ func TestDeleteBkwd(t *testing.T) {
 	}
 
 }
+
+func TestCompressPriorSpaces(t *testing.T) {
+
+	var line buffer.Line
+	var cols []int
+
+	line = buffer.MakeLine("abc     def")
+	cols = line.CompressPriorSpaces([]int{8})
+	if line.ToString() != "abc def" {
+		t.Error("Single cursor", line.ToString())
+	}
+	if !intSliceEq(cols, 4) {
+		t.Error("Single cursor", cols)
+	}
+
+	line = buffer.MakeLine("abc     def     ghi")
+	cols = line.CompressPriorSpaces([]int{8, 16})
+	if line.ToString() != "abc def ghi" {
+		t.Error("Single cursor", line.ToString())
+	}
+	if !intSliceEq(cols, 4, 8) {
+		t.Error("Single cursor", cols)
+	}
+
+}

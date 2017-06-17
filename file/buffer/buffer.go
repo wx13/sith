@@ -338,13 +338,6 @@ func (buffer *Buffer) Equals(buffer2 *Buffer) bool {
 	return true
 }
 
-func (buffer *Buffer) CompressPriorSpaces(row, col int) int {
-	line := buffer.GetRow(row)
-	line, col = line.CompressPriorSpaces(col)
-	buffer.SetRow(row, line)
-	return col
-}
-
 // BracketMatch looks for matching partner rune in a set of lines.
 //
 //   row, col         where to start the search from
@@ -585,4 +578,14 @@ func (buffer *Buffer) Align(rows map[int][]int) map[int][]int {
 
 	return newRows
 
+}
+
+// Unalign removes redundant whitespace preceding each cursor..
+func (buffer *Buffer) Unalign(rows map[int][]int) map[int][]int {
+	for row, cols := range rows {
+		line := buffer.GetRow(row)
+		rows[row] = line.CompressPriorSpaces(cols)
+		buffer.SetRow(row, line)
+	}
+	return rows
 }
