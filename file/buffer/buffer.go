@@ -418,6 +418,7 @@ func (buffer *Buffer) InsertNewlines(rowMap map[int][]int) map[int][]int {
 		sort.Ints(cols)
 		rowMap[row] = cols
 	}
+	sort.Ints(rows)
 
 	// Keep track of new lines that we'll insert.
 	newLines := map[int][]Line{}
