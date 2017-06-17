@@ -87,29 +87,38 @@ func MakeMultiCursor() MultiCursor {
 
 // GetCursor returns a cursor by index.
 func (mc MultiCursor) GetCursor(idx int) Cursor {
+	if idx < 0 {
+		idx = 0
+	}
+	if idx > len(mc.cursors) {
+		idx = len(mc.cursors) - 1
+	}
 	return mc.cursors[idx]
 }
 
 // GetCursorRCC gets the (row, col, colwant) of a cursor by index.
 func (mc MultiCursor) GetCursorRCC(idx int) (row, col, colwant int) {
-	c := mc.cursors[idx]
+	c := mc.GetCursor(idx)
 	return c.row, c.col, c.colwant
 }
 
 func (mc MultiCursor) GetRow(idx int) int {
-	return mc.cursors[idx].row
+	return mc.GetCursor(idx).row
 }
 
 func (mc MultiCursor) GetCol(idx int) int {
-	return mc.cursors[idx].col
+	return mc.GetCursor(idx).col
 }
 
 func (mc MultiCursor) GetRowCol(idx int) (int, int) {
-	return mc.cursors[idx].RowCol()
+	return mc.GetCursor(idx).RowCol()
 }
 
 // SetCursor sets the position of the cursor identified by index.
 func (mc *MultiCursor) SetCursor(idx, row, col, colwant int) {
+	if idx < 0 || idx > len(mc.cursors) {
+		return
+	}
 	mc.cursors[idx].row = row
 	mc.cursors[idx].col = col
 	mc.cursors[idx].colwant = colwant
