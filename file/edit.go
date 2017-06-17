@@ -120,10 +120,9 @@ func (file *File) Delete() {
 // Newline breaks the current line into two.
 func (file *File) Newline() {
 
-	rate := file.timer.Tick()
-
-	for idx, cursor := range file.MultiCursor.Cursors() {
-
+	if len(file.MultiCursor.Cursors()) == 1 {
+		rate := file.timer.Tick()
+		cursor := file.MultiCursor.Cursors()[0]
 		row, col := cursor.RowCol()
 		lineStart := file.buffer.RowSlice(row, 0, col)
 		lineEnd := file.buffer.RowSlice(row, col, -1)
@@ -131,16 +130,22 @@ func (file *File) Newline() {
 
 		file.buffer.ReplaceLines(newLines, row, row)
 
-		file.MultiCursor.SetCursor(idx, row+1, 0, 0)
+		file.MultiCursor.SetCursor(0, row+1, 0, 0)
 
 		if file.autoIndent && rate < file.maxRate && lineEnd.Length() == 0 {
-			file.doAutoIndent(idx)
+			file.doAutoIndent(0)
 		}
 
 		file.buffer.SetRow(row, lineStart.RemoveTrailingWhitespace())
 
+	} else {
+		rows := file.MultiCursor.GetRowsCols()
+		rows = file.buffer.InsertNewlines(rows)
+		file.MultiCursor.ResetCursors(rows)
 	}
 
+	file.enforceRowBounds()
+	file.enforceColBounds()
 	file.Snapshot()
 }
 
