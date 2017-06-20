@@ -1,0 +1,6 @@
+# Configuration file
+#
+# Everything in this file is set to the defaults.
+
+[file]
+tabwidth = 4  # Display width of a tab character
