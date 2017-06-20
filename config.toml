@@ -1,6 +1,9 @@
 # Configuration file
 #
-# Everything in this file is set to the defaults.
 
 [file]
 tabwidth = 4  # Display width of a tab character
+
+# Define additional file types.
+[filetypes]
+	toml = toml  # File extension .toml implies toml file

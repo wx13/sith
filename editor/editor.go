@@ -40,7 +40,8 @@ type Editor struct {
 
 // Config holds all configuration data. It will be read in from a config file.
 type Config struct {
-	File file.Config
+	File      file.Config
+	FileTypes map[string]string
 }
 
 func readConfig() Config {
@@ -49,6 +50,7 @@ func readConfig() Config {
 	config := Config{File: file.DefaultConfig()}
 	toml.DecodeFile(filepath.Join(home, ".sith.toml"), &config)
 	toml.DecodeFile(filepath.Join(home, ".sith/config.toml"), &config)
+	fmt.Printf("%+v\n", config)
 	return config
 }
 
