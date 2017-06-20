@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+## [0.5.1] 2017-06-19
+
+### Bugfixes
+
+- check array bounds on GetRow()
+
+
 ## [0.5.0] 2017-06-01
 
 ### Features
@@ -15,6 +22,7 @@ Change Log
 - Make overlapping cursors more visible
 - Highlight matching bracket character
 - Allow toggling of auto-format-on-save
+
 
 ## [0.4.4] 2017-05-21
 
