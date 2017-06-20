@@ -384,7 +384,7 @@ func (buffer *Buffer) BracketMatch(row, col, end_row int) (int, int, error) {
 }
 
 // DeleteChars deletes count characters at each position in the rows map.
-func (buffer *Buffer) DeleteChars(count int, rows map[int][]int) map[int][]int {
+func (buffer *Buffer) DeleteChars(count int, rows map[int][]int, indent ...int) map[int][]int {
 	for row, cols := range rows {
 		if row > buffer.Length() || row < 0 {
 			continue
@@ -393,7 +393,20 @@ func (buffer *Buffer) DeleteChars(count int, rows map[int][]int) map[int][]int {
 		if count >= 0 {
 			cols = line.DeleteFwd(count, cols...)
 		} else {
-			cols = line.DeleteBkwd(-count, cols...)
+
+			// Unindent
+			c := -count
+			if len(indent) > 0 {
+				col := cols[0]
+				if line.Slice(0, col).ToString() == strings.Repeat(" ", col) {
+					n := indent[0]
+					if n*(col/n) == col {
+						c = n
+					}
+				}
+			}
+
+			cols = line.DeleteBkwd(c, cols...)
 		}
 		buffer.SetRow(row, line)
 		rows[row] = cols

@@ -99,11 +99,17 @@ func allColsZero(rows map[int][]int) bool {
 
 // Backspace removes the character before the cursor.
 func (file *File) Backspace() {
+
+	indent := 0
+	if file.autoTab {
+		indent = len(file.tabString)
+	}
+
 	rows := file.MultiCursor.GetRowsCols()
 	if allColsZero(rows) {
 		rows = file.buffer.DeleteNewlines(rows)
 	} else {
-		rows = file.buffer.DeleteChars(-1, rows)
+		rows = file.buffer.DeleteChars(-1, rows, indent)
 	}
 	file.MultiCursor.ResetCursors(rows)
 	file.enforceRowBounds()
