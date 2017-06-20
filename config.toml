@@ -1,9 +1,17 @@
 # Configuration file
 #
 
-[file]
-tabwidth = 4  # Display width of a tab character
+tabwidth = 4      # Display width of a tab character
+autoTab = true    # Insert indentation string in lieu of tab character
+tabDetect = true  # Detect indentation character
+tabString = "\t"  # Default indentaion string
 
-# Define additional file types.
-[filetypes]
-	toml = toml  # File extension .toml implies toml file
+[filetypes.toml]
+ext = ["toml"]
+parent = "sh"
+
+  [[ syntax_rules ]]
+  pattern = "//.*$"
+  fgcolor = "cyan"
+
+
