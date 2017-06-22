@@ -40,14 +40,13 @@ type Editor struct {
 
 // Config holds all configuration data. It will be read in from a config file.
 type Config struct {
-	File      file.Config
-	FileTypes map[string]string
+	file.Config
 }
 
 func readConfig() Config {
 	user, _ := user.Current()
 	home := user.HomeDir
-	config := Config{File: file.DefaultConfig()}
+	config := Config{file.DefaultConfig()}
 	toml.DecodeFile(filepath.Join(home, ".sith.toml"), &config)
 	toml.DecodeFile(filepath.Join(home, ".sith/config.toml"), &config)
 	fmt.Printf("%+v\n", config)
@@ -123,7 +122,7 @@ func (editor *Editor) OpenNewFile() {
 
 // OpenFile opens a specified file.
 func (editor *Editor) OpenFile(name string) {
-	file := file.NewFile(name, editor.flushChan, editor.screen, editor.config.File)
+	file := file.NewFile(name, editor.flushChan, editor.screen, editor.config.Config)
 	file.SyntaxRules = syntaxcolor.NewSyntaxRules(name)
 	editor.files = append(editor.files, file)
 }
@@ -134,7 +133,7 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 		editor.OpenFile(name)
 	}
 	if len(editor.files) == 0 {
-		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen, editor.config.File))
+		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen, editor.config.Config))
 	}
 	editor.fileIdx = 0
 	editor.fileIdxPrv = 0

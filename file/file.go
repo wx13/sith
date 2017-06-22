@@ -60,6 +60,22 @@ type File struct {
 type Config struct {
 	TabString string
 	TabWidth  int
+	AutoTab   bool
+	TabDetect bool
+	FileTypes map[string]FileType
+}
+
+type FileType struct {
+	Extensions []string
+	Parent     string
+	Syntax     []SyntaxConfig
+}
+
+type SyntaxConfig struct {
+	Pattern string
+	FG      string
+	BG      string
+	Attrs   []string
 }
 
 func DefaultConfig() Config {
