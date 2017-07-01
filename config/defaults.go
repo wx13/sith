@@ -77,6 +77,11 @@ func defaultFileConfigs() map[string]Config {
 			{Pattern: `\[.*?\]`, FG: "green"},
 		},
 	}
+	fc["git"] = Config{
+		SyntaxRules: []SyntaxConfig{
+			{Pattern: "#.*?$", FG: "cyan"},
+		},
+	}
 
 	return fc
 }
