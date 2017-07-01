@@ -1,6 +1,21 @@
 Change Log
 ==========
 
+## [0.6.0-rc1] 2017-07-01
+
+Warning: This has many new features, which may be buggy.
+
+### Features
+- TOML configuration file
+  - any of: ~/.sith.toml, ~/.sith/config.toml, or ~/.config/sith.toml
+  - specify syntax coloring, inhertance, code formatter, etc.
+- More multicursor stuff:
+  - multiple cursors on same line
+  - insert and delete newlines
+  - align & unalign multiple cursors in a line (or multiple lines)
+
+
+
 ## [0.5.1] 2017-06-19
 
 ### Bugfixes
