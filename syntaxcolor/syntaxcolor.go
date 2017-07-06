@@ -35,10 +35,10 @@ func NewSyntaxRules(cfg config.Config) *SyntaxRules {
 }
 
 func (rules *SyntaxRules) ingestConfig(cfg config.Config) {
-	for _, r := range cfg.SyntaxRules {
-		rules.addRule(r.Pattern, Color{
-			fg: toColor(r.FG),
-			bg: toColor(r.BG),
+	for pattern, color := range cfg.SyntaxRules {
+		rules.addRule(pattern, Color{
+			fg: toColor(color.FG),
+			bg: toColor(color.BG),
 		})
 	}
 }

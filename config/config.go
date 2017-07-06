@@ -23,16 +23,14 @@ type Config struct {
 	FmtCmd      string
 	Parent      string
 	ExtMap      map[string]string
-	SyntaxRules []SyntaxConfig
+	SyntaxRules map[string]Color
 	FileConfigs map[string]Config
 }
 
-// SyntaxConfig defines one syntax coloring specification.
-type SyntaxConfig struct {
-	Pattern string
-	FG      string
-	BG      string
-	Attrs   []string
+type Color struct {
+	FG    string
+	BG    string
+	Attrs []string
 }
 
 // Read the configuration file(s).
@@ -85,6 +83,12 @@ func (config Config) Merge(other Config) Config {
 	if other.FileConfigs == nil {
 		other.FileConfigs = map[string]Config{}
 	}
+	if config.SyntaxRules == nil {
+		config.SyntaxRules = map[string]Color{}
+	}
+	if other.SyntaxRules == nil {
+		other.SyntaxRules = map[string]Color{}
+	}
 
 	// Copy map/array values over.
 	for ext, ft := range other.ExtMap {
@@ -98,7 +102,9 @@ func (config Config) Merge(other Config) Config {
 			config.FileConfigs[ext] = ofc
 		}
 	}
-	config.SyntaxRules = append(config.SyntaxRules, other.SyntaxRules...)
+	for pattern, color := range other.SyntaxRules {
+		config.SyntaxRules[pattern] = color
+	}
 
 	// Set the elementary values.
 	if other.AutoTab_set {
@@ -139,7 +145,10 @@ func (config Config) MergeParent(level int) Config {
 
 	parentConfig = config.Merge(parentConfig).MergeParent(level - 1)
 
-	return parentConfig.Merge(config)
+	config = parentConfig.Merge(config)
+	config.Parent = parentConfig.Parent
+
+	return config
 }
 
 // ForExt tailors a config for a specific file extension.

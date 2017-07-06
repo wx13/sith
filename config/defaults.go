@@ -38,48 +38,48 @@ func defaultExtMap() map[string]string {
 func defaultFileConfigs() map[string]Config {
 	fc := map[string]Config{}
 	fc["code"] = Config{
-		SyntaxRules: []SyntaxConfig{
-			{Pattern: "'.*?'", FG: "yellow"},
-			{Pattern: `".*?"`, FG: "yellow"},
+		SyntaxRules: map[string]Color{
+			"'.*?'": {FG: "yellow"},
+			`".*?"`: {FG: "yellow"},
 		},
 	}
 	fc["sh"] = Config{
 		Parent: "code",
-		SyntaxRules: []SyntaxConfig{
-			{Pattern: "#.*$", FG: "cyan"},
+		SyntaxRules: map[string]Color{
+			"#.*$": {FG: "cyan"},
 		},
 	}
 	fc["c"] = Config{
 		Parent: "code",
-		SyntaxRules: []SyntaxConfig{
-			{Pattern: "//.*$", FG: "cyan"},
-			{Pattern: `/\*.*?\*/`, FG: "cyan"},
+		SyntaxRules: map[string]Color{
+			"//.*$":     {FG: "cyan"},
+			`/\*.*?\*/`: {FG: "cyan"},
 		},
 	}
 	fc["go"] = Config{
 		Parent: "code",
-		SyntaxRules: []SyntaxConfig{
-			{Pattern: "//.*$", FG: "cyan"},
-			{Pattern: "'.*?'", FG: "red"},
-			{Pattern: "`.*?`", FG: "yellow"},
+		SyntaxRules: map[string]Color{
+			"//.*$": {FG: "cyan"},
+			"'.*?'": {FG: "red"},
+			"`.*?`": {FG: "yellow"},
 		},
 	}
 	fc["md"] = Config{
-		SyntaxRules: []SyntaxConfig{
-			{Pattern: "^#+.*$", FG: "green"},
-			{Pattern: "^===*$", FG: "green"},
-			{Pattern: "^---*$", FG: "green"},
+		SyntaxRules: map[string]Color{
+			"^#+.*$": {FG: "green"},
+			"^===*$": {FG: "green"},
+			"^---*$": {FG: "green"},
 		},
 	}
 	fc["toml"] = Config{
 		Parent: "sh",
-		SyntaxRules: []SyntaxConfig{
-			{Pattern: `\[.*?\]`, FG: "green"},
+		SyntaxRules: map[string]Color{
+			`\[.*?\]`: {FG: "green"},
 		},
 	}
 	fc["git"] = Config{
-		SyntaxRules: []SyntaxConfig{
-			{Pattern: "#.*?$", FG: "cyan"},
+		SyntaxRules: map[string]Color{
+			"#.*?$": {FG: "cyan"},
 		},
 	}
 
