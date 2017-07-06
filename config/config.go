@@ -117,7 +117,9 @@ func (config Config) Merge(other Config) Config {
 		config.TabString = other.TabString
 		config.TabString_set = true
 	}
-	config.Parent = other.Parent
+	if other.Parent != "" {
+		config.Parent = other.Parent
+	}
 	if other.FmtCmd != "" {
 		config.FmtCmd = other.FmtCmd
 	}
