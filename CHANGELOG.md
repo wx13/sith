@@ -1,6 +1,17 @@
 Change Log
 ==========
 
+## [0.6.1] 2017-07-14
+
+### Features
+- Allow configuration specification of syntax rule which always applies.
+  - Add "clober=true" and rule will always apply (even inside string or comment).
+- MultiCursor navigation modes
+  - AllTogether: all cursors move in unison
+  - Column (default): cursor move together horizontally, but not vertically
+  - Detached: all but main cursor are fixed
+  - Alt-Z to cycle among the modes
+
 ## [0.6.0] 2017-07-14
 
 ### Features
