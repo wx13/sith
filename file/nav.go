@@ -60,29 +60,47 @@ func (file *File) PageUp() {
 
 // CursorUp moves the cursor up n rows.
 func (file *File) CursorUp(n int) {
-	row, _, colwant := file.MultiCursor.GetCursorRCC(0)
-	row -= n
-	if row < 0 {
-		row = 0
+	cursors := file.MultiCursor.Cursors()
+	if file.MultiCursor.NavModeIsDetached() || file.MultiCursor.NavModeIsColumn() {
+		cursors = cursors[:1]
 	}
-	file.MultiCursor.SetCursor(0, row, colwant, colwant)
+	for idx := range cursors {
+		row, _, colwant := file.MultiCursor.GetCursorRCC(idx)
+		row -= n
+		if row < 0 {
+			row = 0
+		}
+		file.MultiCursor.SetCursor(idx, row, colwant, colwant)
+	}
+	file.enforceRowBounds()
 	file.enforceColBounds()
 }
 
 // CursorDown moves the cursor down n rows.
 func (file *File) CursorDown(n int) {
-	row, _, colwant := file.MultiCursor.GetCursorRCC(0)
-	row += n
-	if row >= file.buffer.Length() {
-		row = file.buffer.Length() - 1
+	cursors := file.MultiCursor.Cursors()
+	if file.MultiCursor.NavModeIsDetached() || file.MultiCursor.NavModeIsColumn() {
+		cursors = cursors[:1]
 	}
-	file.MultiCursor.SetCursor(0, row, colwant, colwant)
+	for idx := range cursors {
+		row, _, colwant := file.MultiCursor.GetCursorRCC(idx)
+		row += n
+		if row >= file.buffer.Length() {
+			row = file.buffer.Length() - 1
+		}
+		file.MultiCursor.SetCursor(idx, row, colwant, colwant)
+	}
+	file.enforceRowBounds()
 	file.enforceColBounds()
 }
 
 // CursorRight moves the cursor one column to the right.
 func (file *File) CursorRight() {
-	for idx, cursor := range file.MultiCursor.Cursors() {
+	cursors := file.MultiCursor.Cursors()
+	if file.MultiCursor.NavModeIsDetached() {
+		cursors = cursors[:1]
+	}
+	for idx, cursor := range cursors {
 		row, col := cursor.RowCol()
 		if col < file.buffer.RowLength(row) {
 			file.MultiCursor.SetCol(idx, col+1)
@@ -103,7 +121,11 @@ func (file *File) CursorRight() {
 
 // CursorLeft moves the cursor one column to the left.
 func (file *File) CursorLeft() {
-	for idx, cursor := range file.MultiCursor.Cursors() {
+	cursors := file.MultiCursor.Cursors()
+	if file.MultiCursor.NavModeIsDetached() {
+		cursors = cursors[:1]
+	}
+	for idx, cursor := range cursors {
 		row, col := cursor.RowCol()
 		if col > 0 {
 			file.MultiCursor.SetCol(idx, col-1)
@@ -183,7 +205,11 @@ func (file *File) updateOffsets(nRows, nCols int) {
 // non-whitespace character.
 func (file *File) StartOfLine() {
 	allAtZero := true
-	for _, cursor := range file.MultiCursor.Cursors() {
+	cursors := file.MultiCursor.Cursors()
+	if file.MultiCursor.NavModeIsDetached() {
+		cursors = cursors[:1]
+	}
+	for _, cursor := range cursors {
 		if cursor.Col() != 0 {
 			allAtZero = false
 			break
@@ -191,7 +217,7 @@ func (file *File) StartOfLine() {
 	}
 	if allAtZero {
 		re := regexp.MustCompile("^[ \t]*")
-		for idx, cursor := range file.MultiCursor.Cursors() {
+		for idx, cursor := range cursors {
 			row := cursor.Row()
 			line := file.buffer.GetRow(row)
 			match := re.FindStringIndex(line.ToString())
@@ -199,7 +225,7 @@ func (file *File) StartOfLine() {
 			file.MultiCursor.SetColwant(idx, -1)
 		}
 	} else {
-		for idx := range file.MultiCursor.Cursors() {
+		for idx := range cursors {
 			file.MultiCursor.SetCol(idx, 0)
 			file.MultiCursor.SetColwant(idx, -1)
 		}
@@ -208,7 +234,11 @@ func (file *File) StartOfLine() {
 
 // EndOfLine moves the cursors to the end of the line.
 func (file *File) EndOfLine() {
-	for idx := range file.MultiCursor.Cursors() {
+	cursors := file.MultiCursor.Cursors()
+	if file.MultiCursor.NavModeIsDetached() {
+		cursors = cursors[:1]
+	}
+	for idx := range cursors {
 		row := file.MultiCursor.GetRow(idx)
 		line := file.buffer.GetRow(row)
 		file.MultiCursor.SetCol(idx, line.Length())
@@ -227,7 +257,11 @@ func (file *File) PrevWord() {
 }
 
 func (file *File) prevNextWord(incr int) {
-	for idx, cursor := range file.MultiCursor.Cursors() {
+	cursors := file.MultiCursor.Cursors()
+	if file.MultiCursor.NavModeIsDetached() {
+		cursors = cursors[:1]
+	}
+	for idx, cursor := range cursors {
 		row := cursor.Row()
 		col := cursor.Col()
 		line := file.buffer.GetRow(row)

@@ -144,6 +144,11 @@ func (file *File) Close() bool {
 	return true
 }
 
+// ToggleMCMode cycles among the available multicursor navigation modes.
+func (file *File) ToggleMCMode() {
+	file.MultiCursor.CycleNavMode()
+}
+
 // ToggleAutoIndent toggles the autoindent setting.
 func (file *File) ToggleAutoIndent() {
 	file.autoIndent = file.autoIndent != true

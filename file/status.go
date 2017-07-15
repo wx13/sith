@@ -36,7 +36,7 @@ func (file *File) FileChanged() bool {
 func (file *File) WriteStatus(row, col int) {
 
 	if file.MultiCursor.Length() > 1 {
-		status := fmt.Sprintf("%dC", file.MultiCursor.Length())
+		status := fmt.Sprintf("%d%s", file.MultiCursor.Length(), file.MultiCursor.GetNavModeShort())
 		file.addToStatus(status, row, &col,
 			termbox.ColorGreen|termbox.AttrReverse|termbox.AttrBold,
 			termbox.ColorDefault|termbox.AttrReverse)
