@@ -473,14 +473,14 @@ func (buffer *Buffer) DeleteNewlines(rowsMap map[int][]int) map[int][]int {
 	// the newline.
 	rows := []int{}
 	cols := []int{}
-	for row, _ := range rowsMap {
+	for row := range rowsMap {
 		rows = append(rows, row)
 		cols = append(cols, 0)
 	}
 	sort.Ints(rows)
 
 	// Loop over rows and merge.
-	for k, _ := range rows {
+	for k := range rows {
 		row := rows[k]
 
 		// New col position is at end of previous line. Put in temp var
@@ -569,7 +569,7 @@ func (buffer *Buffer) Align(rows map[int][]int) map[int][]int {
 	newRows := map[int][]int{}
 	for row, cols := range rows {
 		newRows[row] = []int{}
-		for i, _ := range cols {
+		for i := range cols {
 			newRows[row] = append(newRows[row], newCols[i])
 		}
 	}
@@ -577,7 +577,7 @@ func (buffer *Buffer) Align(rows map[int][]int) map[int][]int {
 	// Alter the buffer based on the new rows map.
 	for row, cols := range rows {
 		lineStr := buffer.GetRow(row).ToString()
-		for k, _ := range cols {
+		for k := range cols {
 			col := cols[k]
 			newCol := newRows[row][k]
 			n := newCol - col

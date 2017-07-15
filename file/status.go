@@ -15,7 +15,7 @@ func (file *File) IsModified() bool {
 	return !file.buffer.Equals(&file.savedBuffer)
 }
 
-// DidFileChange checks to see if underlying file changed.
+// FileChanged checks to see if underlying file changed.
 func (file *File) FileChanged() bool {
 	fileInfo, err := os.Stat(file.Name)
 	if err != nil {
@@ -35,9 +35,8 @@ func (file *File) FileChanged() bool {
 // WriteStatus writes the status line.
 func (file *File) WriteStatus(row, col int) {
 
-	status := ""
 	if file.MultiCursor.Length() > 1 {
-		status = fmt.Sprintf("%dC", file.MultiCursor.Length())
+		status := fmt.Sprintf("%dC", file.MultiCursor.Length())
 		file.addToStatus(status, row, &col,
 			termbox.ColorGreen|termbox.AttrReverse|termbox.AttrBold,
 			termbox.ColorDefault|termbox.AttrReverse)
@@ -55,6 +54,7 @@ func (file *File) WriteStatus(row, col int) {
 	}
 
 	if file.autoTab {
+		var status string
 		if file.tabString == "\t" {
 			status = "1t"
 		} else {
@@ -71,7 +71,7 @@ func (file *File) WriteStatus(row, col int) {
 	}
 
 	if file.newline != "\n" {
-		status = strings.Replace(file.newline, "\n", "\\n", -1)
+		status := strings.Replace(file.newline, "\n", "\\n", -1)
 		status = strings.Replace(status, "\r", "\\r", -1)
 		file.addToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
 	}

@@ -150,7 +150,6 @@ func (menu *Menu) Choose(choices []string, idx int, keys ...string) (int, string
 			}
 		}
 	}
-	return menu.selection, ""
 }
 
 // Search searches menu options for a partial string match.

@@ -49,21 +49,31 @@ func (file *File) ColorBracketMatch(rows int) {
 	file.screen.Colorize(row-file.rowOffset, lc, file.colOffset)
 }
 
+// setNewline determines (estimates) the newline string that the file uses.
+// It simply looks for most used newline string.
 func (file *File) setNewline(bufferStr string) {
+
+	// Default to line feed.
 	file.newline = "\n"
 	count := strings.Count(bufferStr, "\n")
+
+	// Check if carriage return is more popular.
 	c := strings.Count(bufferStr, "\r")
 	if c > count {
 		count = c
 		file.newline = "\r"
 	}
+
+	// Check for CRLF or LFCR.
 	for _, newline := range []string{"\n\r", "\r\n"} {
 		c := strings.Count(bufferStr, newline)
+		// Factor of two to prevent overcounting.
 		if c > count/2 {
 			count = c
 			file.newline = newline
 		}
 	}
+
 }
 
 // ReadFile reads in a file (if it exists).

@@ -275,7 +275,7 @@ func (line *Line) InsertStr(str string, cols ...int) []int {
 			// Insert in middle.
 			line.chars = append(line.chars[:col], append(runes, line.chars[col:]...)...)
 		}
-		for j, _ := range cols[i:] {
+		for j := range cols[i:] {
 			cols[i+j] += len(runes)
 		}
 

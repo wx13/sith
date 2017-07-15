@@ -271,7 +271,7 @@ func rowColEq(m1, m2 map[int][]int) bool {
 			return false
 		}
 	}
-	for k2, _ := range m2 {
+	for k2 := range m2 {
 		_, ok := m1[k2]
 		if !ok {
 			return false

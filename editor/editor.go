@@ -52,17 +52,14 @@ func NewEditor() *Editor {
 func (editor *Editor) OpenNewFile() {
 	dir, _ := os.Getwd()
 	dir += "/"
-	names := []string{}
-	idx := 0
-	files := []os.FileInfo{}
 	filename := ""
 	for {
-		files, _ = ioutil.ReadDir(dir)
+		files, _ := ioutil.ReadDir(dir)
 		dotdot, err := os.Stat("../")
 		if err == nil {
 			files = append([]os.FileInfo{dotdot}, files...)
 		}
-		names = []string{}
+		names := []string{}
 		for _, file := range files {
 			if file.IsDir() {
 				names = append(names, file.Name()+"/")
@@ -71,8 +68,7 @@ func (editor *Editor) OpenNewFile() {
 			}
 		}
 		menu := terminal.NewMenu(editor.screen)
-		key := ""
-		idx, key = menu.Choose(names, 0, "ctrlO")
+		idx, key := menu.Choose(names, 0, "ctrlO")
 		editor.Flush()
 		if idx < 0 || key == "cancel" {
 			return
@@ -122,6 +118,7 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 	editor.file = editor.files[0]
 }
 
+// ReloadAll re-reads all open buffers.
 func (editor *Editor) ReloadAll() {
 	for _, file := range editor.files {
 		file.Reload()

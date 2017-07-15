@@ -34,6 +34,7 @@ func (file *File) Fmt() error {
 	return err
 }
 
+// runFmt runs the fmt command on the input string. It returns the formatted text.
 func (file *File) runFmt(contents string) (string, error) {
 
 	if file.fmtCmd == "" {
@@ -57,11 +58,13 @@ func (file *File) runFmt(contents string) (string, error) {
 
 }
 
+// goFmt runs the internal gofmt library on the string.
 func (file *File) goFmt(contents string) (string, error) {
 	bytes, err := format.Source([]byte(contents))
 	return string(bytes), err
 }
 
+// getMaxCol returns the right-most column index of all the rows.
 func getMaxCol(rows map[int][]int) int {
 	maxCol := 0
 	for _, cols := range rows {
@@ -74,8 +77,9 @@ func getMaxCol(rows map[int][]int) int {
 	return maxCol
 }
 
+// allBlankLines returns true if all the specified rows are empty.
 func (file File) allBlankLines(rows map[int][]int) bool {
-	for row, _ := range rows {
+	for row := range rows {
 		if file.buffer.GetRow(row).Length() > 0 {
 			return false
 		}
@@ -83,6 +87,7 @@ func (file File) allBlankLines(rows map[int][]int) bool {
 	return true
 }
 
+// removeBlankLineCursors removes the cursor index of any rows which are empty.
 func (file File) removeBlankLineCursors(rows map[int][]int) (map[int][]int, []int) {
 
 	if file.allBlankLines(rows) {
@@ -90,7 +95,7 @@ func (file File) removeBlankLineCursors(rows map[int][]int) (map[int][]int, []in
 	}
 
 	blankRows := []int{}
-	for row, _ := range rows {
+	for row := range rows {
 		if file.buffer.GetRow(row).Length() == 0 {
 			blankRows = append(blankRows, row)
 			delete(rows, row)

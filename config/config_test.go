@@ -119,7 +119,7 @@ func TestForExt(t *testing.T) {
 			"csh": "sh",
 		},
 		FileConfigs: map[string]config.Config{
-			"sh": config.Config{
+			"sh": {
 				TabWidth: 5, TabWidth_set: true,
 			},
 		},
@@ -150,13 +150,13 @@ func TestForExtWithParent(t *testing.T) {
 			"csh": "csh",
 		},
 		FileConfigs: map[string]config.Config{
-			"sh": config.Config{
+			"sh": {
 				TabWidth: 5, TabWidth_set: true,
 				SyntaxRules: map[string]config.Color{
 					"abc": {FG: "green"},
 				},
 			},
-			"csh": config.Config{
+			"csh": {
 				Parent: "sh",
 				SyntaxRules: map[string]config.Color{
 					"def": {FG: "cyan"},
@@ -189,14 +189,14 @@ func TestForExtAgainstInfLoop(t *testing.T) {
 			"csh": "csh",
 		},
 		FileConfigs: map[string]config.Config{
-			"sh": config.Config{
+			"sh": {
 				Parent:   "csh",
 				TabWidth: 5, TabWidth_set: true,
 				SyntaxRules: map[string]config.Color{
 					"abc": {FG: "green"},
 				},
 			},
-			"csh": config.Config{
+			"csh": {
 				Parent: "sh",
 				SyntaxRules: map[string]config.Color{
 					"def": {FG: "cyan"},
@@ -252,14 +252,14 @@ func TestConfigDup(t *testing.T) {
 			"csh": "csh",
 		},
 		FileConfigs: map[string]config.Config{
-			"sh": config.Config{
+			"sh": {
 				Parent:   "csh",
 				TabWidth: 5, TabWidth_set: true,
 				SyntaxRules: map[string]config.Color{
 					"abc": {FG: "green"},
 				},
 			},
-			"csh": config.Config{
+			"csh": {
 				Parent: "sh",
 				SyntaxRules: map[string]config.Color{
 					"def": {FG: "cyan"},

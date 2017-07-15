@@ -16,6 +16,8 @@ import (
 	"github.com/wx13/sith/terminal"
 )
 
+// File contains all the details about a given file. This includes:
+// name, buffer, buffer history, file-specific settings, etc.
 type File struct {
 	buffer      buffer.Buffer
 	MultiCursor cursor.MultiCursor
@@ -59,6 +61,8 @@ type File struct {
 	statusMutex *sync.Mutex
 }
 
+// NewFile creates a new File object. It reads in the specified file and ingests
+// the specified configuration.
 func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen, cfg config.Config) *File {
 	file := &File{
 		Name:        name,
@@ -90,6 +94,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen, cfg 
 	return file
 }
 
+// GetFileExt returns the filename extension.
 func GetFileExt(filename string) string {
 	ext := path.Ext(filename)
 	if len(ext) == 0 {
@@ -103,6 +108,7 @@ func GetFileExt(filename string) string {
 	return ext
 }
 
+// ingestConfig uses the specified config file to set internal parameters.
 func (file *File) ingestConfig(cfg config.Config) {
 	ext := GetFileExt(file.Name)
 	cfg = cfg.ForExt(ext)
@@ -114,6 +120,7 @@ func (file *File) ingestConfig(cfg config.Config) {
 	file.fmtCmd = cfg.FmtCmd
 }
 
+// Reload re-reads a file from disk.
 func (file *File) Reload() {
 	if file.IsModified() {
 		ok, _ := file.screen.AskYesNo("Changes will be lost. Reload anyway?")
@@ -124,6 +131,9 @@ func (file *File) Reload() {
 	go file.ReadFile(file.Name)
 }
 
+// Close doesn't actually close anything (b/c garbage collection will take care
+// of it. Close just checks with the user and returns true if the file should
+// close.
 func (file *File) Close() bool {
 	if file.IsModified() {
 		doClose, _ := file.screen.AskYesNo("File has been modified. Close anyway?")
@@ -134,14 +144,17 @@ func (file *File) Close() bool {
 	return true
 }
 
+// ToggleAutoIndent toggles the autoindent setting.
 func (file *File) ToggleAutoIndent() {
 	file.autoIndent = file.autoIndent != true
 }
 
+// ToggleAutoTab toggles the autotab setting.
 func (file *File) ToggleAutoTab() {
 	file.autoTab = file.autoTab != true
 }
 
+// ToggleAutoFmt toggles the auto-format setting.
 func (file *File) ToggleAutoFmt() {
 	file.autoFmt = file.autoFmt != true
 }
@@ -175,6 +188,7 @@ func (file *File) UnsetTabStr() {
 	file.ComputeIndent()
 }
 
+// ComputeIndent sets the tabString and tabHealth based on the current indentation.
 func (file *File) ComputeIndent() {
 	if file.tabDetect {
 		file.tabString, file.tabHealth = file.buffer.GetIndent()
@@ -183,22 +197,28 @@ func (file *File) ComputeIndent() {
 	}
 }
 
+// Refresh redraws the screen.
 func (file *File) Refresh() {
 	file.screen.ReallyClear()
 }
 
+// ClearCursors clears out the multicursors.
 func (file *File) ClearCursors() {
 	file.MultiCursor.Clear()
 }
 
+// AddCursor sets the current main cursor as a new multicursor member.
 func (file *File) AddCursor() {
 	file.MultiCursor.Snapshot()
 }
 
+// AddCursorCol creates a multicursor set along a column.
 func (file *File) AddCursorCol() {
 	file.MultiCursor.SetColumn()
 }
 
+// ToString returns a string representation of the text buffer. It uses the
+// original newline (from the input file) as the line separator.
 func (file *File) ToString() string {
 	return file.buffer.ToString(file.newline)
 }
@@ -223,42 +243,53 @@ func (file *File) Slice(nRows, nCols int) []string {
 
 }
 
-func (file *File) ForceSnapshot() {
-	file.buffHist.ForceSnapshot(file.buffer, file.MultiCursor)
-}
-
+// Snapshot saves a snapshot of the buffer state, but only if it has changed.
 func (file *File) Snapshot() {
 	file.buffHist.Snapshot(file.buffer, file.MultiCursor)
 }
 
+// ForceSnapshot saves a snapshot of the buffer state, even if it hasn't changed
+// since the last snapshot.
+func (file *File) ForceSnapshot() {
+	file.buffHist.ForceSnapshot(file.buffer, file.MultiCursor)
+}
+
+// SnapshotSaved saves a special "saved" snapshot when the user saves (or opens)
+// a file.
 func (file *File) SnapshotSaved() {
 	file.buffHist.SnapshotSaved()
 }
 
+// Undo reverts the buffer state to the last snapshot.
 func (file *File) Undo() {
 	buffer, mc := file.buffHist.Prev()
 	file.MultiCursor.ReplaceMC(mc)
 	file.buffer.ReplaceBuffer(buffer)
 }
 
+// Redo sets the buffer state ahead one in the buffer history.
 func (file *File) Redo() {
 	buffer, mc := file.buffHist.Next()
 	file.buffer.ReplaceBuffer(buffer)
 	file.MultiCursor.ReplaceMC(mc)
 }
 
+// UndoSaved reverts the buffer state to the last *saved* snapshot.
 func (file *File) UndoSaved() {
 	buffer, mc := file.buffHist.PrevSaved()
 	file.MultiCursor.ReplaceMC(mc)
 	file.buffer.ReplaceBuffer(buffer)
 }
 
+// RedoSaved is like UndoSaved, but the other direction in time.
 func (file *File) RedoSaved() {
 	buffer, mc := file.buffHist.NextSaved()
 	file.MultiCursor.ReplaceMC(mc)
 	file.buffer.ReplaceBuffer(buffer)
 }
 
+// AskReplace replaces each instance of searchTerm with replaceTerm, asking
+// the user for confirmation each time.
 func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, replaceAll bool) error {
 
 	file.CursorGoTo(row, col)
@@ -293,10 +324,13 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 
 }
 
+// Length returns the number of lines in the buffer.
 func (file *File) Length() int {
 	return file.buffer.Length()
 }
 
+// MarkedSearch searches for searchTerm in the text limited by the muticursor
+// extent.
 func (file *File) MarkedSearch(searchTerm string, loop bool) (row, col int, err error) {
 	file.MultiCursor.OuterMost()
 	_, maxRow := file.MultiCursor.MinMaxRow()
@@ -306,6 +340,7 @@ func (file *File) MarkedSearch(searchTerm string, loop bool) (row, col int, err 
 	return
 }
 
+// SearchFromCursor searches the current buffer, starting from the cursor position.
 func (file *File) SearchFromCursor(searchTerm string) (row, col int, err error) {
 	loop := false
 	cursor := file.MultiCursor.GetCursor(0)
@@ -313,6 +348,7 @@ func (file *File) SearchFromCursor(searchTerm string) (row, col int, err error) 
 	return
 }
 
+// SearchFromStart searches the buffer from the start of the file.
 func (file *File) SearchFromStart(searchTerm string) (row, col int, err error) {
 	loop := false
 	cursor := cursor.MakeCursor(0, -1)
@@ -320,6 +356,8 @@ func (file *File) SearchFromStart(searchTerm string) (row, col int, err error) {
 	return
 }
 
+// SearchLineFo searches forward (to the right) on each multicursor marked line.
+// It sets a cursor on each line where a match was found.
 func (file *File) SearchLineFo(term string) {
 	file.MultiCursor.OnePerLine()
 	for idx, cursor := range file.MultiCursor.Cursors() {
@@ -332,6 +370,8 @@ func (file *File) SearchLineFo(term string) {
 	}
 }
 
+// SearchLineBa searches backward (to the left) on each marked line.
+// It sets a cursor on each line where a match was found.
 func (file *File) SearchLineBa(term string) {
 	file.MultiCursor.OnePerLine()
 	for idx, cursor := range file.MultiCursor.Cursors() {
@@ -344,6 +384,7 @@ func (file *File) SearchLineBa(term string) {
 	}
 }
 
+// AllLineFo is like SearchLineFo, but can return multiple matches on the same line.
 func (file *File) AllLineFo(term string) {
 	file.MultiCursor.OnePerLine()
 	positions := make(map[int][]int)
@@ -359,6 +400,7 @@ func (file *File) AllLineFo(term string) {
 	}
 }
 
+// AllLineBa is like SearchLineBa, but can return multiple matches on the same line.
 func (file *File) AllLineBa(term string) {
 	file.MultiCursor.OnePerLine()
 	positions := make(map[int][]int)

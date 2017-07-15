@@ -27,6 +27,9 @@ type Config struct {
 	FileConfigs map[string]Config
 }
 
+// Color defines background/forground color and attributes for text.
+// The 'Clobber' bool says to color this pattern even if it is nested
+// within another.
 type Color struct {
 	FG      string
 	BG      string
@@ -34,6 +37,7 @@ type Color struct {
 	Clobber bool
 }
 
+// Dup deep copies a Color struct.
 func (color Color) Dup() Color {
 	newColor := Color{
 		FG:      color.FG,
@@ -78,7 +82,7 @@ func (config *Config) markAsSet(meta toml.MetaData, prefix string) {
 	}
 }
 
-// Duplicate a config.
+// Dup deep copies a Config struct.
 func (config Config) Dup() Config {
 	newCfg := Config{
 		TabString:     config.TabString,
@@ -110,28 +114,9 @@ func (config Config) Dup() Config {
 // Merge a config into this config.
 func (config Config) Merge(other Config) Config {
 
+	// We don't need to check for nil maps, b/c Dup() will initialize all maps.
 	config = config.Dup()
 	other = other.Dup()
-
-	// Watch out for nil maps.
-	if config.ExtMap == nil {
-		config.ExtMap = map[string]string{}
-	}
-	if other.ExtMap == nil {
-		other.ExtMap = map[string]string{}
-	}
-	if config.FileConfigs == nil {
-		config.FileConfigs = map[string]Config{}
-	}
-	if other.FileConfigs == nil {
-		other.FileConfigs = map[string]Config{}
-	}
-	if config.SyntaxRules == nil {
-		config.SyntaxRules = map[string]Color{}
-	}
-	if other.SyntaxRules == nil {
-		other.SyntaxRules = map[string]Color{}
-	}
 
 	// Copy map/array values over.
 	for ext, ft := range other.ExtMap {
@@ -176,6 +161,8 @@ func (config Config) Merge(other Config) Config {
 	return config
 }
 
+// MergeParent merges the parent config into the child config.
+// It does this recursively.
 func (config Config) MergeParent(level int) Config {
 	if level <= 0 {
 		return config
