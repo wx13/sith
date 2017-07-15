@@ -1,9 +1,7 @@
 Change Log
 ==========
 
-## [0.6.0-rc1] 2017-07-01
-
-Warning: This has many new features, which may be buggy.
+## [0.6.0] 2017-07-14
 
 ### Features
 - TOML configuration file
