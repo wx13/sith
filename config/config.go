@@ -33,6 +33,15 @@ type Color struct {
 	Attrs []string
 }
 
+func (color Color) Dup() Color {
+	newColor := Color{
+		FG:    color.FG,
+		BG:    color.BG,
+		Attrs: append([]string{}, color.Attrs...),
+	}
+	return newColor
+}
+
 // Read the configuration file(s).
 func Read(paths ...string) Config {
 	config := Config{}
@@ -67,8 +76,40 @@ func (config *Config) markAsSet(meta toml.MetaData, prefix string) {
 	}
 }
 
+// Duplicate a config.
+func (config Config) Dup() Config {
+	newCfg := Config{
+		TabString:     config.TabString,
+		TabString_set: config.TabString_set,
+		TabWidth:      config.TabWidth,
+		TabWidth_set:  config.TabWidth_set,
+		AutoTab:       config.AutoTab,
+		AutoTab_set:   config.AutoTab_set,
+		TabDetect:     config.TabDetect,
+		TabDetect_set: config.TabDetect_set,
+		FmtCmd:        config.FmtCmd,
+		Parent:        config.Parent,
+		ExtMap:        map[string]string{},
+		FileConfigs:   map[string]Config{},
+		SyntaxRules:   map[string]Color{},
+	}
+	for k, v := range config.ExtMap {
+		newCfg.ExtMap[k] = v
+	}
+	for k, v := range config.FileConfigs {
+		newCfg.FileConfigs[k] = v.Dup()
+	}
+	for k, v := range config.SyntaxRules {
+		newCfg.SyntaxRules[k] = v.Dup()
+	}
+	return newCfg
+}
+
 // Merge a config into this config.
 func (config Config) Merge(other Config) Config {
+
+	config = config.Dup()
+	other = other.Dup()
 
 	// Watch out for nil maps.
 	if config.ExtMap == nil {

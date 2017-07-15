@@ -34,7 +34,7 @@ func TestCommonStart(t *testing.T) {
 
 func TestTabs2spaces(t *testing.T) {
 	line1 := buffer.MakeLine("\t\thello world")
-	line2 := line1.Tabs2spaces()
+	line2 := line1.Tabs2spaces(4)
 	if line2.ToString() != "        hello world" {
 		t.Error("Tabs2spaces:", line2)
 	}

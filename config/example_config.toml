@@ -16,7 +16,6 @@ tabString = "\t"  # Default indentaion string
 # optionally import from a parent.
 [fileconfigs.foo]
   parent = "sh"
-  syntaxRules = [
-    {pattern="foo", fg="red"},
-  ]
+  [fileconfigs.foo.syntaxRules]
+    "foo" = {fg="red"}
   tabWidth = 2

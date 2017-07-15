@@ -152,14 +152,14 @@ func TestForExtWithParent(t *testing.T) {
 		FileConfigs: map[string]config.Config{
 			"sh": config.Config{
 				TabWidth: 5, TabWidth_set: true,
-				SyntaxRules: []config.SyntaxConfig{
-					{Pattern: "abc", FG: "green"},
+				SyntaxRules: map[string]config.Color{
+					"abc": {FG: "green"},
 				},
 			},
 			"csh": config.Config{
 				Parent: "sh",
-				SyntaxRules: []config.SyntaxConfig{
-					{Pattern: "def", FG: "cyan"},
+				SyntaxRules: map[string]config.Color{
+					"def": {FG: "cyan"},
 				},
 			},
 		},
@@ -192,14 +192,14 @@ func TestForExtAgainstInfLoop(t *testing.T) {
 			"sh": config.Config{
 				Parent:   "csh",
 				TabWidth: 5, TabWidth_set: true,
-				SyntaxRules: []config.SyntaxConfig{
-					{Pattern: "abc", FG: "green"},
+				SyntaxRules: map[string]config.Color{
+					"abc": {FG: "green"},
 				},
 			},
 			"csh": config.Config{
 				Parent: "sh",
-				SyntaxRules: []config.SyntaxConfig{
-					{Pattern: "def", FG: "cyan"},
+				SyntaxRules: map[string]config.Color{
+					"def": {FG: "cyan"},
 				},
 			},
 		},
@@ -226,4 +226,53 @@ func TestEmptyConfigFile(t *testing.T) {
 	if cfg.AutoTab != false || cfg.AutoTab_set != false {
 		t.Errorf("Wrong defaults: %+v\n", cfg)
 	}
+}
+
+func TestColorDup(t *testing.T) {
+	color := config.Color{
+		BG:    "blue",
+		FG:    "yellow",
+		Attrs: []string{"bold"},
+	}
+	color2 := color.Dup()
+	color.FG = "white"
+	color.Attrs[0] = "underline"
+	if color2.BG != "blue" || color2.Attrs[0] != "bold" {
+		t.Errorf("Color.Dup() did not work: %+v %+v\n", color, color2)
+	}
+}
+
+func TestConfigDup(t *testing.T) {
+
+	cfg := config.Config{
+		TabWidth: 3, TabWidth_set: true,
+		AutoTab: true, AutoTab_set: true,
+		ExtMap: map[string]string{
+			"sh":  "sh",
+			"csh": "csh",
+		},
+		FileConfigs: map[string]config.Config{
+			"sh": config.Config{
+				Parent:   "csh",
+				TabWidth: 5, TabWidth_set: true,
+				SyntaxRules: map[string]config.Color{
+					"abc": {FG: "green"},
+				},
+			},
+			"csh": config.Config{
+				Parent: "sh",
+				SyntaxRules: map[string]config.Color{
+					"def": {FG: "cyan"},
+				},
+			},
+		},
+	}
+
+	cfg2 := cfg.Dup()
+	cfg.ForExt("sh")
+
+	if cfg2.FileConfigs["sh"].SyntaxRules["abc"].FG != "green" {
+		t.Error("Dup allowed for overwrite.")
+	}
+
 }

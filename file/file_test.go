@@ -1,12 +1,13 @@
 package file_test
 
 import (
+	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file"
 	"testing"
 )
 
 func TestNewFile(t *testing.T) {
-	f := file.NewFile("", make(chan struct{}), nil)
+	f := file.NewFile("", make(chan struct{}), nil, config.Config{})
 	if f == nil {
 		t.Error("bad")
 	}
@@ -19,7 +20,7 @@ func CheckBuffer(t *testing.T, f *file.File, s, msg string) {
 }
 
 func TestInserChar(t *testing.T) {
-	f := file.NewFile("", make(chan struct{}), nil)
+	f := file.NewFile("", make(chan struct{}), nil, config.Config{})
 	f.InsertChar('h')
 	f.InsertChar('e')
 	f.InsertChar('l')
@@ -29,7 +30,7 @@ func TestInserChar(t *testing.T) {
 }
 
 func TestEditing(t *testing.T) {
-	f := file.NewFile("", make(chan struct{}), nil)
+	f := file.NewFile("", make(chan struct{}), nil, config.Config{})
 	f.InsertChar('a')
 	f.InsertChar('b')
 	f.InsertChar('c')
