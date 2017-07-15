@@ -22,6 +22,7 @@ type SyntaxRule struct {
 // SyntaxRules is the full collection of all syntax rules.
 type SyntaxRules struct {
 	list       []SyntaxRule
+	clobber    []SyntaxRule
 	whitespace *regexp.Regexp
 }
 
@@ -36,10 +37,17 @@ func NewSyntaxRules(cfg config.Config) *SyntaxRules {
 
 func (rules *SyntaxRules) ingestConfig(cfg config.Config) {
 	for pattern, color := range cfg.SyntaxRules {
-		rules.addRule(pattern, Color{
-			fg: toColor(color.FG),
-			bg: toColor(color.BG),
-		})
+		if color.Clobber {
+			rules.addClobberRule(pattern, Color{
+				fg: toColor(color.FG),
+				bg: toColor(color.BG),
+			})
+		} else {
+			rules.addRule(pattern, Color{
+				fg: toColor(color.FG),
+				bg: toColor(color.BG),
+			})
+		}
 	}
 }
 
@@ -69,6 +77,11 @@ func (rules *SyntaxRules) addWhitespaceRule() {
 func (rules *SyntaxRules) addRule(reStr string, color Color) {
 	re, _ := regexp.Compile(reStr)
 	rules.list = append(rules.list, SyntaxRule{re, color})
+}
+
+func (rules *SyntaxRules) addClobberRule(reStr string, color Color) {
+	re, _ := regexp.Compile(reStr)
+	rules.clobber = append(rules.clobber, SyntaxRule{re, color})
 }
 
 // LineColor object maps a color pair (bg, fg) with start/end indices
@@ -112,16 +125,15 @@ func (rules SyntaxRules) Colorize(str string) []LineColor {
 		lcs = append(lcs, lc)
 		idx = lc.End
 	}
-	match := rules.whitespace.FindStringIndex(str)
-	if match != nil {
-		lc := LineColor{}
-		lc.Bg = termbox.ColorYellow
-		lc.Start, lc.End = match[0], match[1]
-		lcs = append(lcs, lc)
+	for _, rule := range rules.clobber {
+		match := rule.re.FindStringIndex(str)
+		if match != nil {
+			lc := LineColor{}
+			lc.Bg = rule.color.bg
+			lc.Fg = rule.color.fg
+			lc.Start, lc.End = match[0], match[1]
+			lcs = append(lcs, lc)
+		}
 	}
 	return lcs
-}
-
-func (rules *SyntaxRules) addWhitespaceRules(filetype string) {
-	rules.addRule("[ \t]+$", Color{bg: termbox.ColorYellow})
 }

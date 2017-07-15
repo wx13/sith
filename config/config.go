@@ -28,16 +28,18 @@ type Config struct {
 }
 
 type Color struct {
-	FG    string
-	BG    string
-	Attrs []string
+	FG      string
+	BG      string
+	Attrs   []string
+	Clobber bool
 }
 
 func (color Color) Dup() Color {
 	newColor := Color{
-		FG:    color.FG,
-		BG:    color.BG,
-		Attrs: append([]string{}, color.Attrs...),
+		FG:      color.FG,
+		BG:      color.BG,
+		Attrs:   append([]string{}, color.Attrs...),
+		Clobber: color.Clobber,
 	}
 	return newColor
 }

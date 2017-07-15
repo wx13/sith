@@ -21,6 +21,7 @@ func defaultConfig() Config {
 
 		ExtMap:      defaultExtMap(),
 		FileConfigs: defaultFileConfigs(),
+		SyntaxRules: defaultSyntaxRules(),
 	}
 }
 
@@ -33,6 +34,13 @@ func defaultExtMap() map[string]string {
 		em[ext] = "c"
 	}
 	return em
+}
+
+func defaultSyntaxRules() map[string]Color {
+	sr := map[string]Color{
+		"[ \t]+$": {BG: "yellow", Clobber: true},
+	}
+	return sr
 }
 
 func defaultFileConfigs() map[string]Config {
