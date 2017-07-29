@@ -14,6 +14,21 @@ import (
 
 type charMode int
 
+type Attribute termbox.Attribute
+
+const (
+	ColorBlue    = Attribute(termbox.ColorBlue)
+	ColorRed     = Attribute(termbox.ColorRed)
+	ColorGreen   = Attribute(termbox.ColorGreen)
+	ColorYellow  = Attribute(termbox.ColorYellow)
+	ColorCyan    = Attribute(termbox.ColorCyan)
+	ColorMagenta = Attribute(termbox.ColorMagenta)
+	ColorWhite   = Attribute(termbox.ColorWhite)
+	ColorDefault = Attribute(termbox.ColorDefault)
+	AttrBold     = Attribute(termbox.AttrBold)
+	AttrReverse  = Attribute(termbox.AttrReverse)
+)
+
 const (
 	charModeASCII charMode = iota
 	charModeSomeUnicode
@@ -24,8 +39,8 @@ const (
 // Screen is an interface the the terminal screen.
 type Screen struct {
 	row, col int
-	fg, bg   termbox.Attribute
-	colors   map[string]termbox.Attribute
+	fg, bg   Attribute
+	colors   map[string]Attribute
 
 	flushChan chan struct{}
 	dieChan   chan struct{}
@@ -40,8 +55,8 @@ func NewScreen() *Screen {
 	screen := Screen{
 		row:       0,
 		col:       0,
-		bg:        termbox.ColorDefault,
-		fg:        termbox.ColorDefault,
+		bg:        ColorDefault,
+		fg:        ColorDefault,
 		flushChan: make(chan struct{}, 1),
 		dieChan:   make(chan struct{}, 1),
 		tbMutex:   &sync.Mutex{},
@@ -52,6 +67,24 @@ func NewScreen() *Screen {
 	screen.tbMutex.Unlock()
 	screen.handleRequests()
 	return &screen
+}
+
+// Size returns the screen size (col, row).
+func (screen *Screen) Size() (int, int) {
+	return termbox.Size()
+}
+
+// Return the screen size.
+func Size() (cols, rows int) {
+	return termbox.Size()
+}
+
+func (screen *Screen) Row() int {
+	return screen.row
+}
+
+func (screen *Screen) Col() int {
+	return screen.col
 }
 
 // Suspend suspends the screen interaction to let the user
@@ -119,7 +152,7 @@ func (screen *Screen) SetCursor(r, c int) {
 // Clear clears the screen.
 func (screen *Screen) Clear() {
 	screen.tbMutex.Lock()
-	termbox.Clear(screen.fg, screen.bg)
+	termbox.Clear(termbox.Attribute(screen.fg), termbox.Attribute(screen.bg))
 	screen.tbMutex.Unlock()
 	cols, rows := termbox.Size()
 	for row := 0; row < rows; row++ {
@@ -219,7 +252,7 @@ func (screen *Screen) StringDispLen(s string) int {
 }
 
 // WriteStringColor writes a colored string to the screen.
-func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.Attribute) {
+func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg Attribute) {
 	k := 0
 	for _, c := range s {
 		r, n := screen.PrintableRune(c)
@@ -227,7 +260,7 @@ func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg termbox.At
 			continue
 		}
 		screen.tbMutex.Lock()
-		termbox.SetCell(col+k, row, r, fg, bg)
+		termbox.SetCell(col+k, row, r, termbox.Attribute(fg), termbox.Attribute(bg))
 		screen.tbMutex.Unlock()
 		k += n
 	}
@@ -251,18 +284,6 @@ func (screen *Screen) Notify(msg string) {
 // Alert is the same as Notify.
 func (screen *Screen) Alert(msg string) {
 	screen.Notify(msg)
-}
-
-// AskYesNo uses a prompt to ask the user a question.
-func (screen *Screen) AskYesNo(question string) (bool, error) {
-	prompt := MakePrompt(screen)
-	return prompt.AskYesNo(question)
-}
-
-// Ask uses a prompt to ask the user a question.
-func (screen *Screen) Ask(question string, history []string) (string, error) {
-	prompt := MakePrompt(screen)
-	return prompt.Ask(question, history)
 }
 
 // Highlight reverses the screen color.

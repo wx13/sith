@@ -3,7 +3,7 @@ package editor
 import (
 	"strings"
 
-	"github.com/wx13/sith/terminal"
+	"github.com/wx13/sith/ui"
 )
 
 // Cut cuts the current line and sticks it in the copy buffer.
@@ -25,7 +25,7 @@ func (editor *Editor) Paste() {
 
 // PasteFromMenu allows the user to select from the paste history.
 func (editor *Editor) PasteFromMenu() {
-	menu := terminal.NewMenu(editor.screen)
+	menu := ui.NewMenu(editor.screen, editor.keyboard)
 	items := []string{}
 	for _, buffer := range editor.copyHist {
 		str := strings.Join(buffer, " || ")

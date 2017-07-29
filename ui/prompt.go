@@ -1,10 +1,8 @@
-package terminal
+package ui
 
 import (
 	"errors"
 	"strings"
-
-	"github.com/nsf/termbox-go"
 )
 
 // Prompt is a user-input prompt.
@@ -12,15 +10,15 @@ type Prompt struct {
 	oldRow, oldCol   int
 	row, col         int
 	question, answer string
-	screen           *Screen
-	keyboard         *Keyboard
+	screen           Screen
+	keyboard         Keyboard
 }
 
 // MakePrompt creates a new prompt object.
-func MakePrompt(screen *Screen) Prompt {
-	_, rows := termbox.Size()
+func MakePrompt(screen Screen, keyboard Keyboard) Prompt {
+	_, rows := screen.Size()
 	row := rows - 1
-	return Prompt{screen: screen, row: row, keyboard: NewKeyboard()}
+	return Prompt{screen: screen, row: row, keyboard: keyboard}
 }
 
 // GetRune expects a single keypress answer and returns the rune.
@@ -45,10 +43,10 @@ func (prompt *Prompt) GetRune(question string) rune {
 func (prompt *Prompt) AskYesNo(question string) (bool, error) {
 	prompt.screen.WriteMessage(question)
 	prompt.screen.Flush()
-	ev := termbox.PollEvent()
-	if strings.ToLower(string(ev.Ch)) == "y" {
+	_, ch := prompt.keyboard.GetKey()
+	if strings.ToLower(string(ch)) == "y" {
 		return true, nil
-	} else if strings.ToLower(string(ev.Ch)) == "n" {
+	} else if strings.ToLower(string(ch)) == "n" {
 		return false, nil
 	} else {
 		return false, errors.New("Cancel")
@@ -56,8 +54,8 @@ func (prompt *Prompt) AskYesNo(question string) (bool, error) {
 }
 
 func (prompt *Prompt) saveCursor() {
-	prompt.oldRow = prompt.screen.row
-	prompt.oldCol = prompt.screen.col
+	prompt.oldRow = prompt.screen.Row()
+	prompt.oldCol = prompt.screen.Col()
 }
 
 func (prompt *Prompt) restoreCursor() {
@@ -168,8 +166,8 @@ loop:
 }
 
 // GetPromptAnswer is a wrapper arount Ask, which handles some history stuff.
-func (screen *Screen) GetPromptAnswer(question string, history *[]string) string {
-	answer, err := screen.Ask(question, *history)
+func (prompt *Prompt) GetAnswer(question string, history *[]string) string {
+	answer, err := prompt.Ask(question, *history)
 	if err != nil {
 		return ""
 	}

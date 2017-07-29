@@ -14,6 +14,7 @@ import (
 	"github.com/wx13/sith/file/cursor"
 	"github.com/wx13/sith/syntaxcolor"
 	"github.com/wx13/sith/terminal"
+	"github.com/wx13/sith/ui"
 )
 
 // File contains all the details about a given file. This includes:
@@ -123,7 +124,8 @@ func (file *File) ingestConfig(cfg config.Config) {
 // Reload re-reads a file from disk.
 func (file *File) Reload() {
 	if file.IsModified() {
-		ok, _ := file.screen.AskYesNo("Changes will be lost. Reload anyway?")
+		prompt := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+		ok, _ := prompt.AskYesNo("Changes will be lost. Reload anyway?")
 		if !ok {
 			return
 		}
@@ -136,7 +138,8 @@ func (file *File) Reload() {
 // close.
 func (file *File) Close() bool {
 	if file.IsModified() {
-		doClose, _ := file.screen.AskYesNo("File has been modified. Close anyway?")
+		prompt := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+		doClose, _ := prompt.AskYesNo("File has been modified. Close anyway?")
 		if !doClose {
 			return false
 		}
@@ -166,7 +169,7 @@ func (file *File) ToggleAutoFmt() {
 
 // SetTabWidth sets the tab display width.
 func (file *File) SetTabWidth() {
-	p := terminal.MakePrompt(file.screen)
+	p := ui.MakePrompt(file.screen, terminal.NewKeyboard())
 	str, err := p.Ask("tab width:", nil)
 	if err != nil {
 		return
@@ -179,7 +182,7 @@ func (file *File) SetTabWidth() {
 
 // SetTabStr manually sets the tab string, and disables auto-tab-detection.
 func (file *File) SetTabStr() {
-	p := terminal.MakePrompt(file.screen)
+	p := ui.MakePrompt(file.screen, terminal.NewKeyboard())
 	str, err := p.Ask("tab string:", nil)
 	if err == nil {
 		file.tabString = str
@@ -312,7 +315,8 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 		for c := startCol + startColOffset; c < endCol+startColOffset; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)
 		}
-		doReplace, err = file.screen.AskYesNo("Replace this instance?")
+		prompt := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+		doReplace, err = prompt.AskYesNo("Replace this instance?")
 		for c := startCol; c < endCol; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)
 		}

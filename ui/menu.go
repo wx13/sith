@@ -1,35 +1,35 @@
-package terminal
+package ui
 
 import (
 	"strings"
 
-	"github.com/nsf/termbox-go"
+	"github.com/wx13/sith/terminal"
 )
 
 // Menu helps create a searchable, flexible, on-screen menu.
 type Menu struct {
 	cols, rows  int
 	col0, row0  int
-	screen      *Screen
-	keyboard    *Keyboard
+	screen      Screen
+	keyboard    Keyboard
 	selection   int
 	rowShift    int
-	borderColor termbox.Attribute
+	borderColor terminal.Attribute
 	choices     []string
 }
 
 // NewMenu creates a new Menu object.
-func NewMenu(screen *Screen) *Menu {
+func NewMenu(screen Screen, keyboard Keyboard) *Menu {
 	menu := Menu{}
-	menu.setDims()
 	menu.screen = screen
-	menu.keyboard = NewKeyboard()
-	menu.borderColor = termbox.ColorBlue
+	menu.keyboard = keyboard
+	menu.setDims()
+	menu.borderColor = terminal.ColorBlue
 	return &menu
 }
 
 func (menu *Menu) setDims() {
-	cols, rows := termbox.Size()
+	cols, rows := menu.screen.Size()
 	menu.rows = rows - 8
 	menu.col0 = 4
 	menu.row0 = 4
@@ -61,7 +61,7 @@ func (menu *Menu) Clear() {
 
 func (menu *Menu) showSearchStr(searchStr string) {
 	borderColor := menu.borderColor
-	menu.screen.WriteStringColor(menu.row0-1, menu.col0, searchStr, termbox.ColorWhite|termbox.AttrBold, borderColor)
+	menu.screen.WriteStringColor(menu.row0-1, menu.col0, searchStr, terminal.ColorWhite|terminal.AttrBold, borderColor)
 }
 
 // Show displays a menu of choices on the screen.

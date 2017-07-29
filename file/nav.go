@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/nsf/termbox-go"
+	"github.com/wx13/sith/terminal"
+	"github.com/wx13/sith/ui"
 )
 
 func (file *File) enforceColBounds() {
@@ -274,7 +276,8 @@ func (file *File) prevNextWord(incr int) {
 // GoToLine prompts the user for a row number, and the puts the cursor
 // on that row.
 func (file *File) GoToLine() {
-	lineNo := file.screen.GetPromptAnswer("goto:", &file.gotoHist)
+	prompt := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+	lineNo := prompt.GetAnswer("goto:", &file.gotoHist)
 	if lineNo == "" {
 		return
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file"
 	"github.com/wx13/sith/terminal"
+	"github.com/wx13/sith/ui"
 )
 
 // Editor is the main editor object. It orchestrates the terminal,
@@ -67,7 +68,7 @@ func (editor *Editor) OpenNewFile() {
 				names = append(names, file.Name())
 			}
 		}
-		menu := terminal.NewMenu(editor.screen)
+		menu := ui.NewMenu(editor.screen, editor.keyboard)
 		idx, key := menu.Choose(names, 0, "ctrlO")
 		editor.Flush()
 		if idx < 0 || key == "cancel" {
@@ -75,7 +76,7 @@ func (editor *Editor) OpenNewFile() {
 		}
 		if key == "ctrlO" {
 			var err error
-			p := terminal.MakePrompt(editor.screen)
+			p := ui.MakePrompt(editor.screen, editor.keyboard)
 			filename, err = p.Ask(dir, nil)
 			if err != nil {
 				editor.screen.Notify("Unknown answer")
@@ -179,7 +180,7 @@ func (editor *Editor) handleCmd(cmd string, r rune) {
 
 // ExtraMode allows for additional keypresses.
 func (editor *Editor) ExtraMode() {
-	p := terminal.MakePrompt(editor.screen)
+	p := ui.MakePrompt(editor.screen, editor.keyboard)
 	r := p.GetRune("key:")
 	ans := editor.xKeymap.Run(string(r))
 	if len(ans) > 0 {
@@ -215,7 +216,7 @@ func (editor *Editor) SelectFile() {
 		}
 		names = append(names, status+file.Name)
 	}
-	menu := terminal.NewMenu(editor.screen)
+	menu := ui.NewMenu(editor.screen, editor.keyboard)
 	idx, cmd := menu.Choose(names, editor.fileIdx)
 	if idx >= 0 && cmd == "" {
 		editor.SwitchFile(idx)
@@ -226,7 +227,7 @@ func (editor *Editor) SelectFile() {
 // display mode.
 func (editor *Editor) SetCharMode() {
 	modes := editor.screen.ListCharModes()
-	menu := terminal.NewMenu(editor.screen)
+	menu := ui.NewMenu(editor.screen, editor.keyboard)
 	idx, cmd := menu.Choose(modes, 0)
 	if idx >= 0 && cmd == "" {
 		editor.screen.SetCharMode(idx)
@@ -246,7 +247,7 @@ func (editor *Editor) CmdMenu() {
 
 	names = append(names, xnames...)
 
-	menu := terminal.NewMenu(editor.screen)
+	menu := ui.NewMenu(editor.screen, editor.keyboard)
 	idx, cancel := menu.Choose(names, 0)
 	if idx < 0 || cancel != "" {
 		return
@@ -276,7 +277,7 @@ func (editor *Editor) SaveAll() {
 
 // SaveAs prompts for a file to save to.
 func (editor *Editor) SaveAs() {
-	p := terminal.MakePrompt(editor.screen)
+	p := ui.MakePrompt(editor.screen, editor.keyboard)
 	filename, err := p.Ask("Save to:", nil)
 	if err != nil {
 		editor.screen.Notify("Cancelled")
@@ -365,12 +366,12 @@ func (editor *Editor) getFilename(maxNameLen int) string {
 
 func (editor *Editor) writeModStatus(row, col int) int {
 	if editor.file.IsModified() {
-		editor.screen.WriteStringColor(row, col-3, "M  ", termbox.ColorRed, termbox.ColorDefault)
+		editor.screen.WriteStringColor(row, col-3, "M  ", terminal.ColorRed, terminal.ColorDefault)
 		return 3
 	}
 	for _, file := range editor.files {
 		if file.IsModified() {
-			editor.screen.WriteStringColor(row, col-3, "M  ", termbox.ColorYellow, termbox.ColorDefault)
+			editor.screen.WriteStringColor(row, col-3, "M  ", terminal.ColorYellow, terminal.ColorDefault)
 			return 3
 		}
 	}
@@ -379,12 +380,12 @@ func (editor *Editor) writeModStatus(row, col int) int {
 
 func (editor *Editor) writeSyncStatus(row, col int) int {
 	if editor.file.FileChanged() {
-		editor.screen.WriteStringColor(row, col-3, "S  ", termbox.ColorRed, termbox.ColorDefault)
+		editor.screen.WriteStringColor(row, col-3, "S  ", terminal.ColorRed, terminal.ColorDefault)
 		return 3
 	}
 	for _, file := range editor.files {
 		if file.FileChanged() {
-			editor.screen.WriteStringColor(row, col-3, "S  ", termbox.ColorYellow, termbox.ColorDefault)
+			editor.screen.WriteStringColor(row, col-3, "S  ", terminal.ColorYellow, terminal.ColorDefault)
 			return 3
 		}
 	}
@@ -393,7 +394,7 @@ func (editor *Editor) writeSyncStatus(row, col int) int {
 
 // UpdateStatus updates the status line.
 func (editor *Editor) UpdateStatus() {
-	cols, rows := termbox.Size()
+	cols, rows := terminal.Size()
 
 	name := editor.getFilename(cols / 3)
 	message := fmt.Sprintf("%s (%d/%d)   %d/%d,%d",

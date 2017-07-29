@@ -91,8 +91,8 @@ type LineColor struct {
 	Start, End int
 }
 
-// NextMatch finds the next match accross all the rules.
-func (rules SyntaxRules) NextMatch(str string, idx int) (LineColor, error) {
+// nextMatch finds the next match accross all the rules.
+func (rules SyntaxRules) nextMatch(str string, idx int) (LineColor, error) {
 	subStr := str[idx:]
 	i0 := len(subStr) + 1
 	lc := LineColor{}
@@ -118,7 +118,7 @@ func (rules SyntaxRules) Colorize(str string) []LineColor {
 	lcs := []LineColor{}
 	idx := 0
 	for {
-		lc, err := rules.NextMatch(str, idx)
+		lc, err := rules.nextMatch(str, idx)
 		if err != nil {
 			break
 		}

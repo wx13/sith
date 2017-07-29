@@ -6,13 +6,16 @@ import (
 	"sort"
 	"strings"
 	"sync"
-
-	"github.com/wx13/sith/file/cursor"
 )
 
 type Buffer struct {
 	lines []Line
 	mutex *sync.Mutex
+}
+
+type Cursor interface {
+	Row() int
+	Col() int
 }
 
 func MakeBuffer(stringBuf []string) Buffer {
@@ -212,7 +215,7 @@ func (buffer *Buffer) ReplaceLines(lines []Line, minRow, maxRow int) {
 }
 
 // Search searches for a string within the buffer.
-func (buffer *Buffer) Search(searchTerm string, cursor cursor.Cursor, loop bool) (int, int, error) {
+func (buffer *Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, int, error) {
 	var col int
 	col, _ = buffer.GetRow(cursor.Row()).Search(searchTerm, cursor.Col()+1, -1)
 	if col >= 0 {

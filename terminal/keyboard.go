@@ -111,7 +111,7 @@ func (kb *Keyboard) keyToCmd(ev termbox.Event) (string, rune) {
 }
 
 // GetCmdString turns termbox keyboard input into a string representation
-// of the keypress.  If the result is "char", then it also returns the rune.
+// of the keypress. If the result is "char", then it also returns the rune.
 func (kb *Keyboard) GetCmdString(ev termbox.Event) (string, rune) {
 
 	if ev.Type == termbox.EventKey {
@@ -125,4 +125,33 @@ func (kb *Keyboard) GetCmdString(ev termbox.Event) (string, rune) {
 func (kb *Keyboard) GetKey() (string, rune) {
 	ev := termbox.PollEvent()
 	return kb.GetCmdString(ev)
+}
+
+// Mock keyboard for testing.
+type MockKeyboard struct {
+	keys  []string
+	runes []rune
+	idx   int
+}
+
+func NewMockKeyboard(keys []string, runes []rune) *MockKeyboard {
+	return &MockKeyboard{
+		keys:  keys,
+		runes: runes,
+		idx:   0,
+	}
+}
+
+func (mkb *MockKeyboard) GetKey() (string, rune) {
+	idx := mkb.idx
+	key := "unknown"
+	var r rune
+	if mkb.idx < len(mkb.keys) {
+		key = mkb.keys[idx]
+	}
+	if mkb.idx < len(mkb.runes) {
+		r = mkb.runes[idx]
+	}
+	mkb.idx++
+	return key, r
 }

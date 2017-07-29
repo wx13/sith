@@ -1,8 +1,13 @@
 package editor
 
+import (
+	"github.com/wx13/sith/ui"
+)
+
 // SearchLineFo searches the current line from cursor to the end.
 func (editor *Editor) SearchLineFo() {
-	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	prompt := ui.MakePrompt(editor.screen, editor.keyboard)
+	searchTerm := prompt.GetAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
 		editor.file.NotifyUser("Cancelled")
 		return
@@ -12,7 +17,8 @@ func (editor *Editor) SearchLineFo() {
 
 // SearchLineBa searches the current line from cursor to the start.
 func (editor *Editor) SearchLineBa() {
-	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	prompt := ui.MakePrompt(editor.screen, editor.keyboard)
+	searchTerm := prompt.GetAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
 		editor.file.NotifyUser("Cancelled")
 		return
@@ -23,7 +29,8 @@ func (editor *Editor) SearchLineBa() {
 // AllLineFo searches the current line from cursor to the start, and makes multiple
 // cursors (one for each match).
 func (editor *Editor) AllLineFo() {
-	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	prompt := ui.MakePrompt(editor.screen, editor.keyboard)
+	searchTerm := prompt.GetAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
 		editor.file.NotifyUser("Cancelled")
 		return
@@ -34,7 +41,8 @@ func (editor *Editor) AllLineFo() {
 // AllLineBa searches the current line from cursor to the start, and makes multiple
 // cursors (one for each match).
 func (editor *Editor) AllLineBa() {
-	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	prompt := ui.MakePrompt(editor.screen, editor.keyboard)
+	searchTerm := prompt.GetAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
 		editor.file.NotifyUser("Cancelled")
 		return
@@ -44,7 +52,8 @@ func (editor *Editor) AllLineBa() {
 
 // Search searches the entire buffer (or set of buffers if multiFile is true).
 func (editor *Editor) Search(multiFile bool) {
-	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	prompt := ui.MakePrompt(editor.screen, editor.keyboard)
+	searchTerm := prompt.GetAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
 		editor.file.NotifyUser("Cancelled")
 		return
@@ -115,15 +124,16 @@ func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, i
 
 // SearchAndReplace searches and replaces.
 func (editor *Editor) SearchAndReplace(multiFile bool) {
-	searchTerm := editor.screen.GetPromptAnswer("search:", &editor.searchHist)
+	prompt := ui.MakePrompt(editor.screen, editor.keyboard)
+	searchTerm := prompt.GetAnswer("search:", &editor.searchHist)
 	if searchTerm == "" {
 		editor.screen.Notify("Cancelled")
 		return
 	}
 
-	replaceTerm := editor.screen.GetPromptAnswer("replace:", &editor.replaceHist)
+	replaceTerm := prompt.GetAnswer("replace:", &editor.replaceHist)
 
-	replaceAll, err := editor.screen.AskYesNo("Replace All?")
+	replaceAll, err := prompt.AskYesNo("Replace All?")
 	if err != nil {
 		editor.screen.Notify("Cancelled")
 		return

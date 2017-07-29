@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/nsf/termbox-go"
+	"github.com/wx13/sith/terminal"
 )
 
 // IsModified checks to see if a file has been modified.
@@ -38,18 +38,18 @@ func (file *File) WriteStatus(row, col int) {
 	if file.MultiCursor.Length() > 1 {
 		status := fmt.Sprintf("%d%s", file.MultiCursor.Length(), file.MultiCursor.GetNavModeShort())
 		file.addToStatus(status, row, &col,
-			termbox.ColorGreen|termbox.AttrReverse|termbox.AttrBold,
-			termbox.ColorDefault|termbox.AttrReverse)
+			terminal.ColorGreen|terminal.AttrReverse|terminal.AttrBold,
+			terminal.ColorDefault|terminal.AttrReverse)
 	}
 
 	if file.autoIndent {
-		file.addToStatus("->", row, &col, termbox.ColorGreen, termbox.ColorDefault)
+		file.addToStatus("->", row, &col, terminal.ColorGreen, terminal.ColorDefault)
 	}
 
 	if file.autoFmt {
 		ext := GetFileExt(file.Name)
 		if file.fmtCmd != "" || ext == "go" {
-			file.addToStatus("f", row, &col, termbox.ColorGreen, termbox.ColorDefault)
+			file.addToStatus("f", row, &col, terminal.ColorGreen, terminal.ColorDefault)
 		}
 	}
 
@@ -63,23 +63,23 @@ func (file *File) WriteStatus(row, col int) {
 		if !file.tabDetect {
 			status += "*"
 		}
-		file.addToStatus(status, row, &col, termbox.ColorGreen, termbox.ColorDefault)
+		file.addToStatus(status, row, &col, terminal.ColorGreen, terminal.ColorDefault)
 	}
 
 	if !file.tabHealth {
-		file.addToStatus("MixedIndent", row, &col, termbox.ColorRed, termbox.ColorDefault)
+		file.addToStatus("MixedIndent", row, &col, terminal.ColorRed, terminal.ColorDefault)
 	}
 
 	if file.newline != "\n" {
 		status := strings.Replace(file.newline, "\n", "\\n", -1)
 		status = strings.Replace(status, "\r", "\\r", -1)
-		file.addToStatus(status, row, &col, termbox.ColorYellow, termbox.ColorDefault)
+		file.addToStatus(status, row, &col, terminal.ColorYellow, terminal.ColorDefault)
 	}
 
 	file.statusMutex.Lock()
 
 	if file.notification != "" {
-		file.addToStatus(file.notification, row, &col, termbox.ColorCyan, termbox.ColorDefault)
+		file.addToStatus(file.notification, row, &col, terminal.ColorCyan, terminal.ColorDefault)
 	}
 
 	if file.clearNotification {
@@ -93,7 +93,7 @@ func (file *File) WriteStatus(row, col int) {
 
 }
 
-func (file *File) addToStatus(msg string, row int, col *int, fg, bg termbox.Attribute) {
+func (file *File) addToStatus(msg string, row int, col *int, fg, bg terminal.Attribute) {
 	*col -= len(msg) + 1
 	file.screen.WriteStringColor(row, *col, msg, fg, bg)
 }
