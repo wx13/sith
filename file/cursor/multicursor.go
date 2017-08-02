@@ -69,11 +69,11 @@ func (mc MultiCursor) GetNavModeShort() string {
 
 // GetCursor returns a cursor by index.
 func (mc MultiCursor) GetCursor(idx int) Cursor {
-	if idx < 0 {
-		idx = 0
-	}
 	if idx > len(mc.cursors) {
 		idx = len(mc.cursors) - 1
+	}
+	if idx < 0 {
+		idx = 0
 	}
 	return mc.cursors[idx]
 }
