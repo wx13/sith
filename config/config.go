@@ -20,7 +20,9 @@ type Config struct {
 	TabDetect     bool
 	TabDetect_set bool
 
-	FmtCmd      string
+	FmtCmd     string
+	FmtCmd_set bool
+
 	Parent      string
 	ExtMap      map[string]string
 	SyntaxRules map[string]Color
@@ -76,6 +78,8 @@ func (config *Config) markAsSet(meta toml.MetaData, prefix string) {
 			config.TabWidth_set = true
 		case prefix + "autotab":
 			config.AutoTab_set = true
+		case prefix + "fmtcmd":
+			config.FmtCmd_set = true
 		case prefix + "tabdetect":
 			config.TabDetect_set = true
 		}
@@ -94,6 +98,7 @@ func (config Config) Dup() Config {
 		TabDetect:     config.TabDetect,
 		TabDetect_set: config.TabDetect_set,
 		FmtCmd:        config.FmtCmd,
+		FmtCmd_set:    config.FmtCmd_set,
 		Parent:        config.Parent,
 		ExtMap:        map[string]string{},
 		FileConfigs:   map[string]Config{},
@@ -154,8 +159,9 @@ func (config Config) Merge(other Config) Config {
 	if other.Parent != "" {
 		config.Parent = other.Parent
 	}
-	if other.FmtCmd != "" {
+	if other.FmtCmd_set {
 		config.FmtCmd = other.FmtCmd
+		config.FmtCmd_set = true
 	}
 
 	return config
