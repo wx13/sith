@@ -41,7 +41,14 @@ func (file *File) runFmt(contents string) (string, error) {
 		return contents, nil
 	}
 
-	cmd := exec.Command(file.fmtCmd)
+	args := regexp.MustCompile(`\s+`).Split(file.fmtCmd, -1)
+
+	var cmd *exec.Cmd
+	if len(args) > 1 {
+		cmd = exec.Command(args[0], args[1:]...)
+	} else {
+		cmd = exec.Command(args[0])
+	}
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return contents, err
@@ -50,7 +57,7 @@ func (file *File) runFmt(contents string) (string, error) {
 		defer stdin.Close()
 		io.WriteString(stdin, contents)
 	}()
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return contents, err
 	}
