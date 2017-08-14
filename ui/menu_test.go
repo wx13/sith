@@ -15,9 +15,10 @@ func (ms MockScreen) WriteStringColor(row, col int, text string, fg, bg terminal
 func (ms MockScreen) Size() (int, int) {
 	return 80, 24
 }
-func (ms MockScreen) Row() int           { return 0 }
-func (ms MockScreen) Col() int           { return 0 }
-func (ms MockScreen) SetCursor(int, int) {}
+func (ms MockScreen) Row() int                { return 0 }
+func (ms MockScreen) Col() int                { return 0 }
+func (ms MockScreen) SetCursor(int, int)      {}
+func (ms MockScreen) WriteMessage(msg string) {}
 
 func TestEmptyMenuCancel(t *testing.T) {
 
