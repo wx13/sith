@@ -106,9 +106,6 @@ loop:
 			if prompt.col < len(prompt.answer) {
 				prompt.delete()
 			}
-		case "space":
-			prompt.answer += " "
-			prompt.col++
 		case "enter":
 			break loop
 		case "ctrlE":
@@ -156,6 +153,9 @@ loop:
 			prompt.col++
 		case "char":
 			prompt.answer = prompt.answer[:prompt.col] + string(r) + prompt.answer[prompt.col:]
+			prompt.col++
+		case "space":
+			prompt.answer = prompt.answer[:prompt.col] + " " + prompt.answer[prompt.col:]
 			prompt.col++
 		default:
 		}
