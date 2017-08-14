@@ -69,13 +69,13 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	km.Add("ctrlC", editor.Cut, "Cut line")
 	km.Add("ctrlV", editor.Paste, "Paste")
 	km.Add("altV", editor.PasteFromMenu, "Paste from menu")
-	km.Add("altG", editor.Fmt, "Run code formatter")
 	km.Add("altJ", func() { editor.file.Justify(72) }, "Justify")
 	km.Add("altH", func() { editor.file.Justify(0) }, "Unjustify")
 	km.Add("altI", func() { editor.file.ToggleAutoIndent() }, "Toggle auto-indent")
 	km.Add("altT", func() { editor.file.ToggleAutoTab() }, "Toggle Auto-tab")
 	km.Add("alt6", editor.ExtraMode, "Extra mode")
 	km.Add("ctrlSlash", editor.CmdMenu, "Display command menu")
+	km.Add("altG", func() { editor.file.ToggleAutoFmt() }, "Toggle auto fmt on save")
 	return km
 }
 
@@ -95,7 +95,8 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km.Add("s", editor.SaveAll, "Save all files")
 	km.Add("r", func() { editor.file.Reload() }, "Reload file from disk")
 	km.Add("R", editor.ReloadAll, "Reload file from disk")
-	km.Add("g", func() { editor.file.ToggleAutoFmt() }, "Toggle auto fmt on save")
+	km.Add("f", func() { editor.file.Fmt() }, "Run code formatter")
+	km.Add("F", func() { editor.file.Fmt(true) }, "Run code formatter on selection")
 	return km
 }
 

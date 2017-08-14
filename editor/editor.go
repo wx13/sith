@@ -287,11 +287,6 @@ func (editor *Editor) SaveAs() {
 	editor.Save()
 }
 
-// Fmt runs the code formatter on the buffer text.
-func (editor *Editor) Fmt() {
-	editor.file.Fmt()
-}
-
 func intMod(a, n int) int {
 	if a < 0 {
 		return a - n*((a-n+1)/n)

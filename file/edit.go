@@ -11,27 +11,52 @@ import (
 )
 
 // Fmt runs a code formatter on the text buffer and updates the buffer.
-func (file *File) Fmt() error {
+// For Go code, this calls the go format library. For all else, it runs an
+// external command. If 'selection' is specified, then formatting is done
+// only on selected lines.
+func (file *File) Fmt(selection ...bool) error {
 
 	ext := GetFileExt(file.Name)
 	if file.fmtCmd == "" && ext != "go" {
 		return nil
 	}
 
-	contents := file.ToString()
+	contents := ""
+
+	// Grab the text for formatting.
+	startRow := 0
+	endRow := 0
+	if len(selection) > 0 {
+		file.MultiCursor.OuterMost()
+		startRow, endRow = file.MultiCursor.MinMaxRow()
+		subBuffer := file.buffer.InclSlice(startRow, endRow)
+		contents = subBuffer.ToString(file.newline)
+	} else {
+		contents = file.ToString()
+	}
+
+	// Format the text.
 	var err error
 	if ext == "go" {
 		contents, err = file.goFmt(contents)
 	} else {
 		contents, err = file.runFmt(contents)
 	}
-	if err == nil {
-		stringBuf := strings.Split(contents, file.newline)
-		newBuffer := buffer.MakeBuffer(stringBuf)
-		file.buffer.ReplaceBuffer(newBuffer)
-		file.Snapshot()
+	if err != nil {
+		return err
 	}
-	return err
+
+	stringBuf := strings.Split(contents, file.newline)
+	newBuffer := buffer.MakeBuffer(stringBuf)
+
+	if len(selection) > 0 {
+		file.buffer.ReplaceLines(newBuffer.Lines(), startRow, endRow)
+	} else {
+		file.buffer.ReplaceBuffer(newBuffer)
+	}
+
+	file.Snapshot()
+	return nil
 }
 
 // runFmt runs the fmt command on the input string. It returns the formatted text.
