@@ -305,10 +305,13 @@ func (editor *Editor) SwitchFile(n int) {
 // HighlightCursors highlights all the multi-cursors.
 func (editor *Editor) HighlightCursors() {
 	cells := termbox.CellBuffer()
-	cols, _ := termbox.Size()
+	cols, rows := terminal.Size()
 	r0, c0 := editor.file.GetCursor(0)
 	for k := range editor.file.MultiCursor.Cursors()[1:] {
 		r, c := editor.file.GetCursor(k + 1)
+		if r < 0 || r > rows || c < 0 || c > cols {
+			continue
+		}
 		j := r*cols + c
 		if j < 0 || j >= len(cells) {
 			continue
