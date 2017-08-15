@@ -125,6 +125,7 @@ func MakeSplitBuffer(bigString string, lineLen int) Buffer {
 	}
 }
 
+// InclSlice returns a slice of the buffer, inclusive of the endpoints.
 func (buffer *Buffer) InclSlice(row1, row2 int) *Buffer {
 	if row2 >= buffer.Length() {
 		row2 = buffer.Length() - 1
@@ -138,6 +139,7 @@ func (buffer *Buffer) InclSlice(row1, row2 int) *Buffer {
 	return &Buffer{lines: lines, mutex: &sync.Mutex{}}
 }
 
+// RowSlice returns a Line containing a subset of the line at 'row'.
 func (buffer *Buffer) RowSlice(row, startCol, endCol int) Line {
 	buffer.mutex.Lock()
 	line := buffer.lines[row].Slice(startCol, endCol)
@@ -166,12 +168,14 @@ func (buffer *Buffer) ToString(newline string) string {
 	return str[:len(str)-1]
 }
 
+// InsertAfter inserts a set of lines after the specified row in the buffer.
 func (buffer *Buffer) InsertAfter(row int, lines ...Line) {
 	buffer.mutex.Lock()
 	buffer.lines = append(buffer.lines[:row+1], append(lines, buffer.lines[row+1:]...)...)
 	buffer.mutex.Unlock()
 }
 
+// DeleteRow deletes the specified row from the buffer.
 func (buffer *Buffer) DeleteRow(row int) {
 	buffer.mutex.Lock()
 	defer buffer.mutex.Unlock()
@@ -186,6 +190,7 @@ func (buffer *Buffer) DeleteRow(row int) {
 	}
 }
 
+// ReplaceLine replaces the line at the specified row.
 func (buffer *Buffer) ReplaceLine(line Line, row int) {
 	if row >= buffer.Length() {
 		return
@@ -251,6 +256,7 @@ func (buffer *Buffer) ReplaceWord(searchTerm, replaceTerm string, row, col int) 
 	buffer.lines[row] = MakeLine(newStrLine)
 }
 
+// GetRow returns the Line at the specified row index.
 func (buffer *Buffer) GetRow(row int) Line {
 	buffer.mutex.Lock()
 	defer buffer.mutex.Unlock()
@@ -261,6 +267,7 @@ func (buffer *Buffer) GetRow(row int) Line {
 	return MakeLine(line.ToString())
 }
 
+// SetRow replaces the line at the specified row index.
 func (buffer *Buffer) SetRow(row int, line Line) error {
 	if row >= buffer.Length() {
 		return errors.New("index exceeds buffer length")
@@ -271,10 +278,14 @@ func (buffer *Buffer) SetRow(row int, line Line) error {
 	return nil
 }
 
+// RowLength returns the length of the given row.
 func (buffer *Buffer) RowLength(row int) int {
 	return buffer.GetRow(row).Length()
 }
 
+// GetIndent estimates the indentation string of the buffer.
+// It also returns a bool indicating that the indentation is clean (true)
+// or mixed (false).
 func (buffer *Buffer) GetIndent() (string, bool) {
 	spaceHisto := buffer.countLeadingSpacesAndTabs()
 	tabCount := spaceHisto[0]
