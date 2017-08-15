@@ -9,8 +9,14 @@ import (
 	"github.com/wx13/sith/ui"
 )
 
-func (file *File) enforceColBounds() {
-	for idx, cursor := range file.MultiCursor.Cursors() {
+func (file *File) enforceColBounds(indexes ...int) {
+	if len(indexes) == 0 {
+		for idx, _ := range file.MultiCursor.Cursors() {
+			indexes = append(indexes, idx)
+		}
+	}
+	for _, idx := range indexes {
+		cursor := file.MultiCursor.GetCursor(idx)
 		if cursor.Col() > file.buffer.RowLength(cursor.Row()) {
 			file.MultiCursor.SetCol(idx, file.buffer.RowLength(cursor.Row()))
 		}
@@ -20,8 +26,14 @@ func (file *File) enforceColBounds() {
 	}
 }
 
-func (file *File) enforceRowBounds() {
-	for idx, cursor := range file.MultiCursor.Cursors() {
+func (file *File) enforceRowBounds(indexes ...int) {
+	if len(indexes) == 0 {
+		for idx, _ := range file.MultiCursor.Cursors() {
+			indexes = append(indexes, idx)
+		}
+	}
+	for _, idx := range indexes {
+		cursor := file.MultiCursor.GetCursor(idx)
 		if cursor.Row() >= file.buffer.Length() {
 			file.MultiCursor.SetRow(idx, file.buffer.Length()-1)
 		}
@@ -147,8 +159,8 @@ func (file *File) CursorLeft() {
 
 // GetCursor returns the row, col position for the specified multi-cursor index.
 func (file *File) GetCursor(idx int) (int, int) {
-	file.enforceRowBounds()
-	file.enforceColBounds()
+	file.enforceRowBounds(idx)
+	file.enforceColBounds(idx)
 	row, col, _ := file.MultiCursor.GetCursorRCC(idx)
 	line := file.buffer.GetRow(row).Slice(0, col).Tabs2spaces(file.tabWidth)
 	n := file.screen.StringDispLen(line.ToString())
