@@ -205,19 +205,46 @@ func (editor *Editor) LastFile() {
 
 // SelectFile offers a menu to select from open files.
 func (editor *Editor) SelectFile() {
-	names := []string{}
-	for _, file := range editor.files {
-		status := ""
-		if file.IsModified() {
-			status = "*"
-		}
-		if file.FileChanged() {
-			status += "+"
-		}
-		names = append(names, status+file.Name)
-	}
 	menu := ui.NewMenu(editor.screen, editor.keyboard)
-	idx, cmd := menu.Choose(names, editor.fileIdx)
+	idx := editor.fileIdx
+	cmd := ""
+	// Allow user to swap file order.
+	for {
+		names := []string{}
+		for _, file := range editor.files {
+			status := ""
+			if file.IsModified() {
+				status = "*"
+			}
+			if file.FileChanged() {
+				status += "+"
+			}
+			names = append(names, status+file.Name)
+		}
+		idx, cmd = menu.Choose(names, idx, "ctrlJ", "ctrlK")
+		if cmd == "ctrlJ" {
+			if idx >= len(editor.files)-1 {
+				continue
+			}
+			file := editor.files[idx]
+			editor.files[idx] = editor.files[idx+1]
+			idx++
+			editor.files[idx] = file
+			continue
+		}
+		if cmd == "ctrlK" {
+			if idx == 0 {
+				continue
+			}
+			file := editor.files[idx]
+			editor.files[idx] = editor.files[idx-1]
+			idx--
+			editor.files[idx] = file
+			continue
+		}
+		break
+	}
+	// Switch file.
 	if idx >= 0 && cmd == "" {
 		editor.SwitchFile(idx)
 	}
