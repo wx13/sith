@@ -57,11 +57,17 @@ func defaultFileConfigs() map[string]Config {
 			"#.*$": {FG: "cyan"},
 		},
 	}
-	fc["c"] = Config{
+	fc["c-style"] = Config{
 		Parent: "code",
 		SyntaxRules: map[string]Color{
 			"//.*$":     {FG: "cyan"},
 			`/\*.*?\*/`: {FG: "cyan"},
+		},
+	}
+	fc["c"] = Config{
+		Parent: "c-style",
+		SyntaxRules: map[string]Color{
+			"^#[a-z]*": {FG: "blue"},
 		},
 	}
 	fc["go"] = Config{
