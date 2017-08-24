@@ -334,6 +334,9 @@ func (editor *Editor) HighlightCursors() {
 	cells := termbox.CellBuffer()
 	cols, rows := terminal.Size()
 	r0, c0 := editor.file.GetCursor(0)
+	if editor.file.MultiCursor.Length() <= 1 {
+		return
+	}
 	for k := range editor.file.MultiCursor.Cursors()[1:] {
 		r, c := editor.file.GetCursor(k + 1)
 		if r < 0 || r > rows || c < 0 || c > cols {
