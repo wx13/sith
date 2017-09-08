@@ -33,6 +33,8 @@ func defaultExtMap() map[string]string {
 	for _, ext := range []string{"h", "cc", "C", "c++", "cpp"} {
 		em[ext] = "c"
 	}
+	em["commit_editmsg"] = "git_commit"
+	em["git-rebase-todo"] = "git_rebase"
 	return em
 }
 
@@ -91,9 +93,21 @@ func defaultFileConfigs() map[string]Config {
 			`\[.*?\]`: {FG: "green"},
 		},
 	}
-	fc["git"] = Config{
+	fc["git_commit"] = Config{
 		SyntaxRules: map[string]Color{
 			"#.*?$": {FG: "cyan"},
+		},
+	}
+	fc["git_rebase"] = Config{
+		Parent: "git_commit",
+		SyntaxRules: map[string]Color{
+			"^(pick |p )":   {FG: "green"},
+			"^(squash |s )": {FG: "yellow"},
+			"^(fixup |f )":  {FG: "yellow"},
+			"^(drop |d )":   {FG: "red"},
+			"^(edit |e )":   {FG: "blue"},
+			"^(reword |r )": {FG: "blue"},
+			"^(exec |x )":   {FG: "magenta"},
 		},
 	}
 

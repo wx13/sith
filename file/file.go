@@ -100,9 +100,6 @@ func GetFileExt(filename string) string {
 	ext := path.Ext(filename)
 	if len(ext) == 0 {
 		basename := path.Base(filename)
-		if basename == "COMMIT_EDITMSG" {
-			basename = "git"
-		}
 		return strings.ToLower(basename)
 	}
 	ext = ext[1:]
