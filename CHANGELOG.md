@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+## [0.6.2] 2017-09-20
+
+### Features
+- More flexibilty in fmtcmd
+- Can now use code formatter on a select setof lines
+- Syntax coloring for git-rebase-todo
+
+### Bugfixes
+- Fix two multicursor index-out-of-range errors
+- Corrected space char insertion issue in prompt string
+- Speed up multicursor highlighting for large multicursors
+
+
 ## [0.6.1] 2017-07-14
 
 ### Features
