@@ -95,11 +95,12 @@ func (menu *Menu) Show(choices []string) {
 //
 // The function returns two things: the integer index of the current selection,
 // and the string description of the key that caused the program to exit.
-func (menu *Menu) Choose(choices []string, idx int, keys ...string) (int, string) {
+func (menu *Menu) Choose(choices []string, idx int, searchStr string,
+	keys ...string) (int, string) {
+
 	menu.choices = choices
 	menu.setDims()
 	menu.selection = idx
-	searchStr := ""
 	for {
 		menu.Show(choices)
 		menu.showSearchStr(searchStr)

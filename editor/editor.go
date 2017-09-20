@@ -6,8 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 
 	"github.com/nsf/termbox-go"
+	"github.com/wx13/sith/autocomplete"
 	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file"
 	"github.com/wx13/sith/terminal"
@@ -26,6 +28,8 @@ type Editor struct {
 	flushChan  chan struct{}
 	keymap     KeyMap
 	xKeymap    KeyMap
+
+	completer *autocomplete.Completer
 
 	searchHist  []string
 	replaceHist []string
@@ -46,6 +50,7 @@ func NewEditor() *Editor {
 		copyContig: 0,
 		copyHist:   [][]string{},
 		cfg:        config.CreateConfig(),
+		completer:  autocomplete.NewCompleter("", 5),
 	}
 }
 
@@ -69,7 +74,7 @@ func (editor *Editor) OpenNewFile() {
 			}
 		}
 		menu := ui.NewMenu(editor.screen, editor.keyboard)
-		idx, key := menu.Choose(names, 0, "ctrlO")
+		idx, key := menu.Choose(names, 0, "", "ctrlO")
 		editor.Flush()
 		if idx < 0 || key == "cancel" {
 			return
@@ -102,28 +107,41 @@ func (editor *Editor) OpenNewFile() {
 
 // OpenFile opens a specified file.
 func (editor *Editor) OpenFile(name string) {
-	file := file.NewFile(name, editor.flushChan, editor.screen, editor.cfg)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	file := file.NewFile(name, editor.flushChan, editor.screen, editor.cfg, &wg)
+	file.SetCompleter(editor.completer)
 	editor.files = append(editor.files, file)
+	editor.UpdateCompleter(&wg)
 }
 
 // OpenFiles opens a set of specified files.
 func (editor *Editor) OpenFiles(fileNames []string) {
+	var wg sync.WaitGroup
+	wg.Add(len(fileNames))
 	for _, name := range fileNames {
-		editor.OpenFile(name)
+		file := file.NewFile(name, editor.flushChan, editor.screen, editor.cfg, &wg)
+		file.SetCompleter(editor.completer)
+		editor.files = append(editor.files, file)
 	}
 	if len(editor.files) == 0 {
-		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen, editor.cfg))
+		wg.Add(1)
+		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen, editor.cfg, &wg))
 	}
 	editor.fileIdx = 0
 	editor.fileIdxPrv = 0
 	editor.file = editor.files[0]
+	editor.UpdateCompleter(&wg)
 }
 
 // ReloadAll re-reads all open buffers.
 func (editor *Editor) ReloadAll() {
+	var wg sync.WaitGroup
+	wg.Add(len(editor.files))
 	for _, file := range editor.files {
-		file.Reload()
+		file.Reload(&wg)
 	}
+	editor.UpdateCompleter(&wg)
 }
 
 // Quit closes all the files and exits the editor.
@@ -221,7 +239,7 @@ func (editor *Editor) SelectFile() {
 			}
 			names = append(names, status+file.Name)
 		}
-		idx, cmd = menu.Choose(names, idx, "ctrlJ", "ctrlK")
+		idx, cmd = menu.Choose(names, idx, "", "ctrlJ", "ctrlK")
 		if cmd == "ctrlJ" {
 			if idx >= len(editor.files)-1 {
 				continue
@@ -255,7 +273,7 @@ func (editor *Editor) SelectFile() {
 func (editor *Editor) SetCharMode() {
 	modes := editor.screen.ListCharModes()
 	menu := ui.NewMenu(editor.screen, editor.keyboard)
-	idx, cmd := menu.Choose(modes, 0)
+	idx, cmd := menu.Choose(modes, 0, "")
 	if idx >= 0 && cmd == "" {
 		editor.screen.SetCharMode(idx)
 	}
@@ -275,7 +293,7 @@ func (editor *Editor) CmdMenu() {
 	names = append(names, xnames...)
 
 	menu := ui.NewMenu(editor.screen, editor.keyboard)
-	idx, cancel := menu.Choose(names, 0)
+	idx, cancel := menu.Choose(names, 0, "")
 	if idx < 0 || cancel != "" {
 		return
 	}
@@ -293,6 +311,7 @@ func (editor *Editor) CmdMenu() {
 // Save saves the buffer to the file.
 func (editor *Editor) Save() {
 	editor.file.RequestSave()
+	editor.UpdateCompleter(nil)
 }
 
 // SaveAll saves all the open buffers.
@@ -441,4 +460,22 @@ func (editor *Editor) UpdateStatus() {
 	col -= editor.writeSyncStatus(rows-1, col)
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
+}
+
+// Update the auto-completers.
+func (editor *Editor) UpdateCompleter(wg *sync.WaitGroup) {
+	go func() {
+		if wg != nil {
+			wg.Wait()
+		}
+		contents := ""
+		for _, file := range editor.files {
+			contents += " " + file.ToString()
+			if len(contents) >= 1000000 {
+				contents = contents[:1000000]
+				break
+			}
+		}
+		editor.completer.Update(contents)
+	}()
 }

@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/wx13/sith/autocomplete"
 	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file/buffer"
 	"github.com/wx13/sith/file/cursor"
@@ -27,6 +28,9 @@ type File struct {
 	// Check for file system changes.
 	md5sum  [16]byte
 	modTime time.Time
+
+	// For autocompletion. Passed in by editor.
+	completer *autocomplete.Completer
 
 	timer   Timer
 	maxRate float64
@@ -64,7 +68,9 @@ type File struct {
 
 // NewFile creates a new File object. It reads in the specified file and ingests
 // the specified configuration.
-func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen, cfg config.Config) *File {
+func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen,
+	cfg config.Config, wg *sync.WaitGroup) *File {
+
 	file := &File{
 		Name:        name,
 		screen:      screen,
@@ -91,8 +97,12 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen, cfg 
 	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
 	file.ingestConfig(cfg)
 	go file.processSaveRequests()
-	go file.ReadFile(name)
+	go file.ReadFile(name, wg)
 	return file
+}
+
+func (file *File) SetCompleter(c *autocomplete.Completer) {
+	file.completer = c
 }
 
 // GetFileExt returns the filename extension.
@@ -119,7 +129,7 @@ func (file *File) ingestConfig(cfg config.Config) {
 }
 
 // Reload re-reads a file from disk.
-func (file *File) Reload() {
+func (file *File) Reload(wgs ...*sync.WaitGroup) {
 	if file.IsModified() {
 		prompt := ui.MakePrompt(file.screen, terminal.NewKeyboard())
 		ok, _ := prompt.AskYesNo("Changes will be lost. Reload anyway?")
@@ -127,7 +137,7 @@ func (file *File) Reload() {
 			return
 		}
 	}
-	go file.ReadFile(file.Name)
+	go file.ReadFile(file.Name, wgs...)
 }
 
 // Close doesn't actually close anything (b/c garbage collection will take care

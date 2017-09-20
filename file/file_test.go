@@ -3,11 +3,14 @@ package file_test
 import (
 	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file"
+	"sync"
 	"testing"
 )
 
 func TestNewFile(t *testing.T) {
-	f := file.NewFile("", make(chan struct{}), nil, config.Config{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	f := file.NewFile("", make(chan struct{}), nil, config.Config{}, &wg)
 	if f == nil {
 		t.Error("bad")
 	}
@@ -20,7 +23,9 @@ func CheckBuffer(t *testing.T, f *file.File, s, msg string) {
 }
 
 func TestInserChar(t *testing.T) {
-	f := file.NewFile("", make(chan struct{}), nil, config.Config{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	f := file.NewFile("", make(chan struct{}), nil, config.Config{}, &wg)
 	f.InsertChar('h')
 	f.InsertChar('e')
 	f.InsertChar('l')
@@ -30,7 +35,9 @@ func TestInserChar(t *testing.T) {
 }
 
 func TestEditing(t *testing.T) {
-	f := file.NewFile("", make(chan struct{}), nil, config.Config{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	f := file.NewFile("", make(chan struct{}), nil, config.Config{}, &wg)
 	f.InsertChar('a')
 	f.InsertChar('b')
 	f.InsertChar('c')

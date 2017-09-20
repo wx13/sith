@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/nsf/termbox-go"
@@ -77,7 +78,11 @@ func (file *File) setNewline(bufferStr string) {
 }
 
 // ReadFile reads in a file (if it exists).
-func (file *File) ReadFile(name string) {
+func (file *File) ReadFile(name string, wgs ...*sync.WaitGroup) {
+
+	for _, wg := range wgs {
+		defer wg.Done()
+	}
 
 	file.md5sum = md5.Sum([]byte(""))
 

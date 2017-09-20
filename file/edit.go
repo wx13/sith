@@ -7,7 +7,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/wx13/sith/autocomplete"
 	"github.com/wx13/sith/file/buffer"
+	"github.com/wx13/sith/terminal"
+	"github.com/wx13/sith/ui"
 )
 
 // Fmt runs a code formatter on the text buffer and updates the buffer.
@@ -138,14 +141,58 @@ func (file File) removeBlankLineCursors(rows map[int][]int) (map[int][]int, []in
 	return rows, blankRows
 }
 
+func (file *File) complete(ch rune) bool {
+	if ch != '\t' {
+		return false
+	}
+	row, col := file.MultiCursor.GetRowCol(0)
+	prefix := file.buffer.RowSlice(row, 0, col).ToString()
+	if len(prefix) == 0 || prefix[len(prefix)-1] == ' ' || prefix[len(prefix)-1] == '\t' {
+		return false
+	}
+	words := autocomplete.Split(prefix)
+	prefix = words[len(words)-1]
+	more_prefix, results := file.completer.Complete(prefix)
+	if len(results) == 0 {
+		return true
+	}
+	answer := results[0]
+	if len(more_prefix) > len(prefix) {
+		answer = more_prefix
+	} else if len(results) > 1 {
+		menu := ui.NewMenu(file.screen, terminal.NewKeyboard())
+		idx, str := menu.Choose(results, 0, prefix, "tab")
+		file.Flush()
+		if idx < 0 || str == "cancel" || str == "tab" {
+			return true
+		}
+		answer = results[idx]
+	}
+	diff := answer[len(prefix):]
+	file.InsertStr(diff)
+	return true
+}
+
 // InsertChar insters a character (rune) into the current cursor position.
 func (file *File) InsertChar(ch rune) {
+
+	// Possibly do auto completion.
+	if file.complete(ch) {
+		file.Snapshot()
+		return
+	}
 
 	str := string(ch)
 	if ch == '\t' && file.autoTab && file.tabString != "\t" {
 		str = file.tabString
 	}
 
+	file.InsertStr(str)
+
+	file.Snapshot()
+}
+
+func (file *File) InsertStr(str string) {
 	rows := file.MultiCursor.GetRowsCols()
 	var blankRows []int
 	rows, blankRows = file.removeBlankLineCursors(rows)
@@ -154,9 +201,6 @@ func (file *File) InsertChar(ch rune) {
 		rows[row] = []int{0}
 	}
 	file.MultiCursor.ResetCursors(rows)
-
-	file.Snapshot()
-
 }
 
 func allColsZero(rows map[int][]int) bool {
