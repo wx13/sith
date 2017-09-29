@@ -14,6 +14,7 @@ import (
 	"github.com/wx13/sith/file"
 	"github.com/wx13/sith/terminal"
 	"github.com/wx13/sith/ui"
+	"github.com/wx13/version"
 )
 
 // Editor is the main editor object. It orchestrates the terminal,
@@ -454,7 +455,11 @@ func (editor *Editor) UpdateStatus() {
 	)
 	col := cols - len(message)
 	editor.screen.WriteString(rows-1, col, message)
-	editor.screen.WriteString(rows-1, 0, "[ Sith 0.6.2 ]")
+	banner := "[ Sith ]"
+	if version.Version != "" {
+		banner = "[ Sith " + version.Version + " ]"
+	}
+	editor.screen.WriteString(rows-1, 0, banner)
 	editor.screen.DecorateStatusLine()
 	col -= editor.writeModStatus(rows-1, col)
 	col -= editor.writeSyncStatus(rows-1, col)
