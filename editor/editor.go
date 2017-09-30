@@ -14,7 +14,7 @@ import (
 	"github.com/wx13/sith/file"
 	"github.com/wx13/sith/terminal"
 	"github.com/wx13/sith/ui"
-	"github.com/wx13/version"
+	"github.com/wx13/version.v0"
 )
 
 // Editor is the main editor object. It orchestrates the terminal,
