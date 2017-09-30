@@ -457,7 +457,7 @@ func (editor *Editor) UpdateStatus() {
 	editor.screen.WriteString(rows-1, col, message)
 	banner := "[ Sith ]"
 	if version.Version != "" {
-		banner = "[ Sith " + version.Version + " ]"
+		banner = "[ Sith " + version.FullVersion + " ]"
 	}
 	editor.screen.WriteString(rows-1, 0, banner)
 	editor.screen.DecorateStatusLine()
