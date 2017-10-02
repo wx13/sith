@@ -25,7 +25,7 @@ func TestEmptyMenuCancel(t *testing.T) {
 	kb := terminal.NewMockKeyboard([]string{"ctrlC"}, []rune{})
 	screen := MockScreen{}
 	menu := ui.NewMenu(screen, kb)
-	_, ans := menu.Choose([]string{}, 0)
+	_, ans := menu.Choose([]string{}, 0, "")
 	if ans != "cancel" {
 		t.Error("Expected cancel, got", ans)
 	}
@@ -39,7 +39,7 @@ func TestMenuChoose(t *testing.T) {
 	// Choose 0th element.
 	kb := terminal.NewMockKeyboard([]string{"enter"}, []rune{})
 	menu := ui.NewMenu(screen, kb)
-	idx, ans := menu.Choose([]string{"zero", "one"}, 0)
+	idx, ans := menu.Choose([]string{"zero", "one"}, 0, "")
 	if ans != "" || idx != 0 {
 		t.Error("Expected 0, '', got", idx, ans)
 	}
@@ -50,7 +50,7 @@ func TestMenuChoose(t *testing.T) {
 		[]rune{},
 	)
 	menu = ui.NewMenu(screen, kb)
-	idx, ans = menu.Choose([]string{"zero", "one"}, 0)
+	idx, ans = menu.Choose([]string{"zero", "one"}, 0, "")
 	if ans != "" || idx != 1 {
 		t.Error("Expected 1, '', got", idx, ans)
 	}
@@ -61,7 +61,7 @@ func TestMenuChoose(t *testing.T) {
 		[]rune{'o', 'n'},
 	)
 	menu = ui.NewMenu(screen, kb)
-	idx, ans = menu.Choose([]string{"zero", "one", "two", "three"}, 0)
+	idx, ans = menu.Choose([]string{"zero", "one", "two", "three"}, 0, "")
 	if ans != "" || idx != 1 {
 		t.Error("Expected 1, '', got", idx, ans)
 	}
@@ -72,7 +72,7 @@ func TestMenuChoose(t *testing.T) {
 		[]rune{'e'},
 	)
 	menu = ui.NewMenu(screen, kb)
-	idx, ans = menu.Choose([]string{"zero", "one", "two", "three"}, 0)
+	idx, ans = menu.Choose([]string{"zero", "one", "two", "three"}, 0, "")
 	if ans != "" || idx != 3 {
 		t.Error("Expected 3, '', got", idx, ans)
 	}

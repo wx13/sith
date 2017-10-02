@@ -89,9 +89,10 @@ func (menu *Menu) Show(choices []string) {
 	}
 }
 
-// Choose is the main interaction loop for the menu. It takes two required
-// inputs: a list of choices (strings) and a current-selection-index (int).
-// Optionally you can also pass a list "keys" (strings) to listen for.
+// Choose is the main interaction loop for the menu. It takes three required
+// inputs: a list of choices (strings), a current-selection-index (int), and
+// an initial search string (often ""). Optionally you can also pass a list
+// of "keys" (strings) to listen for.
 //
 // The function returns two things: the integer index of the current selection,
 // and the string description of the key that caused the program to exit.
