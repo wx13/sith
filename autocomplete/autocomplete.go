@@ -104,6 +104,9 @@ loop:
 
 // Complete returns completion results for a prefix string.
 func (cmplt *Completer) Complete(prefix string) (string, []string) {
+	if len(prefix) == 0 {
+		return "", []string{}
+	}
 	words := Split(prefix)
 	prefix = words[len(words)-1]
 	matches := []string{}
