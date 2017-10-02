@@ -46,6 +46,10 @@ func Split(str string) []string {
 	return re.Split(str, -1)
 }
 
+func (cmplt *Completer) Split(str string) []string {
+	return Split(str)
+}
+
 // keepUpdating processes update requests.
 func (cmplt *Completer) keepUpdating() {
 	for {
@@ -100,6 +104,8 @@ loop:
 
 // Complete returns completion results for a prefix string.
 func (cmplt *Completer) Complete(prefix string) (string, []string) {
+	words := Split(prefix)
+	prefix = words[len(words)-1]
 	matches := []string{}
 	n := len(prefix)
 	for _, word := range cmplt.words {

@@ -79,8 +79,14 @@ func (prompt *Prompt) delete() {
 	prompt.screen.WriteString(prompt.row, len(prompt.question)+1+len(prompt.answer), " ")
 }
 
+// Allow user to provide a completer.
+type Completer interface {
+	Complete(prefix string) (string, []string)
+	Split(string) []string
+}
+
 // Ask asks the user a question, expecting a string response.
-func (prompt *Prompt) Ask(question string, history []string) (string, error) {
+func (prompt *Prompt) Ask(question string, history []string, completers ...Completer) (string, error) {
 
 	prompt.saveCursor()
 	prompt.question = question
@@ -147,6 +153,29 @@ loop:
 			prompt.clear()
 			prompt.answer = ""
 			prompt.col = 0
+		case "ctrlF":
+			if len(completers) > 0 && completers[0] != nil {
+				words := completers[0].Split(prompt.answer)
+				token := words[len(words)-1]
+				prefix, results := completers[0].Complete(token)
+				if len(results) == 0 {
+					break
+				}
+				ans := results[0]
+				if len(prefix) > len(token) {
+					ans = prefix
+				} else if len(results) > 1 {
+					menu := NewMenu(prompt.screen, prompt.keyboard)
+					idx, str := menu.Choose(results, 0, prefix, "tab")
+					if idx < 0 || str == "cancel" || str == "tab" {
+						break
+					}
+					ans = results[idx]
+				}
+				diff := ans[len(token):]
+				prompt.col += len(diff)
+				prompt.answer += diff
+			}
 		case "unknown":
 		case "tab":
 			prompt.answer = prompt.answer[:prompt.col] + "\t" + prompt.answer[prompt.col:]
@@ -166,8 +195,8 @@ loop:
 }
 
 // GetPromptAnswer is a wrapper arount Ask, which handles some history stuff.
-func (prompt *Prompt) GetAnswer(question string, history *[]string) string {
-	answer, err := prompt.Ask(question, *history)
+func (prompt *Prompt) GetAnswer(question string, history *[]string, completers ...Completer) string {
+	answer, err := prompt.Ask(question, *history, completers...)
 	if err != nil {
 		return ""
 	}

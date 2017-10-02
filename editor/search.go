@@ -9,7 +9,7 @@ import (
 // searchPrompt prompts the user for a search term.
 func (editor *Editor) searchPrompt() (string, error) {
 	prompt := ui.MakePrompt(editor.screen, editor.keyboard)
-	searchTerm := prompt.GetAnswer("search:", &editor.searchHist)
+	searchTerm := prompt.GetAnswer("search:", &editor.searchHist, editor.completer)
 	if searchTerm == "" {
 		editor.file.NotifyUser("Cancelled")
 		return "", errors.New("Cancelled")
