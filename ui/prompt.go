@@ -153,7 +153,7 @@ loop:
 			prompt.clear()
 			prompt.answer = ""
 			prompt.col = 0
-		case "ctrlF":
+		case "tab":
 			if len(completers) > 0 && completers[0] != nil {
 				words := completers[0].Split(prompt.answer)
 				token := words[len(words)-1]
@@ -177,7 +177,7 @@ loop:
 				prompt.answer += diff
 			}
 		case "unknown":
-		case "tab":
+		case "ctrlT":
 			prompt.answer = prompt.answer[:prompt.col] + "\t" + prompt.answer[prompt.col:]
 			prompt.col++
 		case "char":
