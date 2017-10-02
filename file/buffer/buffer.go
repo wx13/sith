@@ -1,3 +1,6 @@
+// Package buffer provides a single editable text buffer.
+// The text is stored as a slice of Lines (split on line-endings).
+// A Line is a wrapper around a slice of runes.
 package buffer
 
 import (
@@ -8,16 +11,20 @@ import (
 	"sync"
 )
 
+// Buffer is an array of Line objects.
 type Buffer struct {
 	lines []Line
 	mutex *sync.Mutex
 }
 
+// Cursor is any object which returns a row/col position.
 type Cursor interface {
 	Row() int
 	Col() int
 }
 
+// MakeBuffer takes in a slice os strings and creates a slice of
+// Line objects.
 func MakeBuffer(stringBuf []string) Buffer {
 	lines := make([]Line, len(stringBuf))
 	for row, str := range stringBuf {
@@ -29,12 +36,15 @@ func MakeBuffer(stringBuf []string) Buffer {
 	}
 }
 
+// Lines returns the slice of lines that the buffer contains. The slice
+// is a "deep copy" of the buffer's internal Line slice.
 func (buffer *Buffer) Lines() []Line {
 	lines := buffer.DeepDup().lines
 	return lines
 }
 
-// Dup creates a new buffer with the same lines.
+// Dup creates a new buffer with the same lines. The lines are shallow
+// copies of the original lines.
 func (buffer *Buffer) Dup() Buffer {
 	buffer.mutex.Lock()
 	linesCopy := make([]Line, len(buffer.lines))
@@ -73,8 +83,10 @@ func (buffer *Buffer) Length() int {
 	return n
 }
 
-// ReplaceBuffer replaces the content (lines) with the
-// content from another buffer.
+// ReplaceBuffer replaces the content (lines) with the content from
+// another buffer. If the buffer got shorter, then just copy over the
+// lines. Otherwise, check each line for equality, and only replace
+// if changed.
 func (buffer *Buffer) ReplaceBuffer(newBuffer Buffer) {
 
 	newLen := newBuffer.Length()
@@ -98,6 +110,7 @@ func (buffer *Buffer) ReplaceBuffer(newBuffer Buffer) {
 
 }
 
+// Append appends a new line on to the buffer.
 func (buffer *Buffer) Append(line ...Line) {
 	buffer.mutex.Lock()
 	buffer.lines = append(buffer.lines, line...)
@@ -147,6 +160,10 @@ func (buffer *Buffer) RowSlice(row, startCol, endCol int) Line {
 	return line
 }
 
+// StrSlab returns a slice of strings corresponding to a "slab" of text
+// which is an offset subset of the buffer. Specify the start and end rows,
+// and start and end columns. Also specify the tab width, because all tabs
+// are converted to spaces.
 func (buffer *Buffer) StrSlab(row1, row2, col1, col2, tabwidth int) []string {
 	lines := buffer.Lines()[row1:row2]
 	strs := make([]string, len(lines))
@@ -156,7 +173,8 @@ func (buffer *Buffer) StrSlab(row1, row2, col1, col2, tabwidth int) []string {
 	return strs
 }
 
-// ToString concatenates the buffer into one long string.
+// ToString concatenates the buffer into one long string. Specify the newline
+// character to insert between Lines.
 func (buffer *Buffer) ToString(newline string) string {
 	if buffer.Length() == 0 {
 		return ""
@@ -219,13 +237,18 @@ func (buffer *Buffer) ReplaceLines(lines []Line, minRow, maxRow int) {
 	buffer.mutex.Unlock()
 }
 
-// Search searches for a string within the buffer.
+// Search searches for a string within the buffer. The 'loop' toggle says
+// to loop around to the start of the file when searching.
 func (buffer *Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, int, error) {
 	var col int
+
+	// Search the current row, from the current column to the end of the line.
 	col, _ = buffer.GetRow(cursor.Row()).Search(searchTerm, cursor.Col()+1, -1)
 	if col >= 0 {
 		return cursor.Row(), col, nil
 	}
+
+	// Search each row, from the next row to the end of the buffer.
 	for row := cursor.Row() + 1; row < buffer.Length(); row++ {
 		col, _ = buffer.GetRow(row).Search(searchTerm, 0, -1)
 		if col >= 0 {
@@ -235,16 +258,22 @@ func (buffer *Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, 
 	if !loop {
 		return cursor.Row(), cursor.Col(), errors.New("Not Found")
 	}
+
+	// Loop around: search from the start of the file to the original row (minus 1).
 	for row := 0; row < cursor.Row(); row++ {
 		col, _ = buffer.GetRow(row).Search(searchTerm, 0, -1)
 		if col >= 0 {
 			return row, col, nil
 		}
 	}
+
+	// Finally, search the original row from the start of the line to the
+	// original column position.
 	col, _ = buffer.GetRow(cursor.Row()).Search(searchTerm, 0, col)
 	if col >= 0 {
 		return cursor.Row(), col, nil
 	}
+
 	return cursor.Row(), cursor.Col(), errors.New("Not Found")
 }
 
@@ -334,6 +363,9 @@ func (buffer *Buffer) scoreIndents(spaceHisto []int) (int, int) {
 	return nSpaces, count
 }
 
+// Equals returns true if the two buffers are:
+// - the same length, and
+// - each line has the same string serialization
 func (buffer *Buffer) Equals(buffer2 *Buffer) bool {
 	if buffer.Length() != buffer2.Length() {
 		return false

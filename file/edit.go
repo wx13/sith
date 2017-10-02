@@ -141,25 +141,39 @@ func (file File) removeBlankLineCursors(rows map[int][]int) (map[int][]int, []in
 	return rows, blankRows
 }
 
+// Complete possibly runs autocompletion, depending on situation.
 func (file *File) complete(ch rune) bool {
+
+	// Only run autocompletion if user pressed tab.
 	if ch != '\t' {
 		return false
 	}
+
+	// Only run autocompletion if there is a word to complete (before the cursor).
 	row, col := file.MultiCursor.GetRowCol(0)
 	prefix := file.buffer.RowSlice(row, 0, col).ToString()
 	if len(prefix) == 0 || prefix[len(prefix)-1] == ' ' || prefix[len(prefix)-1] == '\t' {
 		return false
 	}
+
+	// Get the completion suggestion.
 	words := autocomplete.Split(prefix)
 	prefix = words[len(words)-1]
 	more_prefix, results := file.completer.Complete(prefix)
+
+	// If there are no results, just return.
 	if len(results) == 0 {
 		return true
 	}
+
+	// Default is the first result.
 	answer := results[0]
+
+	// If there is a prefix extension suggestion, use that.
 	if len(more_prefix) > len(prefix) {
 		answer = more_prefix
 	} else if len(results) > 1 {
+		// If there are multiple matches, let the user choose from a menu.
 		menu := ui.NewMenu(file.screen, terminal.NewKeyboard())
 		idx, str := menu.Choose(results, 0, prefix, "tab")
 		file.Flush()
@@ -168,6 +182,8 @@ func (file *File) complete(ch rune) bool {
 		}
 		answer = results[idx]
 	}
+
+	// Insert only the new characters.
 	diff := answer[len(prefix):]
 	file.InsertStr(diff)
 	return true
