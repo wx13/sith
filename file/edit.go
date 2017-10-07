@@ -317,7 +317,7 @@ func (file *File) doAutoIndent(idx int) {
 
 	// Non-whitespace indent.
 	indent := file.buffer.GetRow(row - 1).CommonStart(file.buffer.GetRow(row - 2))
-	if indent.Length() > len(ws) {
+	if indent.Length() > len(ws)+3 {
 		file.ForceSnapshot()
 		newLineStr := indent.ToString() + origLine.ToString()
 		file.buffer.SetRow(row, buffer.MakeLine(newLineStr))
