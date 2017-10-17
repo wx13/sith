@@ -117,27 +117,6 @@ func (buffer *Buffer) Append(line ...Line) {
 	buffer.mutex.Unlock()
 }
 
-// MakeSplitBuffer creates a buffer from a long string by splitting
-// the string at a certain length.
-func MakeSplitBuffer(bigString string, lineLen int) Buffer {
-	words := strings.Fields(bigString)
-	lines := []Line{}
-	lineStr := words[0]
-	for _, word := range words[1:] {
-		if lineLen > 0 && len(lineStr)+len(word) > lineLen {
-			lines = append(lines, MakeLine(lineStr))
-			lineStr = word
-		} else {
-			lineStr += " " + word
-		}
-	}
-	lines = append(lines, MakeLine(lineStr))
-	return Buffer{
-		lines: lines,
-		mutex: &sync.Mutex{},
-	}
-}
-
 // InclSlice returns a slice of the buffer, inclusive of the endpoints.
 func (buffer *Buffer) InclSlice(row1, row2 int) *Buffer {
 	if row2 >= buffer.Length() {
@@ -384,6 +363,20 @@ func (buffer *Buffer) Equals(buffer2 *Buffer) bool {
 	return true
 }
 
+func (buffer *Buffer) hasLines(lines ...string) bool {
+	if len(lines) > buffer.Length() {
+		return false
+	}
+	buffer.mutex.Lock()
+	defer buffer.mutex.Unlock()
+	for i := range lines {
+		if buffer.lines[i].ToString() != lines[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // BracketMatch looks for matching partner rune in a set of lines.
 //
 //   row, col         where to start the search from
@@ -559,6 +552,18 @@ func (buffer *Buffer) DeleteNewlines(rowsMap map[int][]int) map[int][]int {
 
 func (buffer *Buffer) InsertChar(ch rune, rows map[int][]int) map[int][]int {
 	return buffer.InsertStr(string(ch), rows)
+}
+
+// insert the indentation string at the start of each line.
+func (buffer *Buffer) IndentByStr(str string, startRow, endRow int) {
+	if endRow < 0 {
+		endRow = buffer.Length() - 1
+	}
+	for row := startRow; row <= endRow; row++ {
+		line := buffer.GetRow(row)
+		line.InsertStr(str, 0)
+		buffer.SetRow(row, line)
+	}
 }
 
 // InsertStr inserts the specified string into each position in the rows map.

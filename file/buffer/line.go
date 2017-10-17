@@ -152,6 +152,12 @@ func (line Line) RemoveTrailingWhitespace() Line {
 	return MakeLine(str)
 }
 
+func (line Line) RemoveLeadingWhitespace() Line {
+	re := regexp.MustCompile("^[\t ]*")
+	str := re.ReplaceAllString(string(line.chars), "")
+	return MakeLine(str)
+}
+
 func IsWhitespace(r rune) bool {
 	if r == ' ' || r == '\t' {
 		return true
@@ -421,4 +427,9 @@ func (line *Line) BracketMatch(start, end rune, idx, dir, count int) (int, int) 
 		}
 	}
 	return idx, count
+}
+
+// Check if a line matches a regex pattern.
+func (line *Line) RegexMatch(pattern string) (bool, error) {
+	return regexp.MatchString(pattern, line.ToString())
 }

@@ -330,9 +330,7 @@ func (file *File) doAutoIndent(idx int) {
 // Justify justifies the marked text.
 func (file *File) Justify(lineLen int) {
 	minRow, maxRow := file.MultiCursor.MinMaxRow()
-	bigString := file.buffer.InclSlice(minRow, maxRow).ToString(" ")
-	splitBuf := buffer.MakeSplitBuffer(bigString, lineLen)
-	file.buffer.ReplaceLines(splitBuf.Lines(), minRow, maxRow)
+	file.buffer.Justify(minRow, maxRow, lineLen, []string{"//", "#", "%", ";"})
 	file.MultiCursor.Clear()
 	file.Snapshot()
 }
