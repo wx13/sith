@@ -48,6 +48,7 @@ type File struct {
 	tabString string
 	tabHealth bool
 	tabWidth  int
+	lineLen   int
 
 	newline string
 
@@ -85,6 +86,7 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen,
 		tabDetect:   true,
 		tabString:   "\t",
 		tabWidth:    4,
+		lineLen:     80,
 		newline:     "\n",
 		tabHealth:   true,
 		timer:       MakeTimer(),
@@ -184,6 +186,18 @@ func (file *File) SetTabWidth() {
 	width, err := strconv.Atoi(str)
 	if err == nil {
 		file.tabWidth = width
+	}
+}
+
+func (file *File) SetLineLen() {
+	p := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+	str, err := p.Ask("Line length:", nil)
+	if err != nil {
+		return
+	}
+	lineLen, err := strconv.Atoi(str)
+	if err == nil {
+		file.lineLen = lineLen
 	}
 }
 

@@ -328,7 +328,14 @@ func (file *File) doAutoIndent(idx int) {
 }
 
 // Justify justifies the marked text.
-func (file *File) Justify(lineLen int) {
+func (file *File) Justify() {
+	file.justify(file.lineLen)
+}
+func (file *File) UnJustify() {
+	file.justify(0)
+}
+
+func (file *File) justify(lineLen int) {
 	minRow, maxRow := file.MultiCursor.MinMaxRow()
 	file.buffer.Justify(minRow, maxRow, lineLen, []string{"//", "#", "%", ";"})
 	file.MultiCursor.Clear()
