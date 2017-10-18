@@ -36,7 +36,7 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	km.Add("ctrlN", func() { editor.file.PageDown() }, "")
 	km.Add("pageUp", func() { editor.file.PageUp() }, "")
 	km.Add("ctrlB", func() { editor.file.PageUp() }, "")
-	km.Add("ctrlG", func() { editor.file.GoToLine() }, "Go to line number")
+	km.Add("ctrlG", func() { editor.GoToLine() }, "Go to line number (or bookmark)")
 	km.Add("altL", func() { editor.file.Refresh() }, "Refresh screen")
 	km.Add("altO", editor.OpenNewFile, "Open new file")
 	km.Add("altQ", editor.Quit, "Quit editor")
@@ -98,6 +98,8 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km.Add("R", editor.ReloadAll, "Reload file from disk")
 	km.Add("f", func() { editor.file.Fmt() }, "Run code formatter")
 	km.Add("F", func() { editor.file.Fmt(true) }, "Run code formatter on selection")
+	km.Add("b", func() { editor.Bookmark() }, "Bookmark this file location.")
+	km.Add("B", func() { editor.BookmarkMenu() }, "Choose a bookmark from a menu.")
 	return km
 }
 

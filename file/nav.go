@@ -2,11 +2,8 @@ package file
 
 import (
 	"regexp"
-	"strconv"
 
 	"github.com/nsf/termbox-go"
-	"github.com/wx13/sith/terminal"
-	"github.com/wx13/sith/ui"
 )
 
 func (file *File) enforceColBounds(indexes ...int) {
@@ -167,6 +164,13 @@ func (file *File) GetCursor(idx int) (int, int) {
 	return row - file.rowOffset, n - file.colOffset
 }
 
+func (file *File) GetRowCol(idx int) (int, int) {
+	file.enforceRowBounds(idx)
+	file.enforceColBounds(idx)
+	row, col, _ := file.MultiCursor.GetCursorRCC(idx)
+	return row, col
+}
+
 // ScrollLeft shifts the view screen to the left.
 func (file *File) ScrollLeft() {
 	file.colOffset++
@@ -282,19 +286,5 @@ func (file *File) prevNextWord(incr int) {
 		col = line.PrevNextWord(col, incr)
 		file.MultiCursor.SetCol(idx, col)
 		file.MultiCursor.SetColwant(idx, -1)
-	}
-}
-
-// GoToLine prompts the user for a row number, and the puts the cursor
-// on that row.
-func (file *File) GoToLine() {
-	prompt := ui.MakePrompt(file.screen, terminal.NewKeyboard())
-	lineNo := prompt.GetAnswer("goto:", &file.gotoHist)
-	if lineNo == "" {
-		return
-	}
-	row, err := strconv.Atoi(lineNo)
-	if err == nil {
-		file.CursorGoTo(row, 0)
 	}
 }

@@ -29,11 +29,13 @@ type Editor struct {
 	flushChan  chan struct{}
 	keymap     KeyMap
 	xKeymap    KeyMap
+	bookmarks  *Bookmarks
 
 	completer *autocomplete.Completer
 
 	searchHist  []string
 	replaceHist []string
+	gotoHist    []string
 
 	copyBuffer []string
 	copyContig int
@@ -339,6 +341,17 @@ func intMod(a, n int) int {
 		return a - n*((a-n+1)/n)
 	}
 	return a - n*(a/n)
+}
+
+// SwitchFileByName changes to the first file with a matching name.
+func (editor *Editor) SwitchFileByName(name string) error {
+	for n, file := range editor.files {
+		if file.Name == name {
+			editor.SwitchFile(n)
+			return nil
+		}
+	}
+	return fmt.Errorf("no such file")
 }
 
 // SwitchFile changes to a new file buffer.

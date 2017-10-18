@@ -36,7 +36,6 @@ type File struct {
 	maxRate float64
 
 	buffHist *BufferHist
-	gotoHist []string
 
 	Name        string
 	SyntaxRules *syntaxcolor.SyntaxRules
