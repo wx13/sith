@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/wx13/sith/autocomplete"
 	"github.com/wx13/sith/file/buffer"
@@ -173,6 +174,10 @@ func (file *File) complete(ch rune) bool {
 	if len(more_prefix) > len(prefix) {
 		answer = more_prefix
 	} else if len(results) > 1 {
+		if time.Since(file.lastTab) > file.doubleTab {
+			file.lastTab = time.Now()
+			return true
+		}
 		// If there are multiple matches, let the user choose from a menu.
 		menu := ui.NewMenu(file.screen, terminal.NewKeyboard())
 		idx, str := menu.Choose(results, 0, prefix, "tab")
@@ -181,6 +186,7 @@ func (file *File) complete(ch rune) bool {
 			return true
 		}
 		answer = results[idx]
+		file.lastTab = time.Now()
 	}
 
 	// Insert only the new characters.

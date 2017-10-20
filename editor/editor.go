@@ -53,7 +53,7 @@ func NewEditor() *Editor {
 		copyContig: 0,
 		copyHist:   [][]string{},
 		cfg:        config.CreateConfig(),
-		completer:  autocomplete.NewCompleter("", 5),
+		completer:  autocomplete.NewCompleter("", 4),
 	}
 }
 

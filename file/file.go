@@ -31,6 +31,8 @@ type File struct {
 
 	// For autocompletion. Passed in by editor.
 	completer *autocomplete.Completer
+	lastTab   time.Time
+	doubleTab time.Duration
 
 	timer   Timer
 	maxRate float64
@@ -104,6 +106,8 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen,
 
 func (file *File) SetCompleter(c *autocomplete.Completer) {
 	file.completer = c
+	file.lastTab = time.Now()
+	file.doubleTab = time.Second
 }
 
 // GetFileExt returns the filename extension.
