@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+## [unreleased]
+
+### Features
+- Autocomplete -- text-based and triggered by tab
+  - double-tab brings up a menu
+  - Used in search prompt as well
+- Uses version package to automatically stamp version numbers.
+- Much improved text justification
+  - handles comments and indentation
+- Bookmarks -- mark a line of a file and return to it later.
+
+
 ## [0.6.2] 2017-09-20
 
 ### Features
