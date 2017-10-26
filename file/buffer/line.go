@@ -36,7 +36,7 @@ func (line Line) ToString() string {
 }
 
 // CommonStart returns the sub-line that is common between
-// two lines.
+// a set of lines.
 func (line Line) CommonStart(other Line) Line {
 	for k, r := range line.chars {
 		if k >= other.Length() || other.chars[k] != r {
