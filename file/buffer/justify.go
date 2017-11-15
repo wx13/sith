@@ -146,7 +146,7 @@ func MakeSplitBuffer(bigString string, lineLen int) Buffer {
 	lines := []Line{}
 	lineStr := words[0]
 	for _, word := range words[1:] {
-		if lineLen > 0 && len(lineStr)+len(word) > lineLen {
+		if lineLen > 0 && len(lineStr)+len(word) >= lineLen {
 			lines = append(lines, MakeLine(lineStr))
 			lineStr = word
 		} else {
