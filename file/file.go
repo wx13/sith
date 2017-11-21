@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wx13/sith/autocomplete"
 	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file/buffer"
 	"github.com/wx13/sith/file/cursor"
@@ -30,9 +29,9 @@ type File struct {
 	modTime time.Time
 
 	// For autocompletion. Passed in by editor.
-	completer *autocomplete.Completer
-	lastTab   time.Time
-	doubleTab time.Duration
+	AutoComplete func(prefix string) []string
+	lastTab      time.Time
+	doubleTab    time.Duration
 
 	timer   Timer
 	maxRate float64
@@ -104,8 +103,8 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen,
 	return file
 }
 
-func (file *File) SetCompleter(c *autocomplete.Completer) {
-	file.completer = c
+func (file *File) SetCompleter(f func(prefix string) []string) {
+	file.AutoComplete = f
 	file.lastTab = time.Now()
 	file.doubleTab = time.Second
 }

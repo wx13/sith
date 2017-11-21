@@ -3,33 +3,93 @@ package autocomplete_test
 import (
 	"github.com/wx13/sith/autocomplete"
 	"testing"
-	"time"
 )
 
-func TestAutoComplete(t *testing.T) {
+func stringSliceEq(a []string, b ...string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
 
-	text := "elephant foo.bar::telephone(sports_car%abc->experiment)"
-	ac := autocomplete.NewCompleter(text, 5)
-	time.Sleep(time.Millisecond * 100)
+func TestTokenMatch(t *testing.T) {
 
-	prefix, results := ac.Complete("soup")
-	if len(results) != 0 {
-		t.Error("Expected '', but got", prefix)
+	tokens := []string{}
+	matches := autocomplete.TokenMatch(tokens, "", 3)
+	if len(matches) > 0 {
+		t.Error("Empty token list:", matches)
 	}
 
-	prefix, results = ac.Complete("eleph")
-	if len(results) != 1 || results[0] != "elephant" {
-		t.Error("Expected elephant, but got", results)
+	tokens = []string{"tree", "apple tree", "freedom"}
+	matches = autocomplete.TokenMatch(tokens, "tree", 3)
+	if !stringSliceEq(matches, tokens...) {
+		t.Error("Failed match:", tokens, matches)
+	}
+	matches = autocomplete.TokenMatch(tokens, "tree", 4)
+	if !stringSliceEq(matches, "tree", "apple tree") {
+		t.Error("Failed match:", tokens, matches)
 	}
 
-	prefix, results = ac.Complete("sport")
-	if len(results) != 1 || results[0] != "sports_car" {
-		t.Error("Expected sports_car, but got", results)
+}
+
+func TestSuffixes(t *testing.T) {
+
+	tokens := []string{}
+	suffixes := autocomplete.Suffixes(tokens, "", 3)
+	if len(suffixes) > 0 {
+		t.Error("Empty token list:", suffixes)
 	}
 
-	prefix, results = ac.Complete("e")
-	if len(results) != 2 {
-		t.Error("Expected two matches, but got", len(results))
+	tokens = []string{"football", "baseball", "baller"}
+	suffixes = autocomplete.Suffixes(tokens, "ball", 3)
+	if !stringSliceEq(suffixes, "er") {
+		t.Error(tokens, suffixes)
+	}
+
+	tokens = []string{"football", "baseball", "baller"}
+	suffixes = autocomplete.Suffixes(tokens, "ball", 4)
+	if !stringSliceEq(suffixes, "er") {
+		t.Error(tokens, suffixes)
+	}
+
+	tokens = []string{"football", "baseball", "baller"}
+	suffixes = autocomplete.Suffixes(tokens, "ball", 4)
+	if !stringSliceEq(suffixes, "er") {
+		t.Error(tokens, suffixes)
+	}
+
+	tokens = []string{"football player", "baseball player", "baller"}
+	suffixes = autocomplete.Suffixes(tokens, "ball", 4)
+	if !stringSliceEq(suffixes, "er") {
+		t.Errorf("%#v %#v", tokens, suffixes)
+	}
+
+}
+
+func TestComplete(t *testing.T) {
+	ac := autocomplete.New()
+
+	// Basic example.
+	ans := ac.Complete("ball", "football baseball baller")
+	if !stringSliceEq(ans, "er") {
+		t.Error(ans)
+	}
+
+	// With punctuation.
+	ans = ac.Complete("ball::", "football::player", "baseball::player")
+	if !stringSliceEq(ans, "player") {
+		t.Error(ans)
+	}
+
+	// More punctuation stuff.
+	ans = ac.Complete("foot", "football::player", "baseball::player")
+	if !stringSliceEq(ans, "ball") {
+		t.Error(ans)
 	}
 
 }

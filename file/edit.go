@@ -158,9 +158,7 @@ func (file *File) complete(ch rune) bool {
 	}
 
 	// Get the completion suggestion.
-	words := autocomplete.Split(prefix)
-	prefix = words[len(words)-1]
-	more_prefix, results := file.completer.Complete(prefix)
+	results := file.AutoComplete(prefix)
 
 	// If there are no results, just return.
 	if len(results) == 0 {
@@ -171,8 +169,9 @@ func (file *File) complete(ch rune) bool {
 	answer := results[0]
 
 	// If there is a prefix extension suggestion, use that.
-	if len(more_prefix) > len(prefix) {
-		answer = more_prefix
+	common := autocomplete.GetCommonPrefix(results)
+	if len(common) > 0 {
+		answer = common
 	} else if len(results) > 1 {
 		if time.Since(file.lastTab) > file.doubleTab {
 			file.lastTab = time.Now()
@@ -190,8 +189,7 @@ func (file *File) complete(ch rune) bool {
 	}
 
 	// Insert only the new characters.
-	diff := answer[len(prefix):]
-	file.InsertStr(diff)
+	file.InsertStr(answer)
 	return true
 }
 

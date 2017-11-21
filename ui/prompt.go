@@ -81,8 +81,8 @@ func (prompt *Prompt) delete() {
 
 // Allow user to provide a completer.
 type Completer interface {
-	Complete(prefix string) (string, []string)
-	Split(string) []string
+	Complete(prefix string, copora ...string) []string
+	GetCommonPrefix(tokens []string) string
 }
 
 // Ask asks the user a question, expecting a string response.
@@ -155,9 +155,10 @@ loop:
 			prompt.col = 0
 		case "tab":
 			if len(completers) > 0 && completers[0] != nil {
-				words := completers[0].Split(prompt.answer)
+				words := strings.Fields(prompt.answer)
 				token := words[len(words)-1]
-				prefix, results := completers[0].Complete(token)
+				results := completers[0].Complete(token)
+				prefix := completers[0].GetCommonPrefix(results)
 				if len(results) == 0 {
 					break
 				}
@@ -166,7 +167,7 @@ loop:
 					ans = prefix
 				} else if len(results) > 1 {
 					menu := NewMenu(prompt.screen, prompt.keyboard)
-					idx, str := menu.Choose(results, 0, prefix, "tab")
+					idx, str := menu.Choose(results, 0, "", "tab")
 					if idx < 0 || str == "cancel" || str == "tab" {
 						break
 					}

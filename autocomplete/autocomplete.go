@@ -5,86 +5,140 @@ package autocomplete
 
 import (
 	"regexp"
-	"sync"
+	"strings"
 )
 
-// Completer provides autocompletion suggestions.
-type Completer struct {
-	words       []string    // Master list of possible suggestions
-	mutex       *sync.Mutex // Protect the master word list.
-	requestChan chan string // So we only run one update at a time.
-	minLen      int         // Words shorter than this are "insignificant".
+type AutoComplete struct {
+	minLen int
 }
 
-// NewCompleter creates a new completer object.
-func NewCompleter(text string, minLen int) *Completer {
-	cmplt := Completer{}
-	cmplt.mutex = &sync.Mutex{}
-	cmplt.minLen = minLen
-
-	// Set up the updater to wait for requests.
-	cmplt.requestChan = make(chan string, 1)
-	go cmplt.keepUpdating()
-
-	// Request an update.
-	cmplt.Update(text)
-
-	return &cmplt
+func New() *AutoComplete {
+	return &AutoComplete{minLen: 3}
 }
 
-// Update requests an update.
-func (cmplt *Completer) Update(text string) {
-	select {
-	case cmplt.requestChan <- text:
-	default:
+func (ac *AutoComplete) Complete(prefix string, corpora ...string) []string {
+
+	// If prefix is too short, just return.
+	if len(prefix) < ac.minLen {
+		return []string{}
 	}
-}
 
-// Split defines the word boundaries for autocompletion.
-func Split(str string) []string {
-	re := regexp.MustCompile("[^a-zA-Z0-9_]+")
-	return re.Split(str, -1)
-}
+	// Join corpora into one corpus, split at whitespace, and limit in size.
+	corpus := strings.Join(corpora, "\n")
+	tokens_map := map[string]bool{}
+	for _, token := range strings.Fields(corpus) {
+		if len(tokens_map) > 10000 {
+			break
+		}
+		if len(token) <= ac.minLen {
+			continue
+		}
+		tokens_map[token] = true
+	}
+	if len(tokens_map) == 0 {
+		return []string{}
+	}
+	tokens := []string{}
+	for token, _ := range tokens_map {
+		tokens = append(tokens, token)
+	}
 
-func (cmplt *Completer) Split(str string) []string {
-	return Split(str)
-}
+	matches := TokenMatch(tokens, prefix, ac.minLen)
+	if len(matches) <= 1 {
+		return Suffixes(matches, prefix, ac.minLen)
+	}
 
-// keepUpdating processes update requests.
-func (cmplt *Completer) keepUpdating() {
-	for {
-		select {
-		case text := <-cmplt.requestChan:
-			// Construct the words list.
-			words_list := Split(text)
-			word_frequencies := map[string]int{}
-			for _, word := range words_list {
-				if len(word) > cmplt.minLen {
-					word_frequencies[word]++
-				}
-			}
-			words := []string{}
-			for word, _ := range word_frequencies {
-				words = append(words, word)
-			}
-
-			// Carefully swap out the words list.
-			cmplt.mutex.Lock()
-			cmplt.words = words
-			cmplt.mutex.Unlock()
+	for n := 1; n < 100; n++ {
+		tokens = matches
+		matches = TokenMatch(tokens, prefix, ac.minLen+n)
+		if len(matches) == 0 {
+			return Suffixes(tokens, prefix, ac.minLen+n-1)
+		}
+		if len(matches) == 1 {
+			return Suffixes(matches, prefix, ac.minLen+n)
 		}
 	}
+
+	return matches
 }
 
-// getCommonPrefix looks for the longest common prefix of a set of strings.
-// The parameter 'prefix' provides a starting point, so we don't have to
-// search as hard.
-func getCommonPrefix(prefix string, matches []string) string {
-	if len(matches) == 0 {
-		return prefix
+func TokenMatch(tokens []string, prefix string, n int) []string {
+	if len(prefix) < n {
+		return []string{}
 	}
+
+	// Create a regex to search the text.
+	tail := prefix[len(prefix)-n:]
+	re, err := regexp.Compile(regexp.QuoteMeta(tail))
+	if err != nil {
+		return []string{}
+	}
+
+	// Find tail matches.
+	matches := []string{}
+	for _, token := range tokens {
+		if re.MatchString(token) {
+			matches = append(matches, token)
+		}
+	}
+
+	return matches
+}
+
+// Suffixes returns the string suffix after the prefix.
+func Suffixes(tokens []string, prefix string, n int) []string {
+	if len(prefix) < n {
+		return []string{}
+	}
+
+	// Create a regex to search the text.
+	tail := prefix[len(prefix)-n:]
+	re, err := regexp.Compile(regexp.QuoteMeta(tail))
+	if err != nil {
+		return []string{}
+	}
+
+	startsWithPunctRe := regexp.MustCompile("^[^a-zA-Z0-9]")
+	punctRe := regexp.MustCompile("[^a-zA-Z0-9]")
+	charRe := regexp.MustCompile("[a-zA-Z0-9]")
+
+	// Store in a map to dedup.
+	suffixes_map := map[string]bool{}
+	for _, token := range tokens {
+		idx := re.FindStringIndex(token)[1]
+		if idx == len(token) {
+			continue
+		}
+		// Start at end of prefix.
+		suffix := token[idx:]
+		// If first char is not punctuation, go until first punctuation.
+		if startsWithPunctRe.MatchString(suffix) {
+			suffix = charRe.Split(suffix, 2)[0]
+		} else {
+			suffix = punctRe.Split(suffix, 2)[0]
+		}
+		suffixes_map[suffix] = true
+	}
+
+	suffixes := []string{}
+	for suffix, _ := range suffixes_map {
+		if len(suffix) == 0 || suffix[0] == ' ' || suffix[0] == '\t' {
+			continue
+		}
+		suffixes = append(suffixes, strings.Fields(suffix)[0])
+	}
+
+	return suffixes
+}
+
+// GetCommonPrefix looks for the longest common prefix of a set of strings.
+func GetCommonPrefix(matches []string) string {
+	if len(matches) == 0 {
+		return ""
+	}
+	prefix := ""
 loop:
-	for i := len(prefix); i < len(matches[0]); i++ {
+	for i := 0; i < len(matches[0]); i++ {
 		c := matches[0][i]
 		for _, match := range matches {
 			// If even one word is too short, then we are done.
@@ -102,24 +156,6 @@ loop:
 	return prefix
 }
 
-// Complete returns completion results for a prefix string.
-func (cmplt *Completer) Complete(prefix string) (string, []string) {
-	if len(prefix) == 0 {
-		return "", []string{}
-	}
-	words := Split(prefix)
-	prefix = words[len(words)-1]
-	matches := []string{}
-	n := len(prefix)
-	for _, word := range cmplt.words {
-		if len(word) <= n {
-			continue
-		}
-		if word[:n] == prefix {
-			matches = append(matches, word)
-		}
-	}
-	// Check if matches share additional prefix.
-	commonPrefix := getCommonPrefix(prefix, matches)
-	return commonPrefix, matches
+func (ac *AutoComplete) GetCommonPrefix(matches []string) string {
+	return GetCommonPrefix(matches)
 }

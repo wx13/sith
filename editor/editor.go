@@ -31,7 +31,7 @@ type Editor struct {
 	xKeymap    KeyMap
 	bookmarks  *Bookmarks
 
-	completer *autocomplete.Completer
+	completer *autocomplete.AutoComplete
 
 	searchHist  []string
 	replaceHist []string
@@ -53,7 +53,7 @@ func NewEditor() *Editor {
 		copyContig: 0,
 		copyHist:   [][]string{},
 		cfg:        config.CreateConfig(),
-		completer:  autocomplete.NewCompleter("", 4),
+		completer:  autocomplete.New(),
 	}
 }
 
@@ -113,9 +113,18 @@ func (editor *Editor) OpenFile(name string) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	file := file.NewFile(name, editor.flushChan, editor.screen, editor.cfg, &wg)
-	file.SetCompleter(editor.completer)
+	file.SetCompleter(editor.AutoComplete)
 	editor.files = append(editor.files, file)
-	editor.UpdateCompleter(&wg)
+}
+
+func (editor *Editor) AutoComplete(prefix string) []string {
+	text := editor.file.ToString()
+	for i, file := range editor.files {
+		if i != editor.fileIdx {
+			text += "\n" + file.ToString()
+		}
+	}
+	return editor.completer.Complete(prefix, text)
 }
 
 // OpenFiles opens a set of specified files.
@@ -124,7 +133,7 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 	wg.Add(len(fileNames))
 	for _, name := range fileNames {
 		file := file.NewFile(name, editor.flushChan, editor.screen, editor.cfg, &wg)
-		file.SetCompleter(editor.completer)
+		file.SetCompleter(editor.AutoComplete)
 		editor.files = append(editor.files, file)
 	}
 	if len(editor.files) == 0 {
@@ -134,7 +143,6 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 	editor.fileIdx = 0
 	editor.fileIdxPrv = 0
 	editor.file = editor.files[0]
-	editor.UpdateCompleter(&wg)
 }
 
 // ReloadAll re-reads all open buffers.
@@ -144,7 +152,6 @@ func (editor *Editor) ReloadAll() {
 	for _, file := range editor.files {
 		file.Reload(&wg)
 	}
-	editor.UpdateCompleter(&wg)
 }
 
 // Quit closes all the files and exits the editor.
@@ -314,7 +321,6 @@ func (editor *Editor) CmdMenu() {
 // Save saves the buffer to the file.
 func (editor *Editor) Save() {
 	editor.file.RequestSave()
-	editor.UpdateCompleter(nil)
 }
 
 // SaveAll saves all the open buffers.
@@ -478,22 +484,4 @@ func (editor *Editor) UpdateStatus() {
 	col -= editor.writeSyncStatus(rows-1, col)
 	editor.file.WriteStatus(rows-1, col)
 	editor.screen.SetCursor(editor.file.GetCursor(0))
-}
-
-// Update the auto-completers.
-func (editor *Editor) UpdateCompleter(wg *sync.WaitGroup) {
-	go func() {
-		if wg != nil {
-			wg.Wait()
-		}
-		contents := ""
-		for _, file := range editor.files {
-			contents += " " + file.ToString()
-			if len(contents) >= 1000000 {
-				contents = contents[:1000000]
-				break
-			}
-		}
-		editor.completer.Update(contents)
-	}()
 }
