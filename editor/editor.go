@@ -138,7 +138,9 @@ func (editor *Editor) OpenFiles(fileNames []string) {
 	}
 	if len(editor.files) == 0 {
 		wg.Add(1)
-		editor.files = append(editor.files, file.NewFile("", editor.flushChan, editor.screen, editor.cfg, &wg))
+		file := file.NewFile("", editor.flushChan, editor.screen, editor.cfg, &wg)
+		file.SetCompleter(editor.AutoComplete)
+		editor.files = append(editor.files, file)
 	}
 	editor.fileIdx = 0
 	editor.fileIdxPrv = 0
