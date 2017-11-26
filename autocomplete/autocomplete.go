@@ -40,7 +40,10 @@ func (ac *AutoComplete) Complete(prefix string, corpora ...string) []string {
 	}
 	tokens := []string{}
 	for token, _ := range tokens_map {
-		tokens = append(tokens, token)
+		// Don't match yourself:
+		if token != prefix {
+			tokens = append(tokens, token)
+		}
 	}
 
 	matches := TokenMatch(tokens, prefix, ac.minLen)
