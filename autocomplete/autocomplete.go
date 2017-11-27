@@ -16,6 +16,10 @@ func New() *AutoComplete {
 	return &AutoComplete{minLen: 3}
 }
 
+func Complete(prefix string, corpora ...string) []string {
+	return New().Complete(prefix, corpora...)
+}
+
 func (ac *AutoComplete) Complete(prefix string, corpora ...string) []string {
 
 	f := strings.Fields(prefix)

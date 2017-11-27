@@ -3,6 +3,8 @@ package ui
 import (
 	"errors"
 	"strings"
+
+	"github.com/wx13/sith/autocomplete"
 )
 
 // Prompt is a user-input prompt.
@@ -79,14 +81,8 @@ func (prompt *Prompt) delete() {
 	prompt.screen.WriteString(prompt.row, len(prompt.question)+1+len(prompt.answer), " ")
 }
 
-// Allow user to provide a completer.
-type Completer interface {
-	Complete(prefix string, copora ...string) []string
-	GetCommonPrefix(tokens []string) string
-}
-
 // Ask asks the user a question, expecting a string response.
-func (prompt *Prompt) Ask(question string, history []string, completers ...Completer) (string, error) {
+func (prompt *Prompt) Ask(question string, history []string, completers ...func(string) []string) (string, error) {
 
 	prompt.saveCursor()
 	prompt.question = question
@@ -157,8 +153,8 @@ loop:
 			if len(completers) > 0 && completers[0] != nil {
 				words := strings.Fields(prompt.answer)
 				token := words[len(words)-1]
-				results := completers[0].Complete(token)
-				prefix := completers[0].GetCommonPrefix(results)
+				results := completers[0](token)
+				prefix := autocomplete.GetCommonPrefix(results)
 				if len(results) == 0 {
 					break
 				}
@@ -173,9 +169,8 @@ loop:
 					}
 					ans = results[idx]
 				}
-				diff := ans[len(token):]
-				prompt.col += len(diff)
-				prompt.answer += diff
+				prompt.col += len(ans)
+				prompt.answer += ans
 			}
 		case "unknown":
 		case "ctrlT":
@@ -196,7 +191,7 @@ loop:
 }
 
 // GetPromptAnswer is a wrapper arount Ask, which handles some history stuff.
-func (prompt *Prompt) GetAnswer(question string, history *[]string, completers ...Completer) string {
+func (prompt *Prompt) GetAnswer(question string, history *[]string, completers ...func(string) []string) string {
 	answer, err := prompt.Ask(question, *history, completers...)
 	if err != nil {
 		return ""
