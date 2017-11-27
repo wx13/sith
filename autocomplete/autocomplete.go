@@ -18,6 +18,9 @@ func New() *AutoComplete {
 
 func (ac *AutoComplete) Complete(prefix string, corpora ...string) []string {
 
+	f := strings.Fields(prefix)
+	prefix = f[len(f)-1]
+
 	// If prefix is too short, just return.
 	if len(prefix) < ac.minLen {
 		return []string{}
