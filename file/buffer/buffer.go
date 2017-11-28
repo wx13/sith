@@ -178,6 +178,7 @@ func (buffer *Buffer) ToCorpus(row, col int) string {
 		} else {
 			str += line.ToString()
 		}
+		str += " "
 	}
 	return str[:len(str)-1]
 }
