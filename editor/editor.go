@@ -118,7 +118,7 @@ func (editor *Editor) OpenFile(name string) {
 }
 
 func (editor *Editor) AutoComplete(prefix string) []string {
-	text := editor.file.ToString()
+	text := editor.file.ToCorpus(editor.file.GetRowCol(0))
 	for i, file := range editor.files {
 		if i != editor.fileIdx {
 			text += "\n" + file.ToString()

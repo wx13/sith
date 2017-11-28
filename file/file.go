@@ -254,6 +254,12 @@ func (file *File) ToString() string {
 	return file.buffer.ToString(file.newline)
 }
 
+// ToCorpus returns a string representation of the text buffer, with the current
+// token removed. It is used for autocomplete.
+func (file *File) ToCorpus(row, col int) string {
+	return file.buffer.ToCorpus(row, col)
+}
+
 // Slice returns a 2D slice of the buffer.
 func (file *File) Slice(nRows, nCols int) []string {
 

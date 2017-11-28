@@ -357,3 +357,33 @@ func TestCompressPriorSpaces(t *testing.T) {
 	}
 
 }
+
+func TestToCorpus(t *testing.T) {
+	var line buffer.Line
+	var str string
+
+	line = buffer.MakeLine("abc def ghi")
+	str = line.ToCorpus(0)
+	if str != "def ghi" {
+		t.Error("ToCorpus:", str)
+	}
+
+	line = buffer.MakeLine("abc def ghi")
+	str = line.ToCorpus(2)
+	if str != "def ghi" {
+		t.Error("ToCorpus:", str)
+	}
+
+	line = buffer.MakeLine("abc def ghi")
+	str = line.ToCorpus(3)
+	if str != "def ghi" {
+		t.Error("ToCorpus:", str)
+	}
+
+	line = buffer.MakeLine("abc def ghi")
+	str = line.ToCorpus(5)
+	if str != "abc ghi" {
+		t.Error("ToCorpus:", str)
+	}
+
+}

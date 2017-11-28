@@ -35,6 +35,24 @@ func (line Line) ToString() string {
 	return string(line.chars)
 }
 
+// ToCorpus converts a Line into a string without the current token..
+func (line Line) ToCorpus(col int) string {
+	str := string(line.chars)
+	tokens := strings.Fields(str)
+	c := 0
+	out := []string{}
+	for _, token := range tokens {
+		c1 := c + len(token) + 1
+		if col >= c && col < c1 {
+			c = c1
+			continue
+		}
+		out = append(out, token)
+		c = c1
+	}
+	return strings.Join(out, " ")
+}
+
 // CommonStart returns the sub-line that is common between
 // a set of lines.
 func (line Line) CommonStart(other Line) Line {

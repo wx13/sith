@@ -165,6 +165,23 @@ func (buffer *Buffer) ToString(newline string) string {
 	return str[:len(str)-1]
 }
 
+// ToCorpus concatenates the buffer into one long string. Specify the row col of
+// the cursor to remove the current token. Used for autocomplete.
+func (buffer *Buffer) ToCorpus(row, col int) string {
+	if buffer.Length() == 0 {
+		return ""
+	}
+	str := ""
+	for i, line := range buffer.Lines() {
+		if i == row {
+			str += line.ToCorpus(col)
+		} else {
+			str += line.ToString()
+		}
+	}
+	return str[:len(str)-1]
+}
+
 // InsertAfter inserts a set of lines after the specified row in the buffer.
 func (buffer *Buffer) InsertAfter(row int, lines ...Line) {
 	buffer.mutex.Lock()
