@@ -380,8 +380,8 @@ func TestToCorpus(t *testing.T) {
 		t.Error("ToCorpus:", str)
 	}
 
-	line = buffer.MakeLine("abc def ghi")
-	str = line.ToCorpus(5)
+	line = buffer.MakeLine("     abc def ghi")
+	str = line.ToCorpus(11)
 	if str != "abc ghi" {
 		t.Error("ToCorpus:", str)
 	}

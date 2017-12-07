@@ -39,10 +39,11 @@ func (line Line) ToString() string {
 func (line Line) ToCorpus(col int) string {
 	str := string(line.chars)
 	tokens := strings.Fields(str)
+	spaces := regexp.MustCompile("[^ \t]+").Split(str, -1)
 	c := 0
 	out := []string{}
-	for _, token := range tokens {
-		c1 := c + len(token) + 1
+	for i, token := range tokens {
+		c1 := c + len(spaces[i]) + len(token) + 1
 		if col >= c && col < c1 {
 			c = c1
 			continue
