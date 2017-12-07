@@ -321,7 +321,26 @@ func (file *File) doAutoIndent(idx int) {
 
 	// Non-whitespace indent.
 	indent := file.buffer.GetRow(row - 1).CommonStart(file.buffer.GetRow(row - 2))
-	if indent.Length() > len(ws)+1 {
+	// If indent is just whitespace, we are done.
+	if indent.Length() == len(ws) {
+		return
+	}
+	// A single character will only autoindent if more than two lines share it.
+	if indent.Length() == len(ws)+1 {
+		if row < 3 {
+			return
+		}
+		s1 := file.buffer.GetRow(row - 2).ToString()
+		s2 := file.buffer.GetRow(row - 3).ToString()
+		if len(s2) < 1 || len(s1) < 1 {
+			return
+		}
+		if s1[0] != s2[0] {
+			return
+		}
+	}
+	if indent.Length() > len(ws) {
+		// If we make it here, then insert the non-whitespace indent.
 		file.ForceSnapshot()
 		newLineStr := indent.ToString() + origLine.ToString()
 		file.buffer.SetRow(row, buffer.MakeLine(newLineStr))
