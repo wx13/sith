@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-## [0.7.0-rc1] 2017-11-23
+## [0.7.0] 2018-01-02
 
 ### Features
 - Autocomplete -- text-based and triggered by tab
