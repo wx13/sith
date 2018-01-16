@@ -123,7 +123,7 @@ func (editor *Editor) MultiFileSearch(searchTerm string, multiFile bool) (int, i
 // SearchAndReplace searches and replaces.
 func (editor *Editor) SearchAndReplace(multiFile bool) {
 	prompt := ui.MakePrompt(editor.screen, editor.keyboard)
-	searchTerm := prompt.GetAnswer("search:", &editor.searchHist)
+	searchTerm := prompt.GetAnswer("search:", &editor.searchHist, editor.AutoComplete)
 	if searchTerm == "" {
 		editor.screen.Notify("Cancelled")
 		return
