@@ -438,6 +438,9 @@ func (editor *Editor) writeModStatus(row, col int) int {
 		editor.screen.WriteStringColor(row, col-3, "M  ", terminal.ColorRed, terminal.ColorDefault)
 		return 3
 	}
+	if len(editor.files) <= 1 {
+		return 0
+	}
 	for _, file := range editor.files {
 		if file.IsModified() {
 			editor.screen.WriteStringColor(row, col-3, "M  ", terminal.ColorYellow, terminal.ColorDefault)

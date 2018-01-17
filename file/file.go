@@ -96,10 +96,14 @@ func NewFile(name string, flushChan chan struct{}, screen *terminal.Screen,
 		md5sum:      md5.Sum([]byte("")),
 		autoFmt:     true,
 	}
-	file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
 	file.ingestConfig(cfg)
 	go file.processSaveRequests()
-	go file.ReadFile(name, wg)
+	go func() {
+		// Read file async, so we don't have to wait for it.
+		file.ReadFile(name, wg)
+		// Once the file is read, initialize the buffer history.
+		file.buffHist = NewBufferHist(file.buffer, file.MultiCursor)
+	}()
 	return file
 }
 
@@ -282,23 +286,32 @@ func (file *File) Slice(nRows, nCols int) []string {
 
 // Snapshot saves a snapshot of the buffer state, but only if it has changed.
 func (file *File) Snapshot() {
-	file.buffHist.Snapshot(file.buffer, file.MultiCursor)
+	if file.buffHist != nil {
+		file.buffHist.Snapshot(file.buffer, file.MultiCursor)
+	}
 }
 
 // ForceSnapshot saves a snapshot of the buffer state, even if it hasn't changed
 // since the last snapshot.
 func (file *File) ForceSnapshot() {
-	file.buffHist.ForceSnapshot(file.buffer, file.MultiCursor)
+	if file.buffHist != nil {
+		file.buffHist.ForceSnapshot(file.buffer, file.MultiCursor)
+	}
 }
 
 // SnapshotSaved saves a special "saved" snapshot when the user saves (or opens)
 // a file.
 func (file *File) SnapshotSaved() {
-	file.buffHist.SnapshotSaved()
+	if file.buffHist != nil {
+		file.buffHist.SnapshotSaved()
+	}
 }
 
 // Undo reverts the buffer state to the last snapshot.
 func (file *File) Undo() {
+	if file.buffHist == nil {
+		return
+	}
 	buffer, mc := file.buffHist.Prev()
 	file.MultiCursor.ReplaceMC(mc)
 	file.buffer.ReplaceBuffer(buffer)
@@ -306,6 +319,9 @@ func (file *File) Undo() {
 
 // Redo sets the buffer state ahead one in the buffer history.
 func (file *File) Redo() {
+	if file.buffHist == nil {
+		return
+	}
 	buffer, mc := file.buffHist.Next()
 	file.buffer.ReplaceBuffer(buffer)
 	file.MultiCursor.ReplaceMC(mc)
@@ -313,6 +329,9 @@ func (file *File) Redo() {
 
 // UndoSaved reverts the buffer state to the last *saved* snapshot.
 func (file *File) UndoSaved() {
+	if file.buffHist == nil {
+		return
+	}
 	buffer, mc := file.buffHist.PrevSaved()
 	file.MultiCursor.ReplaceMC(mc)
 	file.buffer.ReplaceBuffer(buffer)
@@ -320,6 +339,9 @@ func (file *File) UndoSaved() {
 
 // RedoSaved is like UndoSaved, but the other direction in time.
 func (file *File) RedoSaved() {
+	if file.buffHist == nil {
+		return
+	}
 	buffer, mc := file.buffHist.NextSaved()
 	file.MultiCursor.ReplaceMC(mc)
 	file.buffer.ReplaceBuffer(buffer)

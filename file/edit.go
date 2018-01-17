@@ -263,8 +263,8 @@ func (file *File) Delete() {
 // Newline breaks the current line into two.
 func (file *File) Newline() {
 
+	// For a single cursor, do autoindent.
 	if len(file.MultiCursor.Cursors()) == 1 {
-		rate := file.timer.Tick()
 		cursor := file.MultiCursor.Cursors()[0]
 		row, col := cursor.RowCol()
 		lineStart := file.buffer.RowSlice(row, 0, col)
@@ -275,6 +275,8 @@ func (file *File) Newline() {
 
 		file.MultiCursor.SetCursor(0, row+1, 0, 0)
 
+		// Turn off autoindent for fast entry (probably pasting text).
+		rate := file.timer.Tick()
 		if file.autoIndent && rate < file.maxRate && lineEnd.Length() == 0 {
 			file.doAutoIndent(0)
 		}
@@ -305,49 +307,77 @@ func (file *File) doAutoIndent(idx int) {
 	re, _ := regexp.Compile("^[ \t]+")
 	prevLineStr := file.buffer.GetRow(row - 1).ToString()
 	ws := re.FindString(prevLineStr)
-	if len(ws) > 0 {
-		newLineStr := ws + file.buffer.GetRow(row).ToString()
-		file.buffer.SetRow(row, buffer.MakeLine(newLineStr))
-		col := file.MultiCursor.GetCol(idx) + len(ws)
-		file.MultiCursor.SetCursor(idx, row, col, col)
-		if file.buffer.GetRow(row-1).Length() == len(ws) {
-			file.buffer.SetRow(row-1, buffer.MakeLine(""))
-		}
-	}
-
-	if row < 2 {
-		return
-	}
 
 	// Non-whitespace indent.
-	indent := file.buffer.GetRow(row - 1).CommonStart(file.buffer.GetRow(row - 2))
-	// If indent is just whitespace, we are done.
-	if indent.Length() == len(ws) {
-		return
+	nonWS := ""
+	if row >= 2 {
+		indent := file.buffer.GetRow(row - 1).CommonStart(file.buffer.GetRow(row - 2))
+		nonWS = strings.TrimPrefix(indent.ToString(), ws)
 	}
 	// A single character will only autoindent if more than two lines share it.
-	if indent.Length() == len(ws)+1 {
+	if len(nonWS) == 1 {
 		if row < 3 {
-			return
+			nonWS = ""
+		} else {
+			prev := strings.TrimPrefix(file.buffer.GetRow(row-3).ToString(), ws)
+			if len(prev) == 0 || prev[0] != nonWS[0] {
+				nonWS = ""
+			}
 		}
-		s1 := file.buffer.GetRow(row - 2).ToString()
-		s2 := file.buffer.GetRow(row - 3).ToString()
-		if len(s2) < 1 || len(s1) < 1 {
-			return
-		}
-		if s1[0] != s2[0] {
-			return
-		}
-	}
-	if indent.Length() > len(ws) {
-		// If we make it here, then insert the non-whitespace indent.
-		file.ForceSnapshot()
-		newLineStr := indent.ToString() + origLine.ToString()
-		file.buffer.SetRow(row, buffer.MakeLine(newLineStr))
-		col := file.MultiCursor.GetCol(idx) + indent.Length() - len(ws)
-		file.MultiCursor.SetCursor(idx, row, col, col)
 	}
 
+	indent := ws + nonWS
+	if len(indent) == 0 {
+		return
+	}
+
+	file.ForceSnapshot()
+
+	newLineStr := indent + origLine.ToString()
+
+	// Split the line on whitespace so we can undo parts of the indent.
+	newLineParts := chunkString(newLineStr)
+	newLineStr = ""
+	for i, part := range newLineParts {
+		newLineStr += part
+		file.buffer.SetRow(row, buffer.MakeLine(newLineStr))
+		col := file.MultiCursor.GetCol(idx) + len(indent)
+		file.MultiCursor.SetCursor(idx, row, col, col)
+		if i+1 < len(newLineParts) {
+			file.ForceSnapshot()
+		}
+	}
+
+}
+
+func chunkString(s string) []string {
+	if len(s) <= 1 {
+		return []string{s}
+	}
+	chunks := []string{}
+	chunk := s[:1]
+	for _, r := range s[1:] {
+		chunk_is_space := chunk[0] == ' ' || chunk[0] == '\t'
+		rune_is_space := r == ' ' || r == '\t'
+		if chunk_is_space == rune_is_space {
+			chunk += string(r)
+		} else {
+			chunks = append(chunks, chunk)
+			chunk = string(r)
+		}
+	}
+	chunks = append(chunks, chunk)
+	for i := len(chunks) - 1; i > 0; i-- {
+		chunk = chunks[i]
+		if chunk == " " || chunk == "\t" {
+			if i == len(chunks)-1 {
+				continue
+			}
+			chunks[i+1] = chunk + chunks[i+1]
+			chunks = append(chunks[:i], chunks[i+1:]...)
+		}
+	}
+	return chunks
 }
 
 // Justify justifies the marked text.

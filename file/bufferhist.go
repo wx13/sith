@@ -47,6 +47,8 @@ func NewBufferHist(buffer buffer.Buffer, cursor cursor.MultiCursor) *BufferHist 
 	bh.snapChan = make(chan struct{}, 1)
 	bh.reqMutex = &sync.Mutex{}
 	bh.handleSnapshots()
+	bh.ForceSnapshot(buffer, cursor)
+	bh.SnapshotSaved()
 	return &bh
 }
 
@@ -95,6 +97,7 @@ func (bh *BufferHist) SnapshotSaved() {
 func (bh *BufferHist) snapshot(buff buffer.Buffer, mc cursor.MultiCursor) {
 
 	curBuf, curMC := bh.Current()
+
 	curRow := curMC.GetRow(0)
 	newRow := mc.GetRow(0)
 	if curRow-newRow > 5 || newRow-curRow > 5 {
