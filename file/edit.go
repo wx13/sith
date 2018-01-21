@@ -312,7 +312,7 @@ func (file *File) doAutoIndent(idx int) {
 	nonWS := ""
 	if row >= 2 {
 		indent := file.buffer.GetRow(row - 1).CommonStart(file.buffer.GetRow(row - 2))
-		nonWS = strings.TrimPrefix(indent.ToString(), ws)
+		nonWS = indent.RemoveLeadingWhitespace().ToString()
 	}
 	// A single character will only autoindent if more than two lines share it.
 	if len(nonWS) == 1 {
