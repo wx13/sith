@@ -36,7 +36,12 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	km.Add("ctrlN", func() { editor.file.PageDown() }, "")
 	km.Add("pageUp", func() { editor.file.PageUp() }, "")
 	km.Add("ctrlB", func() { editor.file.PageUp() }, "")
-	km.Add("ctrlG", func() { editor.GoToLine() }, "Go to line number (or bookmark)")
+	km.Add("ctrlG", func() { editor.GoToLine() },
+		"Go to line number (or bookmark)")
+	km.Add("home", func() { editor.file.CursorGoTo(0, 0) },
+		"Go to the start of the file.")
+	km.Add("end", func() { editor.file.CursorGoTo(-1, 0) },
+		"Go to the end of the file.")
 	km.Add("altL", func() { editor.file.Refresh() }, "Refresh screen")
 	km.Add("altO", editor.OpenNewFile, "Open new file")
 	km.Add("altQ", editor.Quit, "Quit editor")

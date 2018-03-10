@@ -25,6 +25,8 @@ func NewKeyboard() *Keyboard {
 		termbox.KeyEnter:      "enter",
 		termbox.KeyPgup:       "pageUp",
 		termbox.KeyPgdn:       "pageDown",
+		termbox.KeyHome:       "home",
+		termbox.KeyEnd:        "end",
 		termbox.KeyTab:        "tab",
 		termbox.KeyCtrl6:      "ctrl6",
 		termbox.KeyCtrlA:      "ctrlA",

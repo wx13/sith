@@ -49,8 +49,12 @@ func (file *File) makeCursorNotAtTopBottom() {
 	}
 }
 
-// CursorGoTo moves the cursor to a row, col position.
+// CursorGoTo moves the cursor to a row, col position. If row is negative, then
+// it specifies from the end of the file.
 func (file *File) CursorGoTo(row, col int) {
+	if row < 0 {
+		row = file.Length() + row
+	}
 	file.MultiCursor.Set(row, col, col)
 	file.enforceRowBounds()
 	file.enforceColBounds()
