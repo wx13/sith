@@ -395,33 +395,19 @@ func isLetter(r rune) bool {
 // PrevNextWord returns the column position of the next/previous
 // word from the current column position.
 func (line *Line) PrevNextWord(col, incr int) int {
-	r := line.GetChar(col)
-	if incr > 0 {
-		for ; col < line.Length(); col++ {
-			r = line.GetChar(col)
-			if isLetter(r) {
-				break
-			}
-		}
-		for ; col < line.Length(); col++ {
-			r = line.GetChar(col)
-			if !isLetter(r) {
-				return col
-			}
-		}
-	} else {
+	if incr < 0 {
 		col -= 1
-		for ; col >= 0; col-- {
-			r = line.GetChar(col)
-			if isLetter(r) {
-				break
-			}
+	}
+	for ; col < line.Length() && col >= 0; col += incr {
+		r := line.GetChar(col)
+		if isLetter(r) {
+			break
 		}
-		for ; col >= 0; col-- {
-			r = line.GetChar(col)
-			if !isLetter(r) {
-				return col + 1
-			}
+	}
+	for ; col < line.Length() && col >= 0; col += incr {
+		r := line.GetChar(col)
+		if !isLetter(r) {
+			return col + (1-incr)/2
 		}
 	}
 	return col
