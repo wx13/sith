@@ -279,24 +279,37 @@ func (file *File) PrevWord() {
 }
 
 func (file *File) prevNextWord(incr int) {
+	// If in detached mode, only one cursor moves.
 	cursors := file.MultiCursor.Cursors()
 	if file.MultiCursor.NavModeIsDetached() {
 		cursors = cursors[:1]
 	}
+
+	// If the cursors columns don't change, then we are at the start/end of the
+	// line and should wrap.
 	unchanged := true
+
+	// Move each cursor.
 	for idx, cursor := range cursors {
 		row := cursor.Row()
 		col := cursor.Col()
 		line := file.buffer.GetRow(row)
+
+		// Store the old cursor, compute the new, and check for changes.
 		old_col := col
 		col = line.PrevNextWord(col, incr)
 		if old_col != col {
 			unchanged = false
 		}
+
+		// Move the cursor.
 		file.MultiCursor.SetCol(idx, col)
 		file.MultiCursor.SetColwant(idx, -1)
 	}
-	if unchanged {
+
+	// Move up/down if at start/end of line.
+	if unchanged && (file.MultiCursor.NavModeIsAllTogether() ||
+		file.MultiCursor.Length() == 1) {
 		if incr > 0 {
 			file.CursorDown(1)
 			file.StartOfLine()
