@@ -407,8 +407,12 @@ func (line *Line) PrevNextWord(col, incr int) int {
 	for ; col < line.Length() && col >= 0; col += incr {
 		r := line.GetChar(col)
 		if !isLetter(r) {
-			return col + (1-incr)/2
+			col += (1 - incr) / 2
+			break
 		}
+	}
+	if col < 0 {
+		col = 0
 	}
 	return col
 }

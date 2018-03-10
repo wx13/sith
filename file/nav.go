@@ -283,12 +283,27 @@ func (file *File) prevNextWord(incr int) {
 	if file.MultiCursor.NavModeIsDetached() {
 		cursors = cursors[:1]
 	}
+	unchanged := true
 	for idx, cursor := range cursors {
 		row := cursor.Row()
 		col := cursor.Col()
 		line := file.buffer.GetRow(row)
+		old_col := col
 		col = line.PrevNextWord(col, incr)
+		if old_col != col {
+			unchanged = false
+		}
 		file.MultiCursor.SetCol(idx, col)
 		file.MultiCursor.SetColwant(idx, -1)
+	}
+	if unchanged {
+		if incr > 0 {
+			file.CursorDown(1)
+			file.StartOfLine()
+		} else {
+			file.CursorUp(1)
+			file.EndOfLine()
+		}
+
 	}
 }
