@@ -388,14 +388,6 @@ func (line *Line) Chars() []rune {
 	return line.chars
 }
 
-func isSpace(r rune) bool {
-	return unicode.IsSpace(r)
-}
-
-func isPunct(r rune) bool {
-	return unicode.IsPunct(r)
-}
-
 func isLetter(r rune) bool {
 	return !(unicode.IsPunct(r) || unicode.IsSpace(r))
 }
@@ -404,18 +396,32 @@ func isLetter(r rune) bool {
 // word from the current column position.
 func (line *Line) PrevNextWord(col, incr int) int {
 	r := line.GetChar(col)
-	var charCheck func(r rune) bool
-	if isLetter(r) {
-		charCheck = isLetter
-	} else if isSpace(r) {
-		charCheck = isSpace
+	if incr > 0 {
+		for ; col < line.Length(); col++ {
+			r = line.GetChar(col)
+			if isLetter(r) {
+				break
+			}
+		}
+		for ; col < line.Length(); col++ {
+			r = line.GetChar(col)
+			if !isLetter(r) {
+				return col
+			}
+		}
 	} else {
-		charCheck = isPunct
-	}
-	for ; col <= line.Length() && col >= 0; col += incr {
-		r = line.GetChar(col)
-		if !charCheck(r) {
-			return col
+		col -= 1
+		for ; col >= 0; col-- {
+			r = line.GetChar(col)
+			if isLetter(r) {
+				break
+			}
+		}
+		for ; col >= 0; col-- {
+			r = line.GetChar(col)
+			if !isLetter(r) {
+				return col + 1
+			}
 		}
 	}
 	return col
