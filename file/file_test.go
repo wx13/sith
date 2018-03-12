@@ -26,6 +26,7 @@ func TestInsertChar(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	f := file.NewFile("", make(chan struct{}), nil, config.Config{}, &wg)
+	wg.Wait()
 	f.InsertChar('h')
 	f.InsertChar('e')
 	f.InsertChar('l')
@@ -38,6 +39,7 @@ func TestInsertStr(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	f := file.NewFile("", make(chan struct{}), nil, config.Config{}, &wg)
+	wg.Wait()
 	f.InsertStr("line 1")
 	f.Newline()
 	f.InsertStr("line 2")
@@ -51,6 +53,7 @@ func TestEditing(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	f := file.NewFile("", make(chan struct{}), nil, config.Config{}, &wg)
+	wg.Wait()
 	f.InsertChar('a')
 	f.InsertChar('b')
 	f.InsertChar('c')
