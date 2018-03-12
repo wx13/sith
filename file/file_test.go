@@ -34,6 +34,19 @@ func TestInserChar(t *testing.T) {
 	CheckBuffer(t, f, "hello", "InsertChar")
 }
 
+func TestInsertStr(t *testing.T) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	f := file.NewFile("", make(chan struct{}), nil, config.Config{}, &wg)
+	f.InsertStr("line 1")
+	f.Newline()
+	f.InsertStr("line 2")
+	f.Newline()
+	f.InsertStr("line 3")
+	f.Newline()
+	CheckBuffer(t, f, "line 1\nline 2\nline 3\n", "InsertStr")
+}
+
 func TestEditing(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
