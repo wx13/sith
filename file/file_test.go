@@ -22,7 +22,7 @@ func CheckBuffer(t *testing.T, f *file.File, s, msg string) {
 	}
 }
 
-func TestInserChar(t *testing.T) {
+func TestInsertChar(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	f := file.NewFile("", make(chan struct{}), nil, config.Config{}, &wg)
