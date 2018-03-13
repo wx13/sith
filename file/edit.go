@@ -196,10 +196,14 @@ func (file *File) complete(ch rune) bool {
 // InsertChar insters a character (rune) into the current cursor position.
 func (file *File) InsertChar(ch rune) {
 
-	// Possibly do auto completion.
-	if file.complete(ch) {
-		file.Snapshot()
-		return
+	rate := file.timer.Tick()
+	// Don't even try autocomplete if text is being pasted.
+	if rate < file.maxRate {
+		// Possibly do auto completion.
+		if file.complete(ch) {
+			file.Snapshot()
+			return
+		}
 	}
 
 	str := string(ch)
