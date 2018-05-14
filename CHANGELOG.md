@@ -1,6 +1,22 @@
 Change Log
 ==========
 
+## [0.7.1] 2018-05-14
+
+This is a very stable release. I've been using it daily for a couple months without issue.
+
+### Features
+- Enable autocomplete for search-and-replace
+- Multi-stage undo for autocomplete
+- Home/End keys go to start/end of file
+- Much improved next/previous word
+  - More like xterm
+  - Wraps past end of line
+
+### Bugfixes
+- Correct handling of leading whitespace for autoindent
+- Fix paste detection
+
 ## [0.7.0] 2018-01-02
 
 ### Features
