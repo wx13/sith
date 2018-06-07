@@ -148,10 +148,10 @@ func (file *File) Save() {
 	contents := []byte(file.ToString())
 	err := ioutil.WriteFile(file.Name, contents, file.fileMode)
 	if err != nil {
-		file.NotifyUser("Could not save to file: " + file.Name)
+		file.NotifyUser("Save Failed: " + err.Error())
 	} else {
 		file.savedBuffer.ReplaceBuffer(file.buffer.DeepDup())
-		file.NotifyUser("Saved to file: " + file.Name)
+		file.NotifyUser("Saved.")
 		file.modTime = time.Now()
 		file.md5sum = md5.Sum(contents)
 	}
