@@ -16,20 +16,20 @@ func (file *File) IsModified() bool {
 }
 
 // FileChanged checks to see if underlying file changed.
-func (file *File) FileChanged() bool {
+func (file *File) FileChanged() (bool, error) {
 	fileInfo, err := os.Stat(file.Name)
 	if err != nil {
-		return false
+		return false, err
 	}
 	if !fileInfo.ModTime().After(file.modTime) {
-		return false
+		return false, nil
 	}
 	byteBuf, err := ioutil.ReadFile(file.Name)
 	if err != nil {
-		return false
+		return false, err
 	}
 	md5sum := md5.Sum(byteBuf)
-	return md5sum != file.md5sum
+	return md5sum != file.md5sum, nil
 }
 
 // WriteStatus writes the status line.

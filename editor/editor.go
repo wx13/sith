@@ -246,7 +246,11 @@ func (editor *Editor) SelectFile() {
 			if file.IsModified() {
 				status = "*"
 			}
-			if file.FileChanged() {
+			changed, err := file.FileChanged()
+			if err != nil {
+				status += "!"
+			}
+			if changed {
 				status += "+"
 			}
 			names = append(names, status+file.Name)
@@ -451,12 +455,21 @@ func (editor *Editor) writeModStatus(row, col int) int {
 }
 
 func (editor *Editor) writeSyncStatus(row, col int) int {
-	if editor.file.FileChanged() {
+	changed, err := editor.file.FileChanged()
+	if err != nil {
+		editor.screen.WriteStringColor(row, col-3, "X", terminal.ColorDefault, terminal.ColorRed)
+		return 3
+	}
+	if changed {
 		editor.screen.WriteStringColor(row, col-3, "S  ", terminal.ColorRed, terminal.ColorDefault)
 		return 3
 	}
 	for _, file := range editor.files {
-		if file.FileChanged() {
+		changed, err := file.FileChanged()
+		if err != nil {
+			editor.screen.WriteStringColor(row, col-3, "X", terminal.ColorDefault, terminal.ColorYellow)
+		}
+		if changed {
 			editor.screen.WriteStringColor(row, col-3, "S  ", terminal.ColorYellow, terminal.ColorDefault)
 			return 3
 		}
