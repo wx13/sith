@@ -369,6 +369,9 @@ func (editor *Editor) SwitchFileByName(name string) error {
 // SwitchFile changes to a new file buffer.
 func (editor *Editor) SwitchFile(n int) {
 	n = intMod(n, len(editor.files))
+	if n == editor.fileIdx {
+		return
+	}
 	editor.fileIdxPrv = editor.fileIdx
 	editor.fileIdx = n
 	editor.file = editor.files[n]
