@@ -37,9 +37,7 @@ type Editor struct {
 	replaceHist []string
 	gotoHist    []string
 
-	copyBuffer []string
-	copyContig int
-	copyHist   [][]string
+	copyBuffer *CopyBuffer
 
 	cfg config.Config
 }
@@ -49,9 +47,7 @@ func NewEditor() *Editor {
 	return &Editor{
 		flushChan:  make(chan struct{}, 1),
 		screen:     terminal.NewScreen(),
-		copyBuffer: []string{},
-		copyContig: 0,
-		copyHist:   [][]string{},
+		copyBuffer: NewCopyBuffer(),
 		cfg:        config.CreateConfig(),
 		completer:  autocomplete.New(),
 	}
@@ -190,7 +186,7 @@ func (editor *Editor) Listen() {
 	for {
 		cmd, r := editor.keyboard.GetKey()
 		editor.handleCmd(cmd, r)
-		editor.copyContig--
+		editor.copyBuffer.NoOp()
 		editor.RequestFlush()
 	}
 
