@@ -1,11 +1,14 @@
 package terminal
 
-import "github.com/nsf/termbox-go"
+import (
+	"strings"
+
+	"github.com/nsf/termbox-go"
+)
 
 // Keyboard acts as an interface to the termbox keyboard.
 type Keyboard struct {
-	KeyMap    map[termbox.Key]string
-	AltKeyMap map[string]string
+	KeyMap map[termbox.Key]string
 }
 
 // NewKeyboard defines a map from termbox key to a
@@ -54,44 +57,11 @@ func NewKeyboard() *Keyboard {
 		termbox.KeyCtrlZ:      "ctrlZ",
 		termbox.KeyCtrlSlash:  "ctrlSlash",
 	}
-	kb.AltKeyMap = map[string]string{
-		"6": "alt6",
-		"a": "altA",
-		"b": "altB",
-		"c": "altC",
-		"d": "altD",
-		"e": "altE",
-		"f": "altF",
-		"g": "altG",
-		"h": "altH",
-		"i": "altI",
-		"j": "altJ",
-		"k": "altK",
-		"l": "altL",
-		"m": "altM",
-		"n": "altN",
-		"o": "altO",
-		"p": "altP",
-		"q": "altQ",
-		"r": "altR",
-		"s": "altS",
-		"t": "altT",
-		"u": "altU",
-		"v": "altV",
-		"w": "altW",
-		"x": "altX",
-		"y": "altY",
-		"z": "altZ",
-	}
 	return &kb
 }
 
 func (kb *Keyboard) altKeyToCmd(ev termbox.Event) (string, rune) {
-	cmd, ok := kb.AltKeyMap[string(ev.Ch)]
-	if ok {
-		return cmd, 0
-	}
-	return "unknown", 0
+	return "alt" + strings.ToUpper(string(ev.Ch)), 0
 }
 
 func (kb *Keyboard) keyToCmd(ev termbox.Event) (string, rune) {
