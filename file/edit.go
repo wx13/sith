@@ -394,7 +394,8 @@ func (file *File) UnJustify() {
 
 func (file *File) justify(lineLen int) {
 	minRow, maxRow := file.MultiCursor.MinMaxRow()
-	file.buffer.Justify(minRow, maxRow, lineLen, []string{"//", "#", "%", ";"})
+	file.buffer.Justify(minRow, maxRow, lineLen,
+		[]string{"//", "#", "%", ";", "\\*"})
 	file.MultiCursor.Clear()
 	file.Snapshot()
 }

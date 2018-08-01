@@ -64,7 +64,7 @@ func (buffer *Buffer) getIndentsRemainders(comStrs []string) (indents, remainder
 	remainders = make([]string, buffer.Length())
 
 	// Construct the regexp to find indentation (including comments strings).
-	pattern := "^[ \t]*(//|#)*[ \t]*"
+	pattern := "^[ \t]*(" + strings.Join(comStrs, "|") + ")*[ \t]*"
 	re, err := regexp.Compile(pattern)
 	if err != nil {
 		return indents, remainders, err
