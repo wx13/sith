@@ -95,7 +95,7 @@ func TestGetIndentsRemainders(t *testing.T) {
 		"  //",
 		"  // abc",
 	})
-	indents, remainders, err = b.getIndentsRemainders([]string{})
+	indents, remainders, err = b.getIndentsRemainders([]string{"//"})
 	if err != nil {
 		t.Error(err)
 	}
