@@ -404,3 +404,33 @@ func TestBufferBracketMatch(t *testing.T) {
 	}
 
 }
+
+func TestCutWord(t *testing.T) {
+
+	var buf buffer.Buffer
+
+	buf = buffer.MakeBuffer([]string{"", "blah abcdef blah"})
+	buf.CutWord(1, 7, -1)
+	if buf.ToString("|") != "|blah cdef blah" {
+		t.Error("Cut to start of word:", buf.ToString("|"))
+	}
+
+	buf = buffer.MakeBuffer([]string{"", "blah abcdef blah"})
+	buf.CutWord(1, 7, 1)
+	if buf.ToString("|") != "|blah ab blah" {
+		t.Error("Cut to end of word:", buf.ToString("|"))
+	}
+
+	buf = buffer.MakeBuffer([]string{"", "blah abcdef blah"})
+	buf.CutWord(1, 7, 0)
+	if buf.ToString("|") != "|blah  blah" {
+		t.Error("Cut entire word:", buf.ToString("|"))
+	}
+
+	buf = buffer.MakeBuffer([]string{"", "blah abcdef"})
+	buf.CutWord(1, 7, 1)
+	if buf.ToString("|") != "|blah ab" {
+		t.Error("Cut to end of word (at end of line):", buf.ToString("|"))
+	}
+
+}

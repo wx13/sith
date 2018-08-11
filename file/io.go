@@ -28,6 +28,7 @@ func (file *File) Flush() {
 		file.screen.WriteString(row, 0, "~")
 	}
 	file.ColorBracketMatch(rows)
+	// file.HighlightCurrentWord()
 }
 
 // ColorBracketMatch colorizes a matching bracket character.
@@ -48,6 +49,22 @@ func (file *File) ColorBracketMatch(rows int) {
 	}
 
 	file.screen.Colorize(row-file.rowOffset, lc, file.colOffset)
+}
+
+// HightlightCurrentWord highlights the word currently under the cursor.
+func (file *File) HighlightCurrentWord() {
+	for row, cols := range file.MultiCursor.GetRowsCols() {
+		line := file.buffer.GetRow(row)
+		for _, col := range cols {
+			start, end := line.WordBounds(col)
+			if start >= end {
+				continue
+			}
+			start = line.TabCursorPos(start, file.tabWidth)
+			end = line.TabCursorPos(end+1, file.tabWidth)
+			file.screen.Underline(row-file.rowOffset, start, end, file.colOffset)
+		}
+	}
 }
 
 // setNewline determines (estimates) the newline string that the file uses.

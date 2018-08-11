@@ -110,6 +110,36 @@ func TestSlice(t *testing.T) {
 
 }
 
+func TestRemove(t *testing.T) {
+	line1 := buffer.MakeLine("0123456789")
+	var line2 buffer.Line
+
+	line2 = line1.Remove(0, 0)
+	if line2.ToString() != "0123456789" {
+		t.Error("remove:", line1.ToString(), line2.ToString())
+	}
+
+	line2 = line1.Remove(0, 1)
+	if line2.ToString() != "123456789" {
+		t.Error("remove:", line1.ToString(), line2.ToString())
+	}
+
+	line2 = line1.Remove(0, 5)
+	if line2.ToString() != "56789" {
+		t.Error("remove:", line1.ToString(), line2.ToString())
+	}
+
+	line2 = line1.Remove(3, 5)
+	if line2.ToString() != "01256789" {
+		t.Error("remove:", line1.ToString(), line2.ToString())
+	}
+
+	line2 = line1.Remove(5, 50)
+	if line2.ToString() != "01234" {
+		t.Error("remove:", line1.ToString(), line2.ToString())
+	}
+}
+
 func TestBracketMatch(t *testing.T) {
 
 	var line buffer.Line
@@ -386,4 +416,29 @@ func TestToCorpus(t *testing.T) {
 		t.Error("ToCorpus:", str)
 	}
 
+}
+
+func TestWordBounds(t *testing.T) {
+	var start, end int
+	line := buffer.MakeLine("abc def ghi!")
+
+	start, end = line.WordBounds(0)
+	if start != 0 || end != 2 {
+		t.Error("WordBounds 0:", start, end)
+	}
+
+	start, end = line.WordBounds(1)
+	if start != 0 || end != 2 {
+		t.Error("WordBounds 1:", start, end)
+	}
+
+	start, end = line.WordBounds(3)
+	if start != 3 || end != 3 {
+		t.Error("WordBounds 3:", start, end)
+	}
+
+	start, end = line.WordBounds(10)
+	if start != 8 || end != 10 {
+		t.Error("WordBounds 0:", start, end)
+	}
 }

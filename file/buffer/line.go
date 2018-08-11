@@ -228,6 +228,7 @@ func (line Line) StrSlice(startCol, endCol int, tabwidth int) string {
 	return pline.Slice(startCol, endCol).ToString()
 }
 
+// Slice returns a new line which is a slice of the input line.
 func (line Line) Slice(startCol, endCol int) Line {
 	if startCol >= line.Length() {
 		return MakeLine("")
@@ -240,6 +241,25 @@ func (line Line) Slice(startCol, endCol int) Line {
 	}
 	newLine := line.Dup()
 	newLine.chars = newLine.chars[startCol:endCol]
+	return newLine
+}
+
+// Remove returns a new line with a range of characters removed.
+func (line Line) Remove(startCol, endCol int) Line {
+	if startCol >= line.Length() {
+		startCol = line.Length() - 1
+	}
+	if startCol < 0 {
+		startCol = 0
+	}
+	if endCol >= line.Length() {
+		endCol = line.Length()
+	}
+	if endCol < 0 {
+		endCol = 0
+	}
+	newLine := line.Dup()
+	newLine.chars = append(newLine.chars[:startCol], newLine.chars[endCol:]...)
 	return newLine
 }
 
@@ -415,6 +435,22 @@ func (line *Line) PrevNextWord(col, incr int) int {
 		col = 0
 	}
 	return col
+}
+
+// WordBounds returns the start and end columns of the word touching the specified column.
+func (line *Line) WordBounds(col int) (int, int) {
+	if !isLetter(line.GetChar(col)) {
+		return col, col
+	}
+	start := col
+	end := col
+	for isLetter(line.GetChar(end)) && end < line.Length() {
+		end++
+	}
+	for isLetter(line.GetChar(start)) && start >= 0 {
+		start--
+	}
+	return start + 1, end - 1
 }
 
 // BracketMatch looks for matching partner rune in a line.

@@ -671,3 +671,22 @@ func (buffer *Buffer) Unalign(rows map[int][]int) map[int][]int {
 	}
 	return rows
 }
+
+// CutWord removes the word under the specified cursor. Returns the new cursor position.
+func (buffer *Buffer) CutWord(row, col, mode int) int {
+	line := buffer.GetRow(row)
+	start, end := line.WordBounds(col)
+	newCol := col
+	switch mode {
+	case -1:
+		line = line.Remove(start, col)
+		newCol -= col - start
+	case 1:
+		line = line.Remove(col, end+1)
+	case 0:
+		line = line.Remove(start, end+1)
+		newCol -= col - start
+	}
+	buffer.SetRow(row, line)
+	return newCol
+}

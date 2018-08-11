@@ -450,6 +450,16 @@ func (file *File) CutToEndOfLine() {
 	file.Snapshot()
 }
 
+// CutToStartOfWord cuts the text from the cursor to the start of the word.
+func (file *File) CutWord(mode int) {
+	for idx := range file.MultiCursor.Cursors() {
+		row, col := file.MultiCursor.GetRowCol(idx)
+		newCol := file.buffer.CutWord(row, col, mode)
+		file.MultiCursor.SetCursor(idx, row, newCol, newCol)
+	}
+	file.Snapshot()
+}
+
 // CursorAlign inserts spaces into each cursor position, in order to
 // align the cursors vertically.
 func (file *File) CursorAlign() {
@@ -460,7 +470,7 @@ func (file *File) CursorAlign() {
 }
 
 // CursorUnalign removes whitespace (except for 1 space) immediately preceding
-// each cursor position.  Effectively, it undoes a CursorAlign.
+// each cursor position. Effectively, it undoes a CursorAlign.
 func (file *File) CursorUnalign() {
 	rows := file.MultiCursor.GetRowsCols()
 	rows = file.buffer.Unalign(rows)

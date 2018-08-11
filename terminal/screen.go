@@ -17,16 +17,17 @@ type charMode int
 type Attribute termbox.Attribute
 
 const (
-	ColorBlue    = Attribute(termbox.ColorBlue)
-	ColorRed     = Attribute(termbox.ColorRed)
-	ColorGreen   = Attribute(termbox.ColorGreen)
-	ColorYellow  = Attribute(termbox.ColorYellow)
-	ColorCyan    = Attribute(termbox.ColorCyan)
-	ColorMagenta = Attribute(termbox.ColorMagenta)
-	ColorWhite   = Attribute(termbox.ColorWhite)
-	ColorDefault = Attribute(termbox.ColorDefault)
-	AttrBold     = Attribute(termbox.AttrBold)
-	AttrReverse  = Attribute(termbox.AttrReverse)
+	ColorBlue     = Attribute(termbox.ColorBlue)
+	ColorRed      = Attribute(termbox.ColorRed)
+	ColorGreen    = Attribute(termbox.ColorGreen)
+	ColorYellow   = Attribute(termbox.ColorYellow)
+	ColorCyan     = Attribute(termbox.ColorCyan)
+	ColorMagenta  = Attribute(termbox.ColorMagenta)
+	ColorWhite    = Attribute(termbox.ColorWhite)
+	ColorDefault  = Attribute(termbox.ColorDefault)
+	AttrBold      = Attribute(termbox.AttrBold)
+	AttrReverse   = Attribute(termbox.AttrReverse)
+	AttrUnderline = Attribute(termbox.AttrUnderline)
 )
 
 const (
@@ -189,6 +190,27 @@ func (screen *Screen) DecorateStatusLine() {
 // WriteString write a string to the screen in the default color scheme.
 func (screen *Screen) WriteString(row, col int, s string) {
 	screen.WriteStringColor(row, col, s, screen.fg, screen.bg)
+}
+
+// Underlines a piece of text.
+func (screen *Screen) Underline(row, start_col, end_col, offset int) {
+	cells := termbox.CellBuffer()
+	screen.tbMutex.Lock()
+	cols, _ := termbox.Size()
+	screen.tbMutex.Unlock()
+	for col := start_col; col < end_col; col++ {
+		if (col - offset) > cols {
+			break
+		}
+		if (col - offset) < 0 {
+			continue
+		}
+		j := row*cols + (col - offset)
+		if j < 0 || j >= len(cells) {
+			continue
+		}
+		cells[j].Fg |= termbox.AttrUnderline
+	}
 }
 
 // Colorize changes the color of text on the screen.
