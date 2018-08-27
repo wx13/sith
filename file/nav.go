@@ -175,6 +175,10 @@ func (file *File) GetRowCol(idx int) (int, int) {
 	return row, col
 }
 
+func (file *File) GetRowsCols() map[int][]int {
+	return file.MultiCursor.GetRowsCols()
+}
+
 // ScrollLeft shifts the view screen to the left.
 func (file *File) ScrollLeft() {
 	file.colOffset++
