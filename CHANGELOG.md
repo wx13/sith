@@ -1,6 +1,22 @@
 Change Log
 ==========
 
+## [0.7.2] 2018-11-21
+
+Another stable release, with many hours of use.
+
+### Features
+- Show an indication (red X) when the underlying file is not readable.
+- Delete current word, to start of word, and to end of word.
+
+### Bugfixes
+- When changing buffers, if new one is the same as the old one, don't actually
+  change. This fixes the 'last buffer' issue where last buffer ends up being
+  itself.
+- Remove duplicate entries in the copy/paste buffer history.
+- In multicursor mode, remove all current words from autocompletion corpus.
+
+
 ## [0.7.1] 2018-05-14
 
 This is a very stable release. I've been using it daily for a couple months without issue.
