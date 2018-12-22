@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"go/format"
 	"io"
 	"os/exec"
@@ -14,6 +15,13 @@ import (
 	"github.com/wx13/sith/ui"
 )
 
+// Same as fmt.Sprintf, but ignores extra arguments.
+func sprintf(format string, a ...interface{}) string {
+	s := fmt.Sprintf(format, a...)
+	r := regexp.MustCompile(`%!\(EXTRA`)
+	return r.Split(s, 2)[0]
+}
+
 // Fmt runs a code formatter on the text buffer and updates the buffer.
 // For Go code, this calls the go format library. For all else, it runs an
 // external command. If 'selection' is specified, then formatting is done
@@ -26,6 +34,7 @@ func (file *File) Fmt(selection ...bool) error {
 	}
 
 	contents := ""
+	hasLineBounds := file.fmtCmd != sprintf(file.fmtCmd, 0, 1)
 
 	// Grab the text for formatting.
 	startRow := 0
@@ -33,10 +42,16 @@ func (file *File) Fmt(selection ...bool) error {
 	if len(selection) > 0 {
 		file.MultiCursor.OuterMost()
 		startRow, endRow = file.MultiCursor.MinMaxRow()
-		subBuffer := file.buffer.InclSlice(startRow, endRow)
-		contents = subBuffer.ToString(file.newline)
+		if (ext == "go") || (!hasLineBounds) {
+			subBuffer := file.buffer.InclSlice(startRow, endRow)
+			contents = subBuffer.ToString(file.newline)
+		} else {
+			contents = file.ToString()
+		}
 	} else {
 		contents = file.ToString()
+		startRow = 0
+		endRow = file.buffer.Length() - 1
 	}
 
 	// Format the text.
@@ -44,7 +59,7 @@ func (file *File) Fmt(selection ...bool) error {
 	if ext == "go" {
 		contents, err = file.goFmt(contents)
 	} else {
-		contents, err = file.runFmt(contents)
+		contents, err = file.runFmt(contents, startRow, endRow)
 	}
 	if err != nil {
 		return err
@@ -53,7 +68,7 @@ func (file *File) Fmt(selection ...bool) error {
 	stringBuf := strings.Split(contents, file.newline)
 	newBuffer := buffer.MakeBuffer(stringBuf)
 
-	if len(selection) > 0 {
+	if (len(selection) > 0) && (ext == "go" || !hasLineBounds) {
 		file.buffer.ReplaceLines(newBuffer.Lines(), startRow, endRow)
 	} else {
 		file.buffer.ReplaceBuffer(newBuffer)
@@ -64,13 +79,15 @@ func (file *File) Fmt(selection ...bool) error {
 }
 
 // runFmt runs the fmt command on the input string. It returns the formatted text.
-func (file *File) runFmt(contents string) (string, error) {
+func (file *File) runFmt(contents string, startRow, endRow int) (string, error) {
 
 	if file.fmtCmd == "" {
 		return contents, nil
 	}
 
-	args := regexp.MustCompile(`\s+`).Split(file.fmtCmd, -1)
+	cmdStr := sprintf(file.fmtCmd, startRow+1, endRow+1)
+
+	args := regexp.MustCompile(`\s+`).Split(cmdStr, -1)
 
 	var cmd *exec.Cmd
 	if len(args) > 1 {
