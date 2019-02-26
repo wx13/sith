@@ -171,17 +171,16 @@ func (buffer *Buffer) ToCorpus(cursors map[int][]int) string {
 	if buffer.Length() == 0 {
 		return ""
 	}
-	str := ""
+	lines := []string{}
 	for i, line := range buffer.Lines() {
 		cols, ok := cursors[i]
 		if ok {
-			str += line.ToCorpus(cols...)
+			lines = append(lines, line.ToCorpus(cols...))
 		} else {
-			str += line.ToString()
+			lines = append(lines, line.ToString())
 		}
-		str += " "
 	}
-	return str[:len(str)-1]
+	return strings.Join(lines, " ")
 }
 
 // InsertAfter inserts a set of lines after the specified row in the buffer.
