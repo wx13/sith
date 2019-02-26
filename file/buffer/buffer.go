@@ -158,11 +158,11 @@ func (buffer *Buffer) ToString(newline string) string {
 	if buffer.Length() == 0 {
 		return ""
 	}
-	str := ""
+	lines := []string{}
 	for _, line := range buffer.Lines() {
-		str += line.ToString() + newline
+		lines = append(lines, line.ToString())
 	}
-	return str[:len(str)-1]
+	return strings.Join(lines, newline)
 }
 
 // ToCorpus concatenates the buffer into one long string. Specify the rows/cols
