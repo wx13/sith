@@ -85,7 +85,7 @@ func (file *File) runFmt(contents string, startRow, endRow int) (string, error) 
 		return contents, nil
 	}
 
-	cmdStr := sprintf(file.fmtCmd, startRow+1, endRow+1)
+	cmdStr := sprintf(file.fmtCmd, file.Name, startRow+1, endRow+1)
 
 	args := regexp.MustCompile(`\s+`).Split(cmdStr, -1)
 
