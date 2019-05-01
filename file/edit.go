@@ -1,12 +1,14 @@
 package file
 
 import (
+	"bytes"
 	"fmt"
 	"go/format"
 	"io"
 	"os/exec"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/wx13/sith/autocomplete"
@@ -85,7 +87,26 @@ func (file *File) runFmt(contents string, startRow, endRow int) (string, error) 
 		return contents, nil
 	}
 
-	cmdStr := sprintf(file.fmtCmd, file.Name, startRow+1, endRow+1)
+	data := struct {
+		Filename  string
+		FirstLine int
+		LastLine  int
+	}{
+		file.Name,
+		startRow + 1,
+		endRow + 1,
+	}
+	tmpl := template.New("fmtCmd")
+	tmpl, err := tmpl.Parse(file.fmtCmd)
+	if err != nil {
+		return "", err
+	}
+	var tmplOut bytes.Buffer
+	err = tmpl.Execute(&tmplOut, data)
+	if err != nil {
+		return "", err
+	}
+	cmdStr := tmplOut.String()
 
 	args := regexp.MustCompile(`\s+`).Split(cmdStr, -1)
 
