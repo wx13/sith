@@ -95,15 +95,23 @@ func (menu *Menu) Show(choices []string) {
 }
 
 // Toggles the row in the selections list and returns the list.
-func (menu *Menu) toggleSelection(row int) []int {
+func (menu *Menu) toggleSelection(row int) {
 	for i, r := range menu.selections {
 		if r == row {
 			menu.selections = append(menu.selections[:i], menu.selections[i+1:]...)
-			return menu.selections
+			return
 		}
 	}
 	menu.selections = append(menu.selections, row)
-	return menu.selections
+}
+
+func (menu *Menu) appendSelection(row int) []int {
+	for _, r := range menu.selections {
+		if r == row {
+			return menu.selections
+		}
+	}
+	return append(menu.selections, row)
 }
 
 // Choose is the main interaction loop for the menu. It takes three required
@@ -131,9 +139,9 @@ func (menu *Menu) ChooseMulti(choices []string, idx int, searchStr string,
 		cmd, r := menu.keyboard.GetKey()
 		switch cmd {
 		case "enter":
-			return menu.toggleSelection(menu.cursor), ""
+			return menu.appendSelection(menu.cursor), ""
 		case "ctrlC":
-			return menu.toggleSelection(menu.cursor), "cancel"
+			return menu.appendSelection(menu.cursor), "cancel"
 		case "arrowDown":
 			if menu.cursor < len(choices)-1 {
 				menu.cursor++
@@ -174,7 +182,7 @@ func (menu *Menu) ChooseMulti(choices []string, idx int, searchStr string,
 		// User keys
 		for _, key := range keys {
 			if cmd == key {
-				return menu.toggleSelection(menu.cursor), key
+				return menu.appendSelection(menu.cursor), key
 			}
 		}
 	}

@@ -57,7 +57,7 @@ func NewEditor() *Editor {
 func (editor *Editor) OpenNewFile() {
 	dir, _ := os.Getwd()
 	dir += "/"
-	filename := ""
+	filenames := []string{}
 	for {
 		files, _ := ioutil.ReadDir(dir)
 		dotdot, err := os.Stat("../")
@@ -73,35 +73,50 @@ func (editor *Editor) OpenNewFile() {
 			}
 		}
 		menu := ui.NewMenu(editor.screen, editor.keyboard)
-		idx, key := menu.Choose(names, 0, "", "ctrlO")
+		idxs, key := menu.ChooseMulti(names, 0, "", "ctrlO")
 		editor.Flush()
-		if idx < 0 || key == "cancel" {
+		if len(idxs) == 0 || key == "cancel" {
 			return
 		}
 		if key == "ctrlO" {
 			var err error
 			p := ui.MakePrompt(editor.screen, editor.keyboard)
-			filename, err = p.Ask(dir, nil)
+			filename, err := p.Ask(dir, nil)
 			if err != nil {
 				editor.screen.Notify("Unknown answer")
 				return
 			}
+			filenames = []string{filename}
 			break
 		}
-		chosenFile := files[idx]
-		if chosenFile.IsDir() {
-			dir = filepath.Clean(dir+chosenFile.Name()) + "/"
+		if len(idxs) == 1 {
+			chosenFile := files[idxs[0]]
+			if chosenFile.IsDir() {
+				dir = filepath.Clean(dir+chosenFile.Name()) + "/"
+			} else {
+				filenames = []string{names[idxs[0]]}
+				break
+			}
 		} else {
-			filename = names[idx]
+			for _, idx := range idxs {
+				chosenFile := files[idx]
+				if chosenFile.IsDir() {
+					editor.screen.Notify("Can't open multiple directories")
+					return
+				}
+				filenames = append(filenames, names[idx])
+			}
 			break
 		}
 	}
 	cwd, _ := os.Getwd()
-	chosenFile, _ := filepath.Rel(cwd, dir+filename)
-	editor.OpenFile(chosenFile)
-	editor.fileIdxPrv = editor.fileIdx
-	editor.fileIdx = len(editor.files) - 1
-	editor.file = editor.files[editor.fileIdx]
+	for _, filename := range filenames {
+		chosenFile, _ := filepath.Rel(cwd, dir+filename)
+		editor.OpenFile(chosenFile)
+		editor.fileIdxPrv = editor.fileIdx
+		editor.fileIdx = len(editor.files) - 1
+		editor.file = editor.files[editor.fileIdx]
+	}
 }
 
 // OpenFile opens a specified file.
