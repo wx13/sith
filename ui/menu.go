@@ -94,13 +94,16 @@ func (menu *Menu) Show(choices []string) {
 	menu.screen.HighlightRange(r, r, menu.col0, menu.col0+menu.cols-1)
 }
 
-func (menu *Menu) isSelected(row int) int {
+// Toggles the row in the selections list and returns the list.
+func (menu *Menu) toggleSelection(row int) []int {
 	for i, r := range menu.selections {
 		if r == row {
-			return i
+			menu.selections = append(menu.selections[:i], menu.selections[i+1:]...)
+			return menu.selections
 		}
 	}
-	return -1
+	menu.selections = append(menu.selections, row)
+	return menu.selections
 }
 
 // Choose is the main interaction loop for the menu. It takes three required
@@ -112,6 +115,11 @@ func (menu *Menu) isSelected(row int) int {
 // and the string description of the key that caused the program to exit.
 func (menu *Menu) Choose(choices []string, idx int, searchStr string,
 	keys ...string) (int, string) {
+	all, str := menu.ChooseMulti(choices, idx, searchStr, keys...)
+	return all[0], str
+}
+func (menu *Menu) ChooseMulti(choices []string, idx int, searchStr string,
+	keys ...string) ([]int, string) {
 
 	menu.choices = choices
 	menu.setDims()
@@ -123,9 +131,9 @@ func (menu *Menu) Choose(choices []string, idx int, searchStr string,
 		cmd, r := menu.keyboard.GetKey()
 		switch cmd {
 		case "enter":
-			return menu.cursor, ""
+			return menu.toggleSelection(menu.cursor), ""
 		case "ctrlC":
-			return menu.cursor, "cancel"
+			return menu.toggleSelection(menu.cursor), "cancel"
 		case "arrowDown":
 			if menu.cursor < len(choices)-1 {
 				menu.cursor++
@@ -158,12 +166,7 @@ func (menu *Menu) Choose(choices []string, idx int, searchStr string,
 		case "ctrlN":
 			menu.cursor = menu.SearchNext(choices, searchStr)
 		case "altS":
-			i := menu.isSelected(menu.cursor)
-			if i < 0 {
-				menu.selections = append(menu.selections, menu.cursor)
-			} else {
-				menu.selections = append(menu.selections[:i], menu.selections[i+1:]...)
-			}
+			menu.toggleSelection(menu.cursor)
 		case "altC":
 			menu.selections = []int{}
 		default:
@@ -171,7 +174,7 @@ func (menu *Menu) Choose(choices []string, idx int, searchStr string,
 		// User keys
 		for _, key := range keys {
 			if cmd == key {
-				return menu.cursor, key
+				return menu.toggleSelection(menu.cursor), key
 			}
 		}
 	}
