@@ -12,7 +12,8 @@ type Menu struct {
 	col0, row0  int
 	screen      Screen
 	keyboard    Keyboard
-	selection   int
+	selections  []int
+	cursor      int
 	rowShift    int
 	borderColor terminal.Attribute
 	choices     []string
@@ -25,6 +26,7 @@ func NewMenu(screen Screen, keyboard Keyboard) *Menu {
 	menu.keyboard = keyboard
 	menu.setDims()
 	menu.borderColor = terminal.ColorBlue
+	menu.selections = []int{}
 	return &menu
 }
 
@@ -67,11 +69,11 @@ func (menu *Menu) showSearchStr(searchStr string) {
 // Show displays a menu of choices on the screen.
 func (menu *Menu) Show(choices []string) {
 	menu.Clear()
-	if menu.selection >= menu.rows-1+menu.rowShift {
-		menu.rowShift = menu.selection - menu.rows + 1
+	if menu.cursor >= menu.rows-1+menu.rowShift {
+		menu.rowShift = menu.cursor - menu.rows + 1
 	}
-	if menu.selection < menu.rowShift {
-		menu.rowShift = menu.selection
+	if menu.cursor < menu.rowShift {
+		menu.rowShift = menu.cursor
 	}
 	for row := 0; row < menu.rows; row++ {
 		idx := menu.rowShift + row
@@ -84,9 +86,21 @@ func (menu *Menu) Show(choices []string) {
 		}
 		menu.screen.WriteString(menu.row0+row, menu.col0, line)
 	}
-	for col := 0; col < menu.cols; col++ {
-		menu.screen.Highlight(menu.row0+menu.selection-menu.rowShift, menu.col0+col)
+	for _, row := range menu.selections {
+		r := menu.row0 + row - menu.rowShift
+		menu.screen.ColorRange(r, r, menu.col0, menu.col0+menu.cols-1, terminal.ColorGreen, terminal.ColorDefault)
 	}
+	r := menu.row0 + menu.cursor - menu.rowShift
+	menu.screen.HighlightRange(r, r, menu.col0, menu.col0+menu.cols-1)
+}
+
+func (menu *Menu) isSelected(row int) int {
+	for i, r := range menu.selections {
+		if r == row {
+			return i
+		}
+	}
+	return -1
 }
 
 // Choose is the main interaction loop for the menu. It takes three required
@@ -101,7 +115,7 @@ func (menu *Menu) Choose(choices []string, idx int, searchStr string,
 
 	menu.choices = choices
 	menu.setDims()
-	menu.selection = idx
+	menu.cursor = idx
 	for {
 		menu.Show(choices)
 		menu.showSearchStr(searchStr)
@@ -109,46 +123,55 @@ func (menu *Menu) Choose(choices []string, idx int, searchStr string,
 		cmd, r := menu.keyboard.GetKey()
 		switch cmd {
 		case "enter":
-			return menu.selection, ""
+			return menu.cursor, ""
 		case "ctrlC":
-			return menu.selection, "cancel"
+			return menu.cursor, "cancel"
 		case "arrowDown":
-			if menu.selection < len(choices)-1 {
-				menu.selection++
+			if menu.cursor < len(choices)-1 {
+				menu.cursor++
 			}
 		case "arrowUp":
-			if menu.selection > 0 {
-				menu.selection--
+			if menu.cursor > 0 {
+				menu.cursor--
 			}
 		case "pageDown":
-			menu.selection += 10
-			if menu.selection >= len(choices) {
-				menu.selection = len(choices) - 1
+			menu.cursor += 10
+			if menu.cursor >= len(choices) {
+				menu.cursor = len(choices) - 1
 			}
 		case "pageUp":
-			menu.selection -= 10
-			if menu.selection < 0 {
-				menu.selection = 0
+			menu.cursor -= 10
+			if menu.cursor < 0 {
+				menu.cursor = 0
 			}
 		case "unknown":
 		case "char":
 			searchStr += string(r)
-			menu.selection = menu.Search(choices, searchStr)
+			menu.cursor = menu.Search(choices, searchStr)
 		case "backspace":
 			if len(searchStr) > 0 {
 				searchStr = searchStr[:len(searchStr)-1]
-				menu.selection = menu.Search(choices, searchStr)
+				menu.cursor = menu.Search(choices, searchStr)
 			}
 		case "ctrlU":
 			searchStr = ""
 		case "ctrlN":
-			menu.selection = menu.SearchNext(choices, searchStr)
+			menu.cursor = menu.SearchNext(choices, searchStr)
+		case "altS":
+			i := menu.isSelected(menu.cursor)
+			if i < 0 {
+				menu.selections = append(menu.selections, menu.cursor)
+			} else {
+				menu.selections = append(menu.selections[:i], menu.selections[i+1:]...)
+			}
+		case "altC":
+			menu.selections = []int{}
 		default:
 		}
 		// User keys
 		for _, key := range keys {
 			if cmd == key {
-				return menu.selection, key
+				return menu.cursor, key
 			}
 		}
 	}
@@ -161,18 +184,18 @@ func (menu *Menu) Search(choices []string, searchStr string) int {
 			return index
 		}
 	}
-	return menu.selection
+	return menu.cursor
 }
 
 // SearchNext searches menu options from the current option on.
 func (menu *Menu) SearchNext(choices []string, searchStr string) int {
-	index := menu.selection
+	index := menu.cursor
 	for {
 		index++
 		if index >= len(choices) {
 			index = 0
 		}
-		if index == menu.selection {
+		if index == menu.cursor {
 			break
 		}
 		if strings.Contains(strings.ToLower(choices[index]), strings.ToLower(searchStr)) {

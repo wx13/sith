@@ -7,6 +7,8 @@ import (
 type Screen interface {
 	Flush()
 	Highlight(row, col int)
+	HighlightRange(startRow, endRow, startCol, endCol int)
+	ColorRange(startRow, endRow, startCol, endCol int, fg, bg terminal.Attribute)
 	WriteString(row, col int, text string)
 	WriteStringColor(row, col int, text string, fg, bg terminal.Attribute)
 	Size() (cols, rows int)

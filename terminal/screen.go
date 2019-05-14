@@ -319,6 +319,36 @@ func (screen *Screen) Highlight(row, col int) {
 	cells[j].Fg |= termbox.AttrReverse
 }
 
+// HighlightRange reverses the screen color over a range of rows/columns.
+func (screen *Screen) HighlightRange(startRow, endRow, startCol, endCol int) {
+	screen.tbMutex.Lock()
+	defer screen.tbMutex.Unlock()
+	cells := termbox.CellBuffer()
+	cols, _ := termbox.Size()
+	for row := startRow; row <= endRow; row++ {
+		for col := startCol; col <= endCol; col++ {
+			j := row*cols + col
+			cells[j].Bg |= termbox.AttrReverse
+			cells[j].Fg |= termbox.AttrReverse
+		}
+	}
+}
+
+// ColorRange colors a range of cells.
+func (screen *Screen) ColorRange(startRow, endRow, startCol, endCol int, fg, bg Attribute) {
+	screen.tbMutex.Lock()
+	defer screen.tbMutex.Unlock()
+	cells := termbox.CellBuffer()
+	cols, _ := termbox.Size()
+	for row := startRow; row <= endRow; row++ {
+		for col := startCol; col <= endCol; col++ {
+			j := row*cols + col
+			cells[j].Bg = termbox.Attribute(bg)
+			cells[j].Fg = termbox.Attribute(fg)
+		}
+	}
+}
+
 // SetCharMode sets the character display mode.
 func (screen *Screen) SetCharMode(c int) {
 	screen.charMode = charMode(c)

@@ -8,10 +8,12 @@ import (
 
 type MockScreen struct{}
 
-func (ms MockScreen) Flush()                                                                {}
-func (ms MockScreen) Highlight(row, col int)                                                {}
-func (ms MockScreen) WriteString(row, col int, text string)                                 {}
-func (ms MockScreen) WriteStringColor(row, col int, text string, fg, bg terminal.Attribute) {}
+func (ms MockScreen) Flush()                                                                      {}
+func (ms MockScreen) Highlight(row, col int)                                                      {}
+func (ms MockScreen) HighlightRange(startRow, endRow, starCol, endCol int)                        {}
+func (ms MockScreen) ColorRange(startRow, endRow, starCol, endCol int, fg, bg terminal.Attribute) {}
+func (ms MockScreen) WriteString(row, col int, text string)                                       {}
+func (ms MockScreen) WriteStringColor(row, col int, text string, fg, bg terminal.Attribute)       {}
 func (ms MockScreen) Size() (int, int) {
 	return 80, 24
 }
