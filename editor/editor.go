@@ -169,11 +169,24 @@ func (editor *Editor) ReloadAll() {
 
 // Quit closes all the files and exits the editor.
 func (editor *Editor) Quit() {
-	for range editor.files {
-		if !editor.CloseFile() {
-			editor.NextFile()
+	// Check if any files are modified. If so, confirm with the user.
+	mod := false
+	for _, file := range editor.files {
+		if file.IsModified() {
+			mod = true
+			break
 		}
 	}
+	if mod {
+		prompt := ui.MakePrompt(editor.screen, editor.keyboard)
+		close, _ := prompt.AskYesNo("One or more files has been modified. Quit without saving?")
+		if !close {
+			return
+		}
+	}
+
+	// Exit.
+	editor.screen.Close()
 }
 
 // CloseFile closes the current file.
