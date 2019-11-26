@@ -191,7 +191,8 @@ func (file *File) complete(ch rune) bool {
 	// Only run autocompletion if there is a word to complete (before the cursor).
 	row, col := file.MultiCursor.GetRowCol(0)
 	prefix := file.buffer.RowSlice(row, 0, col).ToString()
-	if len(prefix) == 0 || prefix[len(prefix)-1] == ' ' || prefix[len(prefix)-1] == '\t' {
+	if len(prefix) == 0 || prefix[len(prefix)-1] == ' ' ||
+		prefix[len(prefix)-1] == '\t' || len(strings.Fields(prefix)) == 0 {
 		return false
 	}
 
