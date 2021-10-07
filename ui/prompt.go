@@ -163,11 +163,12 @@ loop:
 					ans = prefix
 				} else if len(results) > 1 {
 					menu := NewMenu(prompt.screen, prompt.keyboard)
-					idx, str := menu.Choose(results, 0, "", "tab")
-					if idx < 0 || str == "cancel" || str == "tab" {
-						break
+					cmd, r := menu.ShowOnly(results)
+					if cmd == "char" {
+						prompt.answer = prompt.answer[:prompt.col] + string(r) + prompt.answer[prompt.col:]
+						prompt.col++
+						continue
 					}
-					ans = results[idx]
 				}
 				prompt.col += len(ans)
 				prompt.answer += ans

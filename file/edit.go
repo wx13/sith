@@ -218,12 +218,11 @@ func (file *File) complete(ch rune) bool {
 		}
 		// If there are multiple matches, let the user choose from a menu.
 		menu := ui.NewMenu(file.screen, terminal.NewKeyboard())
-		idx, str := menu.Choose(results, 0, "", "tab")
-		file.Flush()
-		if idx < 0 || str == "cancel" || str == "tab" {
-			return true
+		cmd, r := menu.ShowOnly(results)
+		answer = common
+		if cmd == "char" {
+			answer = common + string(r)
 		}
-		answer = results[idx]
 		file.lastTab = time.Now()
 	}
 

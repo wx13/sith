@@ -114,6 +114,17 @@ func (menu *Menu) appendSelection(row int) []int {
 	return append(menu.selections, row)
 }
 
+// ShowOnly simply shows the choices and returns on any keypress.
+func (menu *Menu) ShowOnly(choices []string) (string, rune) {
+	menu.choices = choices
+	menu.setDims()
+	menu.Show(choices)
+	menu.screen.Flush()
+	cmd, r := menu.keyboard.GetKey()
+	menu.Clear()
+	return cmd, r
+}
+
 // Choose is the main interaction loop for the menu. It takes three required
 // inputs: a list of choices (strings), a current-selection-index (int), and
 // an initial search string (often ""). Optionally you can also pass a list
