@@ -9,12 +9,9 @@ import (
 	"regexp"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/wx13/sith/autocomplete"
 	"github.com/wx13/sith/file/buffer"
-	"github.com/wx13/sith/terminal"
-	"github.com/wx13/sith/ui"
 )
 
 // Same as fmt.Sprintf, but ignores extra arguments.
@@ -212,18 +209,7 @@ func (file *File) complete(ch rune) bool {
 	if len(common) > 0 {
 		answer = common
 	} else if len(results) > 1 {
-		if time.Since(file.lastTab) > file.doubleTab {
-			file.lastTab = time.Now()
-			return true
-		}
-		// If there are multiple matches, let the user choose from a menu.
-		menu := ui.NewMenu(file.screen, terminal.NewKeyboard())
-		cmd, r := menu.ShowOnly(results)
-		answer = common
-		if cmd == "char" {
-			answer = common + string(r)
-		}
-		file.lastTab = time.Now()
+		return true
 	}
 
 	// Insert only the new characters.
