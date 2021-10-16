@@ -209,6 +209,7 @@ func (file *File) complete(ch rune) bool {
 	if len(common) > 0 {
 		answer = common
 	} else if len(results) > 1 {
+		file.NotifyUser(strings.Join(results, "|"))
 		return true
 	}
 
