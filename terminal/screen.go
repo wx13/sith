@@ -4,30 +4,29 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"unicode"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
-
-	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/syntaxcolor"
 )
 
 type charMode int
 
-type Attribute termbox.Attribute
+// Attribute wraps tcell.Style for color and attribute handling.
+type Attribute int
 
 const (
-	ColorBlue     = Attribute(termbox.ColorBlue)
-	ColorRed      = Attribute(termbox.ColorRed)
-	ColorGreen    = Attribute(termbox.ColorGreen)
-	ColorYellow   = Attribute(termbox.ColorYellow)
-	ColorCyan     = Attribute(termbox.ColorCyan)
-	ColorMagenta  = Attribute(termbox.ColorMagenta)
-	ColorWhite    = Attribute(termbox.ColorWhite)
-	ColorDefault  = Attribute(termbox.ColorDefault)
-	AttrBold      = Attribute(termbox.AttrBold)
-	AttrReverse   = Attribute(termbox.AttrReverse)
-	AttrUnderline = Attribute(termbox.AttrUnderline)
+	ColorBlue     = Attribute(tcell.ColorBlue)
+	ColorRed      = Attribute(tcell.ColorRed)
+	ColorGreen    = Attribute(tcell.ColorGreen)
+	ColorYellow   = Attribute(tcell.ColorYellow)
+	ColorCyan     = Attribute(tcell.ColorTeal)
+	ColorMagenta  = Attribute(tcell.ColorPurple)
+	ColorWhite    = Attribute(tcell.ColorWhite)
+	ColorDefault  = Attribute(tcell.ColorDefault)
+	AttrBold      = Attribute(1 << 16)
+	AttrReverse   = Attribute(1 << 17)
+	AttrUnderline = Attribute(1 << 18)
 )
 
 const (
@@ -46,9 +45,35 @@ type Screen struct {
 	flushChan chan struct{}
 	dieChan   chan struct{}
 
+	tcell   tcell.Screen
 	tbMutex *sync.Mutex
 
 	charMode charMode
+}
+
+// toStyle converts fg/bg Attributes to a tcell.Style.
+func toStyle(fg, bg Attribute) tcell.Style {
+	style := tcell.StyleDefault
+
+	// Extract color (lower 16 bits)
+	fgColor := tcell.Color(fg & 0xFFFF)
+	bgColor := tcell.Color(bg & 0xFFFF)
+
+	style = style.Foreground(fgColor).Background(bgColor)
+
+	// Apply attributes from either fg or bg
+	attrs := fg | bg
+	if attrs&AttrBold != 0 {
+		style = style.Bold(true)
+	}
+	if attrs&AttrReverse != 0 {
+		style = style.Reverse(true)
+	}
+	if attrs&AttrUnderline != 0 {
+		style = style.Underline(true)
+	}
+
+	return style
 }
 
 // NewScreen creates a new screen object.
@@ -64,7 +89,15 @@ func NewScreen() *Screen {
 		charMode:  charModeFullUnicode,
 	}
 	screen.tbMutex.Lock()
-	termbox.Init()
+	var err error
+	screen.tcell, err = tcell.NewScreen()
+	if err != nil {
+		panic(err)
+	}
+	if err := screen.tcell.Init(); err != nil {
+		panic(err)
+	}
+	screen.tcell.EnableMouse()
 	screen.tbMutex.Unlock()
 	screen.handleRequests()
 	return &screen
@@ -72,18 +105,24 @@ func NewScreen() *Screen {
 
 // Size returns the screen size (col, row).
 func (screen *Screen) Size() (int, int) {
-	return termbox.Size()
+	screen.tbMutex.Lock()
+	defer screen.tbMutex.Unlock()
+	return screen.tcell.Size()
 }
 
 // Return the screen size.
 func Size() (cols, rows int) {
-	return termbox.Size()
+	// This is a package-level function used before screen is created.
+	// Return a reasonable default; actual size comes from Screen.Size().
+	return 80, 24
 }
 
+// Row returns the current cursor row.
 func (screen *Screen) Row() int {
 	return screen.row
 }
 
+// Col returns the current cursor column.
 func (screen *Screen) Col() int {
 	return screen.col
 }
@@ -93,8 +132,8 @@ func (screen *Screen) Col() int {
 func (screen *Screen) Suspend() {
 	screen.Clear()
 	screen.tbMutex.Lock()
-	termbox.Flush()
-	termbox.Close()
+	screen.tcell.Show()
+	screen.tcell.Fini()
 	screen.tbMutex.Unlock()
 }
 
@@ -109,7 +148,14 @@ func (screen *Screen) Close() {
 // Open starts the terminal session.
 func (screen *Screen) Open() {
 	screen.tbMutex.Lock()
-	termbox.Init()
+	var err error
+	screen.tcell, err = tcell.NewScreen()
+	if err != nil {
+		panic(err)
+	}
+	if err := screen.tcell.Init(); err != nil {
+		panic(err)
+	}
 	screen.tbMutex.Unlock()
 }
 
@@ -127,13 +173,13 @@ func (screen *Screen) handleRequests() {
 			select {
 			case <-screen.flushChan:
 				screen.tbMutex.Lock()
-				termbox.Flush()
+				screen.tcell.Show()
 				screen.tbMutex.Unlock()
 			case <-screen.dieChan:
 				screen.Clear()
 				screen.tbMutex.Lock()
-				termbox.Flush()
-				termbox.Close()
+				screen.tcell.Show()
+				screen.tcell.Fini()
 				screen.tbMutex.Unlock()
 				os.Exit(0)
 			}
@@ -146,16 +192,16 @@ func (screen *Screen) SetCursor(r, c int) {
 	screen.row = r
 	screen.col = c
 	screen.tbMutex.Lock()
-	termbox.SetCursor(c, r)
+	screen.tcell.ShowCursor(c, r)
 	screen.tbMutex.Unlock()
 }
 
 // Clear clears the screen.
 func (screen *Screen) Clear() {
 	screen.tbMutex.Lock()
-	termbox.Clear(termbox.Attribute(screen.fg), termbox.Attribute(screen.bg))
+	screen.tcell.Clear()
 	screen.tbMutex.Unlock()
-	cols, rows := termbox.Size()
+	cols, rows := screen.Size()
 	for row := 0; row < rows; row++ {
 		screen.WriteString(row, 0, strings.Repeat(" ", cols))
 	}
@@ -164,12 +210,12 @@ func (screen *Screen) Clear() {
 // ReallyClear writes a repeaded character to the screen and then
 // clears it, to make sure all terminal garbage is gone.
 func (screen *Screen) ReallyClear() {
-	cols, rows := termbox.Size()
+	cols, rows := screen.Size()
 	for row := 0; row < rows; row++ {
 		screen.WriteString(row, 0, strings.Repeat(".", cols))
 	}
 	screen.tbMutex.Lock()
-	termbox.Flush()
+	screen.tcell.Show()
 	screen.tbMutex.Unlock()
 	for row := 0; row < rows; row++ {
 		screen.WriteString(row, 0, strings.Repeat(" ", cols))
@@ -179,11 +225,13 @@ func (screen *Screen) ReallyClear() {
 
 // DecorateStatusLine colors the status line text.
 func (screen *Screen) DecorateStatusLine() {
-	cells := termbox.CellBuffer()
-	cols, rows := termbox.Size()
+	screen.tbMutex.Lock()
+	defer screen.tbMutex.Unlock()
+	cols, rows := screen.tcell.Size()
+	style := tcell.StyleDefault.Foreground(tcell.ColorBlue)
 	for col := 0; col < cols; col++ {
-		j := (rows-1)*cols + col
-		cells[j].Fg = termbox.ColorBlue
+		mainc, combc, _, _ := screen.tcell.GetContent(col, rows-1)
+		screen.tcell.SetContent(col, rows-1, mainc, combc, style)
 	}
 }
 
@@ -194,44 +242,33 @@ func (screen *Screen) WriteString(row, col int, s string) {
 
 // Underlines a piece of text.
 func (screen *Screen) Underline(row, start_col, end_col, offset int) {
-	cells := termbox.CellBuffer()
 	screen.tbMutex.Lock()
-	cols, _ := termbox.Size()
-	screen.tbMutex.Unlock()
+	defer screen.tbMutex.Unlock()
+	cols, _ := screen.tcell.Size()
 	for col := start_col; col < end_col; col++ {
-		if (col - offset) > cols {
-			break
-		}
-		if (col - offset) < 0 {
+		adjCol := col - offset
+		if adjCol > cols || adjCol < 0 {
 			continue
 		}
-		j := row*cols + (col - offset)
-		if j < 0 || j >= len(cells) {
-			continue
-		}
-		cells[j].Fg |= termbox.AttrUnderline
+		mainc, combc, style, _ := screen.tcell.GetContent(adjCol, row)
+		screen.tcell.SetContent(adjCol, row, mainc, combc, style.Underline(true))
 	}
 }
 
 // Colorize changes the color of text on the screen.
 func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset int) {
-	cells := termbox.CellBuffer()
 	screen.tbMutex.Lock()
-	cols, _ := termbox.Size()
-	screen.tbMutex.Unlock()
+	defer screen.tbMutex.Unlock()
+	cols, _ := screen.tcell.Size()
 	for _, lc := range colors {
+		style := toStyle(Attribute(lc.Fg), Attribute(lc.Bg))
 		for col := lc.Start; col < lc.End; col++ {
-			if (col - offset) > cols {
-				break
-			}
-			if (col - offset) < 0 {
+			adjCol := col - offset
+			if adjCol > cols || adjCol < 0 {
 				continue
 			}
-			j := row*cols + (col - offset)
-			if j < 0 || j >= len(cells) {
-				continue
-			}
-			cells[j].Bg, cells[j].Fg = lc.Bg, lc.Fg
+			mainc, combc, _, _ := screen.tcell.GetContent(adjCol, row)
+			screen.tcell.SetContent(adjCol, row, mainc, combc, style)
 		}
 	}
 }
@@ -239,7 +276,7 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 // PrintableRune uses the charMode to convert the rune into
 // a printable rune.
 func (screen *Screen) PrintableRune(c rune) (rune, int) {
-	if !unicode.IsPrint(c) {
+	if c < 32 {
 		return c, 0
 	}
 	if screen.charMode == charModeASCII {
@@ -275,15 +312,16 @@ func (screen *Screen) StringDispLen(s string) int {
 
 // WriteStringColor writes a colored string to the screen.
 func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg Attribute) {
+	style := toStyle(fg, bg)
 	k := 0
+	screen.tbMutex.Lock()
+	defer screen.tbMutex.Unlock()
 	for _, c := range s {
 		r, n := screen.PrintableRune(c)
 		if n <= 0 {
 			continue
 		}
-		screen.tbMutex.Lock()
-		termbox.SetCell(col+k, row, r, termbox.Attribute(fg), termbox.Attribute(bg))
-		screen.tbMutex.Unlock()
+		screen.tcell.SetContent(col+k, row, r, nil, style)
 		k += n
 	}
 }
@@ -293,13 +331,13 @@ func (screen *Screen) WriteMessage(msg string) {
 	if len(msg) == 0 {
 		return
 	}
-	_, rows := termbox.Size()
+	_, rows := screen.Size()
 	screen.WriteString(rows-1, 0, msg+"  ")
 }
 
 // Notify writes a status-line notification.
 func (screen *Screen) Notify(msg string) {
-	cols, rows := termbox.Size()
+	cols, rows := screen.Size()
 	screen.WriteString(rows-1, (cols-len(msg))/2, msg+"  ")
 }
 
@@ -312,24 +350,18 @@ func (screen *Screen) Alert(msg string) {
 func (screen *Screen) Highlight(row, col int) {
 	screen.tbMutex.Lock()
 	defer screen.tbMutex.Unlock()
-	cells := termbox.CellBuffer()
-	cols, _ := termbox.Size()
-	j := row*cols + col
-	cells[j].Bg |= termbox.AttrReverse
-	cells[j].Fg |= termbox.AttrReverse
+	mainc, combc, style, _ := screen.tcell.GetContent(col, row)
+	screen.tcell.SetContent(col, row, mainc, combc, style.Reverse(true))
 }
 
 // HighlightRange reverses the screen color over a range of rows/columns.
 func (screen *Screen) HighlightRange(startRow, endRow, startCol, endCol int) {
 	screen.tbMutex.Lock()
 	defer screen.tbMutex.Unlock()
-	cells := termbox.CellBuffer()
-	cols, _ := termbox.Size()
 	for row := startRow; row <= endRow; row++ {
 		for col := startCol; col <= endCol; col++ {
-			j := row*cols + col
-			cells[j].Bg |= termbox.AttrReverse
-			cells[j].Fg |= termbox.AttrReverse
+			mainc, combc, style, _ := screen.tcell.GetContent(col, row)
+			screen.tcell.SetContent(col, row, mainc, combc, style.Reverse(true))
 		}
 	}
 }
@@ -338,13 +370,11 @@ func (screen *Screen) HighlightRange(startRow, endRow, startCol, endCol int) {
 func (screen *Screen) ColorRange(startRow, endRow, startCol, endCol int, fg, bg Attribute) {
 	screen.tbMutex.Lock()
 	defer screen.tbMutex.Unlock()
-	cells := termbox.CellBuffer()
-	cols, _ := termbox.Size()
+	style := toStyle(fg, bg)
 	for row := startRow; row <= endRow; row++ {
 		for col := startCol; col <= endCol; col++ {
-			j := row*cols + col
-			cells[j].Bg = termbox.Attribute(bg)
-			cells[j].Fg = termbox.Attribute(fg)
+			mainc, combc, _, _ := screen.tcell.GetContent(col, row)
+			screen.tcell.SetContent(col, row, mainc, combc, style)
 		}
 	}
 }
@@ -362,4 +392,9 @@ func (screen *Screen) ListCharModes() []string {
 		"Narrow unicode characters",
 		"Full unicode",
 	}
+}
+
+// GetTcell returns the underlying tcell.Screen for keyboard polling.
+func (screen *Screen) GetTcell() tcell.Screen {
+	return screen.tcell
 }

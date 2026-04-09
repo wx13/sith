@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/nsf/termbox-go"
+	"github.com/gdamore/tcell/v2"
 	"github.com/wx13/sith/config"
 )
 
 // Color specifies a foreground and background color.
 type Color struct {
-	fg, bg termbox.Attribute
+	fg, bg tcell.Color
 }
 
 // SyntaxRule simply maps a regexp to a color.
@@ -51,23 +51,23 @@ func (rules *SyntaxRules) ingestConfig(cfg config.Config) {
 	}
 }
 
-func toColor(name string) termbox.Attribute {
-	colormap := map[string]termbox.Attribute{
-		"green":   termbox.ColorGreen,
-		"red":     termbox.ColorRed,
-		"blue":    termbox.ColorBlue,
-		"cyan":    termbox.ColorCyan,
-		"magenta": termbox.ColorMagenta,
-		"yellow":  termbox.ColorYellow,
-		"white":   termbox.ColorWhite,
-		"black":   termbox.ColorBlack,
-		"default": termbox.ColorDefault,
+func toColor(name string) tcell.Color {
+	colormap := map[string]tcell.Color{
+		"green":   tcell.ColorGreen,
+		"red":     tcell.ColorRed,
+		"blue":    tcell.ColorBlue,
+		"cyan":    tcell.ColorTeal,
+		"magenta": tcell.ColorPurple,
+		"yellow":  tcell.ColorYellow,
+		"white":   tcell.ColorWhite,
+		"black":   tcell.ColorBlack,
+		"default": tcell.ColorDefault,
 	}
 	color, ok := colormap[name]
 	if ok {
 		return color
 	}
-	return termbox.ColorDefault
+	return tcell.ColorDefault
 }
 
 func (rules *SyntaxRules) addWhitespaceRule() {
@@ -87,7 +87,7 @@ func (rules *SyntaxRules) addClobberRule(reStr string, color Color) {
 // LineColor object maps a color pair (bg, fg) with start/end indices
 // within a string.
 type LineColor struct {
-	Fg, Bg     termbox.Attribute
+	Fg, Bg     tcell.Color
 	Start, End int
 }
 

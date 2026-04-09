@@ -8,7 +8,6 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/nsf/termbox-go"
 	"github.com/wx13/sith/autocomplete"
 	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file"
@@ -212,6 +211,7 @@ func (editor *Editor) CloseFile() bool {
 func (editor *Editor) Listen() {
 
 	editor.keyboard = terminal.NewKeyboard()
+	editor.keyboard.SetScreen(editor.screen.GetTcell())
 	editor.keymap = editor.MakeKeyMap()
 	editor.xKeymap = editor.MakeExtraKeyMap()
 	for {
@@ -406,8 +406,7 @@ func (editor *Editor) SwitchFile(n int) {
 
 // HighlightCursors highlights all the multi-cursors.
 func (editor *Editor) HighlightCursors() {
-	cells := termbox.CellBuffer()
-	cols, rows := terminal.Size()
+	cols, rows := editor.screen.Size()
 	r0, c0 := editor.file.GetCursor(0)
 	if editor.file.MultiCursor.Length() <= 1 {
 		return
@@ -417,16 +416,12 @@ func (editor *Editor) HighlightCursors() {
 		if r < 0 || r > rows || c < 0 || c > cols {
 			continue
 		}
-		j := r*cols + c
-		if j < 0 || j >= len(cells) {
-			continue
-		}
 		if r == r0 && c == c0 {
-			cells[j].Bg |= termbox.AttrBold
-			cells[j].Fg |= termbox.AttrBold | termbox.ColorYellow
+			editor.screen.ColorRange(r, r, c, c,
+				terminal.ColorYellow|terminal.AttrBold,
+				terminal.AttrBold)
 		} else {
-			cells[j].Bg |= termbox.AttrReverse
-			cells[j].Fg |= termbox.AttrReverse
+			editor.screen.Highlight(r, c)
 		}
 	}
 }

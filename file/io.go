@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nsf/termbox-go"
+	"github.com/gdamore/tcell/v2"
 	"github.com/wx13/sith/file/buffer"
 	"github.com/wx13/sith/syntaxcolor"
 )
@@ -15,7 +15,7 @@ import (
 // Flush writes the buffer contents to the screen.
 func (file *File) Flush() {
 	file.ComputeIndent()
-	cols, rows := termbox.Size()
+	cols, rows := file.screen.Size()
 	slice := file.Slice(rows-1, cols)
 	file.screen.Clear()
 	for row, str := range slice {
@@ -41,7 +41,7 @@ func (file *File) ColorBracketMatch(rows int) {
 	col = file.buffer.GetRow(row).TabCursorPos(col, file.tabWidth)
 	lc := []syntaxcolor.LineColor{
 		{
-			Fg:    termbox.ColorRed | termbox.AttrBold,
+			Fg:    tcell.ColorRed,
 			Start: col,
 			End:   col + 1,
 		},

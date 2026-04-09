@@ -2,8 +2,6 @@ package file
 
 import (
 	"regexp"
-
-	"github.com/nsf/termbox-go"
 )
 
 func (file *File) enforceColBounds(indexes ...int) {
@@ -42,7 +40,7 @@ func (file *File) enforceRowBounds(indexes ...int) {
 
 func (file *File) makeCursorNotAtTopBottom() {
 	row := file.MultiCursor.GetRow(0)
-	_, rows := termbox.Size()
+	_, rows := file.screen.Size()
 	bottom := file.rowOffset + rows - 1
 	if row >= bottom {
 		file.rowOffset += (row - bottom) + rows/8
@@ -63,13 +61,13 @@ func (file *File) CursorGoTo(row, col int) {
 
 // PageDown moves the cursor half a screen down.
 func (file *File) PageDown() {
-	_, rows := termbox.Size()
+	_, rows := file.screen.Size()
 	file.CursorDown(rows/2 - 1)
 }
 
 // PageUp moves the cursor have a screen up.
 func (file *File) PageUp() {
-	_, rows := termbox.Size()
+	_, rows := file.screen.Size()
 	file.CursorUp(rows/2 - 1)
 }
 

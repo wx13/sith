@@ -3,100 +3,128 @@ package terminal
 import (
 	"strings"
 
-	"github.com/nsf/termbox-go"
+	"github.com/gdamore/tcell/v2"
 )
 
-// Keyboard acts as an interface to the termbox keyboard.
+// Keyboard acts as an interface to the tcell keyboard.
 type Keyboard struct {
-	KeyMap map[termbox.Key]string
+	KeyMap map[tcell.Key]string
+	screen tcell.Screen
 }
 
-// NewKeyboard defines a map from termbox key to a
+// NewKeyboard defines a map from tcell key to a
 // string representation.
 func NewKeyboard() *Keyboard {
-	termbox.SetInputMode(termbox.InputAlt)
 	kb := Keyboard{}
-	kb.KeyMap = map[termbox.Key]string{
-		termbox.KeyBackspace:  "backspace",
-		termbox.KeyBackspace2: "backspace",
-		termbox.KeyDelete:     "delete",
-		termbox.KeyArrowUp:    "arrowUp",
-		termbox.KeyArrowDown:  "arrowDown",
-		termbox.KeyArrowLeft:  "arrowLeft",
-		termbox.KeyArrowRight: "arrowRight",
-		termbox.KeySpace:      "space",
-		termbox.KeyEnter:      "enter",
-		termbox.KeyPgup:       "pageUp",
-		termbox.KeyPgdn:       "pageDown",
-		termbox.KeyHome:       "home",
-		termbox.KeyEnd:        "end",
-		termbox.KeyTab:        "tab",
-		termbox.KeyCtrl6:      "ctrl6",
-		termbox.KeyCtrlA:      "ctrlA",
-		termbox.KeyCtrlB:      "ctrlB",
-		termbox.KeyCtrlC:      "ctrlC",
-		termbox.KeyCtrlD:      "ctrlD",
-		termbox.KeyCtrlE:      "ctrlE",
-		termbox.KeyCtrlF:      "ctrlF",
-		termbox.KeyCtrlG:      "ctrlG",
-		termbox.KeyCtrlJ:      "ctrlJ",
-		termbox.KeyCtrlK:      "ctrlK",
-		termbox.KeyCtrlL:      "ctrlL",
-		termbox.KeyCtrlN:      "ctrlN",
-		termbox.KeyCtrlO:      "ctrlO",
-		termbox.KeyCtrlP:      "ctrlP",
-		termbox.KeyCtrlQ:      "ctrlQ",
-		termbox.KeyCtrlR:      "ctrlR",
-		termbox.KeyCtrlS:      "ctrlS",
-		termbox.KeyCtrlT:      "ctrlT",
-		termbox.KeyCtrlU:      "ctrlU",
-		termbox.KeyCtrlV:      "ctrlV",
-		termbox.KeyCtrlW:      "ctrlW",
-		termbox.KeyCtrlX:      "ctrlX",
-		termbox.KeyCtrlY:      "ctrlY",
-		termbox.KeyCtrlZ:      "ctrlZ",
-		termbox.KeyCtrlSlash:  "ctrlSlash",
+	kb.KeyMap = map[tcell.Key]string{
+		tcell.KeyBackspace:  "backspace",
+		tcell.KeyBackspace2: "backspace",
+		tcell.KeyDelete:     "delete",
+		tcell.KeyUp:         "arrowUp",
+		tcell.KeyDown:       "arrowDown",
+		tcell.KeyLeft:       "arrowLeft",
+		tcell.KeyRight:      "arrowRight",
+		tcell.KeyEnter:      "enter",
+		tcell.KeyPgUp:       "pageUp",
+		tcell.KeyPgDn:       "pageDown",
+		tcell.KeyHome:       "home",
+		tcell.KeyEnd:        "end",
+		tcell.KeyTab:        "tab",
+		tcell.KeyCtrlA:      "ctrlA",
+		tcell.KeyCtrlB:      "ctrlB",
+		tcell.KeyCtrlC:      "ctrlC",
+		tcell.KeyCtrlD:      "ctrlD",
+		tcell.KeyCtrlE:      "ctrlE",
+		tcell.KeyCtrlF:      "ctrlF",
+		tcell.KeyCtrlG:      "ctrlG",
+		tcell.KeyCtrlJ:      "ctrlJ",
+		tcell.KeyCtrlK:      "ctrlK",
+		tcell.KeyCtrlL:      "ctrlL",
+		tcell.KeyCtrlN:      "ctrlN",
+		tcell.KeyCtrlO:      "ctrlO",
+		tcell.KeyCtrlP:      "ctrlP",
+		tcell.KeyCtrlQ:      "ctrlQ",
+		tcell.KeyCtrlR:      "ctrlR",
+		tcell.KeyCtrlS:      "ctrlS",
+		tcell.KeyCtrlT:      "ctrlT",
+		tcell.KeyCtrlU:      "ctrlU",
+		tcell.KeyCtrlV:      "ctrlV",
+		tcell.KeyCtrlW:      "ctrlW",
+		tcell.KeyCtrlX:      "ctrlX",
+		tcell.KeyCtrlY:      "ctrlY",
+		tcell.KeyCtrlZ:      "ctrlZ",
+		tcell.KeyCtrlBackslash: "ctrlSlash",
 	}
 	return &kb
 }
 
-func (kb *Keyboard) altKeyToCmd(ev termbox.Event) (string, rune) {
-	return "alt" + strings.ToUpper(string(ev.Ch)), 0
+// SetScreen sets the tcell screen for polling events.
+func (kb *Keyboard) SetScreen(screen tcell.Screen) {
+	kb.screen = screen
 }
 
-func (kb *Keyboard) keyToCmd(ev termbox.Event) (string, rune) {
+func (kb *Keyboard) altKeyToCmd(r rune) (string, rune) {
+	return "alt" + strings.ToUpper(string(r)), 0
+}
 
-	cmd, ok := kb.KeyMap[ev.Key]
+func (kb *Keyboard) keyToCmd(ev *tcell.EventKey) (string, rune) {
+	key := ev.Key()
+	r := ev.Rune()
+	mod := ev.Modifiers()
 
+	cmd, ok := kb.KeyMap[key]
 	if ok {
 		return cmd, 0
-	} else if (ev.Mod & termbox.ModAlt) != 0 {
-		return kb.altKeyToCmd(ev)
-	} else if ev.Ch > 160 && ev.Ch < 256 {
-		ev.Ch -= 128
-		return kb.altKeyToCmd(ev)
-	} else if ev.Ch >= 32 && ev.Ch < 128 {
-		return "char", ev.Ch
-	} else {
-		return "unknown", 0
 	}
+
+	if mod&tcell.ModAlt != 0 {
+		return kb.altKeyToCmd(r)
+	}
+
+	// Handle Ctrl+6 (ctrl6) - tcell represents this differently
+	if key == tcell.KeyCtrlCarat {
+		return "ctrl6", 0
+	}
+
+	// Space is a rune in tcell, not a special key
+	if key == tcell.KeyRune && r == ' ' {
+		return "space", 0
+	}
+
+	if key == tcell.KeyRune && r >= 32 && r < 128 {
+		return "char", r
+	}
+
+	// Handle extended characters (alt+char in some terminals)
+	if key == tcell.KeyRune && r > 160 && r < 256 {
+		return kb.altKeyToCmd(r - 128)
+	}
+
+	if key == tcell.KeyRune {
+		return "char", r
+	}
+
+	return "unknown", 0
 }
 
-// GetCmdString turns termbox keyboard input into a string representation
+// GetCmdString turns tcell keyboard input into a string representation
 // of the keypress. If the result is "char", then it also returns the rune.
-func (kb *Keyboard) GetCmdString(ev termbox.Event) (string, rune) {
-
-	if ev.Type == termbox.EventKey {
-		return kb.keyToCmd(ev)
-	}
-	return "unknown", 0
+func (kb *Keyboard) GetCmdString(ev *tcell.EventKey) (string, rune) {
+	return kb.keyToCmd(ev)
 }
 
 // GetKey returns the human-readable name for a keypress,
 // or the rune if it is character.
 func (kb *Keyboard) GetKey() (string, rune) {
-	ev := termbox.PollEvent()
-	return kb.GetCmdString(ev)
+	for {
+		ev := kb.screen.PollEvent()
+		switch ev := ev.(type) {
+		case *tcell.EventKey:
+			return kb.GetCmdString(ev)
+		case *tcell.EventResize:
+			kb.screen.Sync()
+		}
+	}
 }
 
 // Mock keyboard for testing.
