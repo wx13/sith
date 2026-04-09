@@ -2,7 +2,6 @@ package file
 
 import (
 	"crypto/md5"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
@@ -112,7 +111,7 @@ func (file *File) ReadFile(name string, wgs ...*sync.WaitGroup) {
 		file.modTime = fileInfo.ModTime()
 		stringBuf := []string{""}
 
-		byteBuf, err := ioutil.ReadFile(name)
+		byteBuf, err := os.ReadFile(name)
 		if err == nil {
 			file.setNewline(string(byteBuf))
 			stringBuf = strings.Split(string(byteBuf), file.newline)
@@ -163,7 +162,7 @@ func (file *File) Save() {
 	}
 	file.SnapshotSaved()
 	contents := []byte(file.ToString())
-	err := ioutil.WriteFile(file.Name, contents, file.fileMode)
+	err := os.WriteFile(file.Name, contents, file.fileMode)
 	if err != nil {
 		file.NotifyUser("Save Failed: " + err.Error())
 	} else {

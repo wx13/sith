@@ -2,7 +2,7 @@ package editor
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -59,17 +59,20 @@ func (editor *Editor) OpenNewFile() {
 	dir += "/"
 	filenames := []string{}
 	for {
-		files, _ := ioutil.ReadDir(dir)
-		dotdot, err := os.Stat("../")
-		if err == nil {
-			files = append([]os.FileInfo{dotdot}, files...)
+		entries, _ := os.ReadDir(dir)
+		hasDotDot := false
+		if _, err := os.Stat("../"); err == nil {
+			hasDotDot = true
 		}
 		names := []string{}
-		for _, file := range files {
-			if file.IsDir() {
-				names = append(names, file.Name()+"/")
+		if hasDotDot {
+			names = append(names, "../")
+		}
+		for _, entry := range entries {
+			if entry.IsDir() {
+				names = append(names, entry.Name()+"/")
 			} else {
-				names = append(names, file.Name())
+				names = append(names, entry.Name())
 			}
 		}
 		menu := ui.NewMenu(editor.screen, editor.keyboard)
@@ -90,21 +93,21 @@ func (editor *Editor) OpenNewFile() {
 			break
 		}
 		if len(idxs) == 1 {
-			chosenFile := files[idxs[0]]
-			if chosenFile.IsDir() {
-				dir = filepath.Clean(dir+chosenFile.Name()) + "/"
+			chosenName := names[idxs[0]]
+			if fs.ValidPath(chosenName) && chosenName[len(chosenName)-1] == '/' {
+				dir = filepath.Clean(dir+chosenName) + "/"
 			} else {
-				filenames = []string{names[idxs[0]]}
+				filenames = []string{chosenName}
 				break
 			}
 		} else {
 			for _, idx := range idxs {
-				chosenFile := files[idx]
-				if chosenFile.IsDir() {
+				chosenName := names[idx]
+				if fs.ValidPath(chosenName) && chosenName[len(chosenName)-1] == '/' {
 					editor.screen.Notify("Can't open multiple directories")
 					return
 				}
-				filenames = append(filenames, names[idx])
+				filenames = append(filenames, chosenName)
 			}
 			break
 		}

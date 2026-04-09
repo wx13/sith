@@ -1,15 +1,15 @@
 package config_test
 
 import (
-	"github.com/wx13/sith/config"
-	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/wx13/sith/config"
 )
 
 func writeTempFile(contents string) string {
 	b := []byte(contents)
-	tmpfile, err := ioutil.TempFile("", "config_test")
+	tmpfile, err := os.CreateTemp("", "config_test")
 	if err != nil {
 		panic(err)
 	}

@@ -3,7 +3,6 @@ package file
 import (
 	"crypto/md5"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -24,7 +23,7 @@ func (file *File) FileChanged() (bool, error) {
 	if !fileInfo.ModTime().After(file.modTime) {
 		return false, nil
 	}
-	byteBuf, err := ioutil.ReadFile(file.Name)
+	byteBuf, err := os.ReadFile(file.Name)
 	if err != nil {
 		return false, err
 	}
