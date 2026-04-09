@@ -12,8 +12,8 @@ import (
 
 type charMode int
 
-// Attribute wraps tcell.Style for color and attribute handling.
-type Attribute int
+// Attribute combines a tcell.Color with style attributes.
+type Attribute uint64
 
 const (
 	ColorBlue     = Attribute(tcell.ColorBlue)
@@ -24,9 +24,9 @@ const (
 	ColorMagenta  = Attribute(tcell.ColorPurple)
 	ColorWhite    = Attribute(tcell.ColorWhite)
 	ColorDefault  = Attribute(tcell.ColorDefault)
-	AttrBold      = Attribute(1 << 16)
-	AttrReverse   = Attribute(1 << 17)
-	AttrUnderline = Attribute(1 << 18)
+	AttrBold      = Attribute(1 << 48)
+	AttrReverse   = Attribute(1 << 49)
+	AttrUnderline = Attribute(1 << 50)
 )
 
 const (
@@ -55,9 +55,9 @@ type Screen struct {
 func toStyle(fg, bg Attribute) tcell.Style {
 	style := tcell.StyleDefault
 
-	// Extract color (lower 16 bits)
-	fgColor := tcell.Color(fg & 0xFFFF)
-	bgColor := tcell.Color(bg & 0xFFFF)
+	// Extract color (lower 48 bits contain tcell.Color)
+	fgColor := tcell.Color(fg & 0xFFFFFFFFFFFF)
+	bgColor := tcell.Color(bg & 0xFFFFFFFFFFFF)
 
 	style = style.Foreground(fgColor).Background(bgColor)
 
@@ -261,7 +261,7 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 	defer screen.tbMutex.Unlock()
 	cols, _ := screen.tcell.Size()
 	for _, lc := range colors {
-		style := toStyle(Attribute(lc.Fg), Attribute(lc.Bg))
+		style := tcell.StyleDefault.Foreground(lc.Fg).Background(lc.Bg)
 		for col := lc.Start; col < lc.End; col++ {
 			adjCol := col - offset
 			if adjCol > cols || adjCol < 0 {

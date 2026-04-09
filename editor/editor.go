@@ -504,7 +504,7 @@ func (editor *Editor) writeSyncStatus(row, col int) int {
 
 // UpdateStatus updates the status line.
 func (editor *Editor) UpdateStatus() {
-	cols, rows := terminal.Size()
+	cols, rows := editor.screen.Size()
 
 	name := editor.getFilename(cols / 3)
 	message := fmt.Sprintf("%s (%d/%d)   %d/%d,%d",
