@@ -7,7 +7,7 @@ import (
 	"github.com/wx13/sith/syntaxcolor"
 )
 
-func ExampleColorize() {
+func ExampleSyntaxRules_Colorize() {
 
 	cfg := config.Config{
 		SyntaxRules: map[string]config.Color{
