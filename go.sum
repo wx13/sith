@@ -7,5 +7,3 @@ github.com/nsf/termbox-go v1.1.1 h1:nksUPLCb73Q++DwbYUBEglYBRPZyoXJdrj5L+TkjyZY=
 github.com/nsf/termbox-go v1.1.1/go.mod h1:T0cTdVuOwf7pHQNtfhnEbzHbcNyCEcVU4YPpouCbVxo=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
-github.com/wx13/version.v0 v0.2.0 h1:g1bVfCMRnE8h1PfFfq+XTddicj0YL0L3+ncVXusiO9o=
-github.com/wx13/version.v0 v0.2.0/go.mod h1:HnDfcRKpGrXZpJFVuuu0u9Kr6XYNKQA+NzQM/ECLQLk=

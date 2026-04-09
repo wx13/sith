@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"sort"
 	"sync"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/wx13/sith/file"
 	"github.com/wx13/sith/terminal"
 	"github.com/wx13/sith/ui"
-	"github.com/wx13/version.v0"
 )
 
 // Editor is the main editor object. It orchestrates the terminal,
@@ -504,6 +504,14 @@ func (editor *Editor) writeSyncStatus(row, col int) int {
 	return 0
 }
 
+func getVersion() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return ""
+	}
+	return info.Main.Version
+}
+
 // UpdateStatus updates the status line.
 func (editor *Editor) UpdateStatus() {
 	cols, rows := terminal.Size()
@@ -520,8 +528,8 @@ func (editor *Editor) UpdateStatus() {
 	col := cols - len(message)
 	editor.screen.WriteString(rows-1, col, message)
 	banner := "[ Sith ]"
-	if version.Version != "" {
-		banner = "[ Sith " + version.FullVersion + " ]"
+	if v := getVersion(); v != "" && v != "(devel)" {
+		banner = "[ Sith " + v + " ]"
 	}
 	editor.screen.WriteString(rows-1, 0, banner)
 	editor.screen.DecorateStatusLine()
