@@ -245,6 +245,16 @@ func (file *File) InsertStr(str string) {
 	rows := file.MultiCursor.GetRowsCols()
 	var blankRows []int
 	rows, blankRows = file.removeBlankLineCursors(rows)
+
+	// Invalidate syntax cache from the first modified row
+	minRow := file.buffer.Length()
+	for row := range rows {
+		if row < minRow {
+			minRow = row
+		}
+	}
+	file.InvalidateSyntaxCache(minRow)
+
 	rows = file.buffer.InsertStr(str, rows)
 	for _, row := range blankRows {
 		rows[row] = []int{0}
@@ -272,6 +282,16 @@ func (file *File) Backspace() {
 	}
 
 	rows := file.MultiCursor.GetRowsCols()
+
+	// Invalidate syntax cache from the first modified row
+	minRow := file.buffer.Length()
+	for row := range rows {
+		if row < minRow {
+			minRow = row
+		}
+	}
+	file.InvalidateSyntaxCache(minRow)
+
 	if allColsZero(rows) {
 		rows = file.buffer.DeleteNewlines(rows)
 	} else {
@@ -296,6 +316,10 @@ func (file *File) Newline() {
 	if len(file.MultiCursor.Cursors()) == 1 {
 		cursor := file.MultiCursor.Cursors()[0]
 		row, col := cursor.RowCol()
+
+		// Invalidate syntax cache from this row
+		file.InvalidateSyntaxCache(row)
+
 		lineStart := file.buffer.RowSlice(row, 0, col)
 		lineEnd := file.buffer.RowSlice(row, col, -1)
 		newLines := []buffer.Line{lineStart, lineEnd}

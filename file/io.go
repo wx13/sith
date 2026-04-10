@@ -18,16 +18,51 @@ func (file *File) Flush() {
 	cols, rows := file.screen.Size()
 	slice := file.Slice(rows-1, cols)
 	file.screen.Clear()
+
+	// Ensure states are calculated for all lines before the visible area
+	file.ensureSyntaxStates(file.rowOffset)
+
 	for row, str := range slice {
 		file.screen.WriteString(row, 0, str)
-		fullStr := file.buffer.GetRow(row + file.rowOffset).Tabs2spaces(file.tabWidth).ToString()
-		file.screen.Colorize(row, file.SyntaxRules.Colorize(fullStr), file.colOffset)
+		bufferRow := row + file.rowOffset
+		fullStr := file.buffer.GetRow(bufferRow).Tabs2spaces(file.tabWidth).ToString()
+
+		// Get the start state for this line
+		startState := file.stateCache.GetState(bufferRow)
+		result := file.SyntaxRules.ColorizeWithState(fullStr, startState)
+
+		// Cache the end state
+		file.stateCache.SetEndState(bufferRow, result.EndState)
+
+		file.screen.Colorize(row, result.Colors, file.colOffset)
 	}
 	for row := len(slice); row < rows-1; row++ {
 		file.screen.WriteString(row, 0, "~")
 	}
 	file.ColorBracketMatch(rows)
 	// file.HighlightCurrentWord()
+}
+
+// ensureSyntaxStates calculates syntax states for all lines up to (but not including) lineNum.
+func (file *File) ensureSyntaxStates(lineNum int) {
+	for i := 0; i < lineNum && i < file.buffer.Length(); i++ {
+		// Check if we already have the state cached
+		if file.stateCache.GetState(i+1) != syntaxcolor.StateNormal || i == 0 {
+			// State might be cached, but we need to verify by checking if it was calculated
+			// For simplicity, just recalculate if we don't have enough cached states
+		}
+
+		startState := file.stateCache.GetState(i)
+		fullStr := file.buffer.GetRow(i).Tabs2spaces(file.tabWidth).ToString()
+		result := file.SyntaxRules.ColorizeWithState(fullStr, startState)
+		stateChanged := file.stateCache.SetEndState(i, result.EndState)
+
+		// If state didn't change, and we have more states cached, we can stop
+		if !stateChanged && file.stateCache.GetState(i+1) != syntaxcolor.StateNormal {
+			// The rest should still be valid
+			break
+		}
+	}
 }
 
 // ColorBracketMatch colorizes a matching bracket character.

@@ -40,6 +40,7 @@ type File struct {
 
 	Name        string
 	SyntaxRules *syntaxcolor.SyntaxRules
+	stateCache  *syntaxcolor.StateCache
 	fileMode    os.FileMode
 	autoIndent  bool
 
@@ -133,6 +134,8 @@ func (file *File) ingestConfig(cfg config.Config) {
 	file.tabWidth = cfg.TabWidth
 	file.tabString = cfg.TabString
 	file.SyntaxRules = syntaxcolor.NewSyntaxRules(cfg)
+	file.SyntaxRules.SetupForLanguage(ext)
+	file.stateCache = syntaxcolor.NewStateCache()
 	file.fmtCmd = cfg.FmtCmd
 }
 
@@ -160,6 +163,14 @@ func (file *File) Close() bool {
 		}
 	}
 	return true
+}
+
+// InvalidateSyntaxCache invalidates syntax highlighting state from a given row onwards.
+// This should be called whenever the buffer is modified.
+func (file *File) InvalidateSyntaxCache(fromRow int) {
+	if file.stateCache != nil {
+		file.stateCache.Invalidate(fromRow)
+	}
 }
 
 // ToggleMCMode cycles among the available multicursor navigation modes.
