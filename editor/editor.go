@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/wx13/sith/autocomplete"
 	"github.com/wx13/sith/config"
@@ -37,6 +38,7 @@ type Editor struct {
 	replaceHist []string
 	gotoHist    []string
 	history     *state.History
+	session     *state.Session
 
 	copyBuffer *CopyBuffer
 
@@ -53,6 +55,7 @@ func NewEditor() *Editor {
 		cfg:         config.CreateConfig(),
 		completer:   autocomplete.New(),
 		history:     history,
+		session:     state.NewSession(),
 		searchHist:  history.GetSearch(),
 		replaceHist: history.GetReplace(),
 		gotoHist:    history.GetGoto(),
@@ -194,8 +197,9 @@ func (editor *Editor) Quit() {
 		}
 	}
 
-	// Save history before exiting.
+	// Save history and session before exiting.
 	editor.saveHistory()
+	editor.saveSession()
 
 	// Exit.
 	editor.screen.Close()
@@ -226,6 +230,90 @@ func reverseStrings(s []string) []string {
 		result[len(s)-1-i] = v
 	}
 	return result
+}
+
+// saveSession saves the current session (open files, cursor positions) to disk.
+func (editor *Editor) saveSession() {
+	if editor.session == nil || len(editor.files) == 0 {
+		return
+	}
+
+	// Create a fresh session
+	editor.session = state.NewSession()
+
+	for i, f := range editor.files {
+		row, col := f.GetRowCol(0)
+		editor.session.AddFile(f.Name, row, col, i == editor.fileIdx)
+	}
+
+	editor.session.Save()
+}
+
+// HasSavedSession returns true if there's a saved session for the current directory.
+func (editor *Editor) HasSavedSession() bool {
+	return editor.session != nil && editor.session.HasSession()
+}
+
+// RestoreSession restores the previously saved session.
+// Returns the list of file names to open and the index of the active file.
+func (editor *Editor) RestoreSession() ([]string, int) {
+	if editor.session == nil {
+		return nil, 0
+	}
+
+	if err := editor.session.Load(); err != nil {
+		return nil, 0
+	}
+
+	files := editor.session.GetFiles()
+	if len(files) == 0 {
+		return nil, 0
+	}
+
+	names := make([]string, len(files))
+	activeIdx := 0
+	for i, f := range files {
+		names[i] = f.Path
+		if f.Active {
+			activeIdx = i
+		}
+	}
+
+	return names, activeIdx
+}
+
+// RestoreCursorPositions restores cursor positions after files are loaded.
+func (editor *Editor) RestoreCursorPositions() {
+	if editor.session == nil {
+		return
+	}
+
+	files := editor.session.GetFiles()
+	for i, f := range files {
+		if i < len(editor.files) {
+			editor.files[i].CursorGoTo(f.Row, f.Col)
+		}
+	}
+}
+
+// SessionAge returns how long ago the session was saved.
+func (editor *Editor) SessionAge() string {
+	if editor.session == nil {
+		return ""
+	}
+	if err := editor.session.Load(); err != nil {
+		return ""
+	}
+	age := editor.session.Age()
+	if age < time.Minute {
+		return "just now"
+	} else if age < time.Hour {
+		return fmt.Sprintf("%d minutes ago", int(age.Minutes()))
+	} else if age < 24*time.Hour {
+		return fmt.Sprintf("%d hours ago", int(age.Hours()))
+	} else {
+		return fmt.Sprintf("%d days ago", int(age.Hours()/24))
+	}
 }
 
 // CloseFile closes the current file.
