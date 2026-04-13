@@ -28,40 +28,23 @@ func main() {
 		}
 	}
 
-	session := editor.NewEditor()
-	defer session.Quit()
+	e := editor.NewEditor()
+	defer e.Quit()
 
 	// Try to restore session if:
 	// - --resume flag is set, OR
 	// - No files specified and a saved session exists
-	if resume || (len(fileArgs) == 0 && session.HasSavedSession()) {
-		files, activeIdx := session.RestoreSession()
-		if len(files) > 0 {
-			if !resume {
-				// Ask user if they want to restore
-				fmt.Printf("Restore previous session (%s, %d files)? [Y/n] ", session.SessionAge(), len(files))
-				var response string
-				fmt.Scanln(&response)
-				if response != "" && response[0] != 'y' && response[0] != 'Y' {
-					files = nil
-				}
-			}
-			if len(files) > 0 {
-				session.OpenFiles(files)
-				session.SwitchFile(activeIdx)
-				session.RestoreCursorPositions()
-				session.Flush()
-				session.KeepFlushed()
-				session.Listen()
-				return
-			}
-		}
+	restored := false
+	if resume || (len(fileArgs) == 0 && e.HasSavedSession()) {
+		restored = e.TryRestoreSession(resume)
 	}
 
-	// Normal startup with specified files (or empty)
-	session.OpenFiles(fileArgs)
+	if !restored {
+		// Normal startup with specified files (or empty)
+		e.OpenFiles(fileArgs)
+	}
 
-	session.Flush()
-	session.KeepFlushed()
-	session.Listen()
+	e.Flush()
+	e.KeepFlushed()
+	e.Listen()
 }

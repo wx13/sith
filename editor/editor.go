@@ -316,6 +316,35 @@ func (editor *Editor) SessionAge() string {
 	}
 }
 
+// TryRestoreSession attempts to restore a saved session.
+// If forceRestore is false, prompts the user for confirmation.
+// Returns true if session was restored.
+func (editor *Editor) TryRestoreSession(forceRestore bool) bool {
+	files, activeIdx := editor.RestoreSession()
+	if len(files) == 0 {
+		return false
+	}
+
+	if !forceRestore {
+		// Initialize keyboard for prompt
+		editor.keyboard = terminal.NewKeyboard()
+		editor.keyboard.SetScreen(editor.screen.GetTcell())
+
+		// Ask user if they want to restore
+		prompt := ui.MakePrompt(editor.screen, editor.keyboard)
+		question := fmt.Sprintf("Restore session (%s, %d files)?", editor.SessionAge(), len(files))
+		restore, err := prompt.AskYesNo(question)
+		if err != nil || !restore {
+			return false
+		}
+	}
+
+	editor.OpenFiles(files)
+	editor.SwitchFile(activeIdx)
+	editor.RestoreCursorPositions()
+	return true
+}
+
 // CloseFile closes the current file.
 func (editor *Editor) CloseFile() bool {
 	editor.Flush()
