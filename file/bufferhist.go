@@ -12,17 +12,19 @@ import (
 // BufferState contains a snapshot of the buffer state,
 // including multicursor positions.
 type BufferState struct {
-	buff  buffer.Buffer
-	mc    cursor.MultiCursor
-	saved bool
+	buff      buffer.Buffer
+	mc        cursor.MultiCursor
+	saved     bool
+	timestamp time.Time
 }
 
 // NewBufferState creates a new buffer state snapshot from the
 // current state.
 func NewBufferState(buff buffer.Buffer, mc cursor.MultiCursor) *BufferState {
 	return &BufferState{
-		buff: buff,
-		mc:   mc,
+		buff:      buff,
+		mc:        mc,
+		timestamp: time.Now(),
 	}
 }
 
@@ -218,4 +220,111 @@ func (bh *BufferHist) PrevSaved() (buffer.Buffer, cursor.MultiCursor) {
 		}
 	}
 	return bh.Current()
+}
+
+// StateInfo contains metadata about a buffer state for display purposes.
+type StateInfo struct {
+	Timestamp time.Time
+	LineDelta int // relative to current state
+	IsCurrent bool
+	IsSaved   bool
+	Index     int // index in the returned slice, for jumping to this state
+	element   *list.Element
+}
+
+// GetSavedStates returns metadata about all saved states plus the current state.
+// States are returned in chronological order (oldest first).
+func (bh *BufferHist) GetSavedStates() []StateInfo {
+	bh.elemMutex.Lock()
+	defer bh.elemMutex.Unlock()
+
+	currentLines := bh.element.Value.(*BufferState).buff.Length()
+	currentIsSaved := bh.element.Value.(*BufferState).saved
+
+	states := []StateInfo{}
+
+	// Collect all saved states from the beginning
+	for el := bh.list.Front(); el != nil; el = el.Next() {
+		state := el.Value.(*BufferState)
+		isCurrent := el == bh.element
+
+		// Include if saved OR if it's the current position
+		if state.saved || isCurrent {
+			info := StateInfo{
+				Timestamp: state.timestamp,
+				LineDelta: state.buff.Length() - currentLines,
+				IsCurrent: isCurrent,
+				IsSaved:   state.saved,
+				Index:     len(states),
+				element:   el,
+			}
+			states = append(states, info)
+		}
+	}
+
+	// If current is not saved, we already included it above
+	// Mark it appropriately
+	if !currentIsSaved {
+		for i := range states {
+			if states[i].IsCurrent {
+				states[i].IsSaved = false
+				break
+			}
+		}
+	}
+
+	return states
+}
+
+// JumpToState moves to the state at the given element.
+func (bh *BufferHist) JumpToState(info StateInfo) (buffer.Buffer, cursor.MultiCursor) {
+	bh.elemMutex.Lock()
+	bh.element = info.element
+	bh.elemMutex.Unlock()
+	return bh.Current()
+}
+
+// GetStateDiff returns the lines that differ between the current state and the target state.
+// Returns two slices: lines only in current (removals) and lines only in target (additions).
+func (bh *BufferHist) GetStateDiff(info StateInfo) (removals, additions []string) {
+	bh.elemMutex.Lock()
+	currentBuff := bh.element.Value.(*BufferState).buff
+	targetBuff := info.element.Value.(*BufferState).buff
+	bh.elemMutex.Unlock()
+
+	currentLines := make(map[string]int)
+	for _, line := range currentBuff.Lines() {
+		currentLines[line.ToString()]++
+	}
+
+	targetLines := make(map[string]int)
+	for _, line := range targetBuff.Lines() {
+		targetLines[line.ToString()]++
+	}
+
+	// Lines in current but not in target (would be removed)
+	for _, line := range currentBuff.Lines() {
+		str := line.ToString()
+		if targetLines[str] < currentLines[str] {
+			removals = append(removals, str)
+			targetLines[str]++ // avoid counting same line twice
+		}
+	}
+
+	// Reset target counts
+	targetLines = make(map[string]int)
+	for _, line := range targetBuff.Lines() {
+		targetLines[line.ToString()]++
+	}
+
+	// Lines in target but not in current (would be added)
+	for _, line := range targetBuff.Lines() {
+		str := line.ToString()
+		if currentLines[str] < targetLines[str] {
+			additions = append(additions, str)
+			currentLines[str]++ // avoid counting same line twice
+		}
+	}
+
+	return removals, additions
 }
