@@ -120,15 +120,32 @@ func CreateConfig() Config {
 }
 
 func readConfig() Config {
-	user, err := user.Current()
-	if err != nil {
+	home := homeDir()
+	if home == "" {
 		return Config{}
 	}
-	home := user.HomeDir
 	cfg := Read(
 		filepath.Join(home, ".sith.toml"),
 		filepath.Join(home, ".sith/config.toml"),
 		filepath.Join(home, ".config/sith/config.toml"),
 	)
 	return cfg
+}
+
+func homeDir() string {
+	user, err := user.Current()
+	if err != nil {
+		return ""
+	}
+	return user.HomeDir
+}
+
+// ConfigDir returns the path to the sith config directory (~/.config/sith).
+// It creates the directory if it doesn't exist.
+func ConfigDir() string {
+	home := homeDir()
+	if home == "" {
+		return ""
+	}
+	return filepath.Join(home, ".config", "sith")
 }

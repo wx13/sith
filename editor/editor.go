@@ -11,6 +11,7 @@ import (
 	"github.com/wx13/sith/autocomplete"
 	"github.com/wx13/sith/config"
 	"github.com/wx13/sith/file"
+	"github.com/wx13/sith/state"
 	"github.com/wx13/sith/terminal"
 	"github.com/wx13/sith/ui"
 	"github.com/wx13/sith/version"
@@ -35,6 +36,7 @@ type Editor struct {
 	searchHist  []string
 	replaceHist []string
 	gotoHist    []string
+	history     *state.History
 
 	copyBuffer *CopyBuffer
 
@@ -43,12 +45,17 @@ type Editor struct {
 
 // NewEditor creates a new Editor object.
 func NewEditor() *Editor {
+	history := state.NewHistory()
 	return &Editor{
-		flushChan:  make(chan struct{}, 1),
-		screen:     terminal.NewScreen(),
-		copyBuffer: NewCopyBuffer(),
-		cfg:        config.CreateConfig(),
-		completer:  autocomplete.New(),
+		flushChan:   make(chan struct{}, 1),
+		screen:      terminal.NewScreen(),
+		copyBuffer:  NewCopyBuffer(),
+		cfg:         config.CreateConfig(),
+		completer:   autocomplete.New(),
+		history:     history,
+		searchHist:  history.GetSearch(),
+		replaceHist: history.GetReplace(),
+		gotoHist:    history.GetGoto(),
 	}
 }
 
@@ -187,8 +194,38 @@ func (editor *Editor) Quit() {
 		}
 	}
 
+	// Save history before exiting.
+	editor.saveHistory()
+
 	// Exit.
 	editor.screen.Close()
+}
+
+// saveHistory saves the search/replace/goto history to disk.
+func (editor *Editor) saveHistory() {
+	if editor.history == nil {
+		return
+	}
+	// Update history from current in-memory slices
+	for _, term := range reverseStrings(editor.searchHist) {
+		editor.history.AddSearch(term)
+	}
+	for _, term := range reverseStrings(editor.replaceHist) {
+		editor.history.AddReplace(term)
+	}
+	for _, term := range reverseStrings(editor.gotoHist) {
+		editor.history.AddGoto(term)
+	}
+	editor.history.Save()
+}
+
+// reverseStrings returns a reversed copy of the slice.
+func reverseStrings(s []string) []string {
+	result := make([]string, len(s))
+	for i, v := range s {
+		result[len(s)-1-i] = v
+	}
+	return result
 }
 
 // CloseFile closes the current file.
