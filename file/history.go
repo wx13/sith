@@ -32,6 +32,7 @@ func (file *File) ShowHistory() {
 	}
 
 	keyboard := terminal.NewKeyboard()
+	keyboard.SetScreen(file.screen.GetTcell())
 	menu := ui.NewMenu(file.screen, keyboard)
 
 	for {
