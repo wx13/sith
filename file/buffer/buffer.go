@@ -240,14 +240,14 @@ func (buffer *Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, 
 	var col int
 
 	// Search the current row, from the current column to the end of the line.
-	col, _ = buffer.GetRow(cursor.Row()).Search(searchTerm, cursor.Col()+1, -1)
+	col, _ = buffer.GetRowDirect(cursor.Row()).Search(searchTerm, cursor.Col()+1, -1)
 	if col >= 0 {
 		return cursor.Row(), col, nil
 	}
 
 	// Search each row, from the next row to the end of the buffer.
 	for row := cursor.Row() + 1; row < buffer.Length(); row++ {
-		col, _ = buffer.GetRow(row).Search(searchTerm, 0, -1)
+		col, _ = buffer.GetRowDirect(row).Search(searchTerm, 0, -1)
 		if col >= 0 {
 			return row, col, nil
 		}
@@ -258,7 +258,7 @@ func (buffer *Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, 
 
 	// Loop around: search from the start of the file to the original row (minus 1).
 	for row := 0; row < cursor.Row(); row++ {
-		col, _ = buffer.GetRow(row).Search(searchTerm, 0, -1)
+		col, _ = buffer.GetRowDirect(row).Search(searchTerm, 0, -1)
 		if col >= 0 {
 			return row, col, nil
 		}
@@ -266,7 +266,7 @@ func (buffer *Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, 
 
 	// Finally, search the original row from the start of the line to the
 	// original column position.
-	col, _ = buffer.GetRow(cursor.Row()).Search(searchTerm, 0, col)
+	col, _ = buffer.GetRowDirect(cursor.Row()).Search(searchTerm, 0, col)
 	if col >= 0 {
 		return cursor.Row(), col, nil
 	}
@@ -276,13 +276,14 @@ func (buffer *Buffer) Search(searchTerm string, cursor Cursor, loop bool) (int, 
 
 // Replace replaces occurrences of a string within a line.
 func (buffer *Buffer) ReplaceWord(searchTerm, replaceTerm string, row, col int) {
-	startCol, endCol := buffer.GetRow(row).Search(searchTerm, col, -1)
-	strLine := buffer.GetRow(row).ToString()
+	startCol, endCol := buffer.GetRowDirect(row).Search(searchTerm, col, -1)
+	strLine := buffer.GetRowDirect(row).ToString()
 	newStrLine := strLine[:startCol] + replaceTerm + strLine[endCol:]
 	buffer.lines[row] = MakeLine(newStrLine)
 }
 
-// GetRow returns the Line at the specified row index.
+// GetRow returns a copy of the Line at the specified row index.
+// Use this when you need to modify the line.
 func (buffer *Buffer) GetRow(row int) Line {
 	buffer.mutex.Lock()
 	defer buffer.mutex.Unlock()
@@ -291,6 +292,18 @@ func (buffer *Buffer) GetRow(row int) Line {
 	}
 	line := buffer.lines[row]
 	return MakeLine(line.ToString())
+}
+
+// GetRowDirect returns the Line at the specified row index without copying.
+// This is more efficient but the caller MUST NOT modify the returned Line.
+// Use this for read-only operations like display, search, length checks.
+func (buffer *Buffer) GetRowDirect(row int) Line {
+	buffer.mutex.Lock()
+	defer buffer.mutex.Unlock()
+	if row < 0 || row >= len(buffer.lines) {
+		return MakeLine("")
+	}
+	return buffer.lines[row]
 }
 
 // SetRow replaces the line at the specified row index.
@@ -306,7 +319,7 @@ func (buffer *Buffer) SetRow(row int, line Line) error {
 
 // RowLength returns the length of the given row.
 func (buffer *Buffer) RowLength(row int) int {
-	return buffer.GetRow(row).Length()
+	return buffer.GetRowDirect(row).Length()
 }
 
 // GetIndent estimates the indentation string of the buffer.
@@ -402,7 +415,7 @@ func (buffer *Buffer) hasLines(lines ...string) bool {
 func (buffer *Buffer) BracketMatch(row, col, end_row int) (int, int, error) {
 
 	// Get the rune under the cursor.
-	current_line := buffer.GetRow(row)
+	current_line := buffer.GetRowDirect(row)
 	start := current_line.GetChar(col)
 
 	// Get the partner rune:
@@ -428,7 +441,7 @@ func (buffer *Buffer) BracketMatch(row, col, end_row int) (int, int, error) {
 		row += dir
 	}
 	for ; row >= 0 && row != end_row+dir && row < buffer.Length(); row += dir {
-		line := buffer.GetRow(row)
+		line := buffer.GetRowDirect(row)
 		col, count = line.BracketMatch(start, end, col, dir, count)
 		if count == 0 {
 			return row, col, nil

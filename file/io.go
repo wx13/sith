@@ -25,7 +25,7 @@ func (file *File) Flush() {
 	for row, str := range slice {
 		file.screen.WriteString(row, 0, str)
 		bufferRow := row + file.rowOffset
-		fullStr := file.buffer.GetRow(bufferRow).Tabs2spaces(file.tabWidth).ToString()
+		fullStr := file.buffer.GetRowDirect(bufferRow).Tabs2spaces(file.tabWidth).ToString()
 
 		// Get the start state for this line
 		startState := file.stateCache.GetState(bufferRow)
@@ -53,7 +53,7 @@ func (file *File) ensureSyntaxStates(lineNum int) {
 		}
 
 		startState := file.stateCache.GetState(i)
-		fullStr := file.buffer.GetRow(i).Tabs2spaces(file.tabWidth).ToString()
+		fullStr := file.buffer.GetRowDirect(i).Tabs2spaces(file.tabWidth).ToString()
 		result := file.SyntaxRules.ColorizeWithState(fullStr, startState)
 		stateChanged := file.stateCache.SetEndState(i, result.EndState)
 
@@ -73,7 +73,7 @@ func (file *File) ColorBracketMatch(rows int) {
 	if err != nil {
 		return
 	}
-	col = file.buffer.GetRow(row).TabCursorPos(col, file.tabWidth)
+	col = file.buffer.GetRowDirect(row).TabCursorPos(col, file.tabWidth)
 	lc := []syntaxcolor.LineColor{
 		{
 			Fg:    tcell.ColorRed,
@@ -88,7 +88,7 @@ func (file *File) ColorBracketMatch(rows int) {
 // HightlightCurrentWord highlights the word currently under the cursor.
 func (file *File) HighlightCurrentWord() {
 	for row, cols := range file.MultiCursor.GetRowsCols() {
-		line := file.buffer.GetRow(row)
+		line := file.buffer.GetRowDirect(row)
 		for _, col := range cols {
 			start, end := line.WordBounds(col)
 			if start >= end {

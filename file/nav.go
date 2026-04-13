@@ -161,7 +161,7 @@ func (file *File) GetCursor(idx int) (int, int) {
 	file.enforceRowBounds(idx)
 	file.enforceColBounds(idx)
 	row, col, _ := file.MultiCursor.GetCursorRCC(idx)
-	line := file.buffer.GetRow(row).Slice(0, col).Tabs2spaces(file.tabWidth)
+	line := file.buffer.GetRowDirect(row).Slice(0, col).Tabs2spaces(file.tabWidth)
 	n := file.screen.StringDispLen(line.ToString())
 	return row - file.rowOffset, n - file.colOffset
 }
@@ -243,7 +243,7 @@ func (file *File) StartOfLine() {
 		re := regexp.MustCompile("^[ \t]*")
 		for idx, cursor := range cursors {
 			row := cursor.Row()
-			line := file.buffer.GetRow(row)
+			line := file.buffer.GetRowDirect(row)
 			match := re.FindStringIndex(line.ToString())
 			file.MultiCursor.SetCol(idx, match[1])
 			file.MultiCursor.SetColwant(idx, -1)
@@ -264,7 +264,7 @@ func (file *File) EndOfLine() {
 	}
 	for idx := range cursors {
 		row := file.MultiCursor.GetRow(idx)
-		line := file.buffer.GetRow(row)
+		line := file.buffer.GetRowDirect(row)
 		file.MultiCursor.SetCol(idx, line.Length())
 		file.MultiCursor.SetColwant(idx, -1)
 	}
@@ -295,7 +295,7 @@ func (file *File) prevNextWord(incr int) {
 	for idx, cursor := range cursors {
 		row := cursor.Row()
 		col := cursor.Col()
-		line := file.buffer.GetRow(row)
+		line := file.buffer.GetRowDirect(row)
 
 		// Store the old cursor, compute the new, and check for changes.
 		old_col := col
