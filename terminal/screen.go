@@ -49,6 +49,9 @@ type Screen struct {
 	tbMutex *sync.Mutex
 
 	charMode charMode
+
+	// gutterWidth reserves columns on the left for indicators (code blocks, git status, etc.)
+	gutterWidth int
 }
 
 // toStyle converts fg/bg Attributes to a tcell.Style.
@@ -79,14 +82,15 @@ func toStyle(fg, bg Attribute) tcell.Style {
 // NewScreen creates a new screen object.
 func NewScreen() *Screen {
 	screen := Screen{
-		row:       0,
-		col:       0,
-		bg:        ColorDefault,
-		fg:        ColorDefault,
-		flushChan: make(chan struct{}, 1),
-		dieChan:   make(chan struct{}, 1),
-		tbMutex:   &sync.Mutex{},
-		charMode:  charModeFullUnicode,
+		row:         0,
+		col:         0,
+		bg:          ColorDefault,
+		fg:          ColorDefault,
+		flushChan:   make(chan struct{}, 1),
+		dieChan:     make(chan struct{}, 1),
+		tbMutex:     &sync.Mutex{},
+		charMode:    charModeFullUnicode,
+		gutterWidth: 1, // Reserve 1 column for indicators (code blocks, git status, etc.)
 	}
 	screen.tbMutex.Lock()
 	var err error
@@ -103,11 +107,22 @@ func NewScreen() *Screen {
 	return &screen
 }
 
-// Size returns the screen size (col, row).
+// Size returns the usable screen size (col, row), accounting for the gutter.
 func (screen *Screen) Size() (int, int) {
 	screen.tbMutex.Lock()
 	defer screen.tbMutex.Unlock()
-	return screen.tcell.Size()
+	cols, rows := screen.tcell.Size()
+	return cols - screen.gutterWidth, rows
+}
+
+// SetGutterWidth sets the width of the left gutter (reserved for indicators).
+func (screen *Screen) SetGutterWidth(width int) {
+	screen.gutterWidth = width
+}
+
+// GutterWidth returns the current gutter width.
+func (screen *Screen) GutterWidth() int {
+	return screen.gutterWidth
 }
 
 // Return the screen size.
@@ -192,7 +207,7 @@ func (screen *Screen) SetCursor(r, c int) {
 	screen.row = r
 	screen.col = c
 	screen.tbMutex.Lock()
-	screen.tcell.ShowCursor(c, r)
+	screen.tcell.ShowCursor(c+screen.gutterWidth, r)
 	screen.tbMutex.Unlock()
 }
 
@@ -246,7 +261,7 @@ func (screen *Screen) Underline(row, start_col, end_col, offset int) {
 	defer screen.tbMutex.Unlock()
 	cols, _ := screen.tcell.Size()
 	for col := start_col; col < end_col; col++ {
-		adjCol := col - offset
+		adjCol := col - offset + screen.gutterWidth
 		if adjCol > cols || adjCol < 0 {
 			continue
 		}
@@ -263,7 +278,7 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 	for _, lc := range colors {
 		style := tcell.StyleDefault.Foreground(lc.Fg).Background(lc.Bg)
 		for col := lc.Start; col < lc.End; col++ {
-			adjCol := col - offset
+			adjCol := col - offset + screen.gutterWidth
 			if adjCol > cols || adjCol < 0 {
 				continue
 			}
@@ -271,6 +286,15 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 			screen.tcell.SetContent(adjCol, row, mainc, combc, style)
 		}
 	}
+}
+
+// DrawLeftBar draws a vertical bar character at the left edge of a row.
+// Used to visually indicate code blocks in markdown files.
+func (screen *Screen) DrawLeftBar(row int, color tcell.Color) {
+	screen.tbMutex.Lock()
+	defer screen.tbMutex.Unlock()
+	style := tcell.StyleDefault.Foreground(color)
+	screen.tcell.SetContent(0, row, '▌', nil, style)
 }
 
 // PrintableRune uses the charMode to convert the rune into
@@ -321,7 +345,7 @@ func (screen *Screen) WriteStringColor(row, col int, s string, fg, bg Attribute)
 		if n <= 0 {
 			continue
 		}
-		screen.tcell.SetContent(col+k, row, r, nil, style)
+		screen.tcell.SetContent(col+k+screen.gutterWidth, row, r, nil, style)
 		k += n
 	}
 }
@@ -350,8 +374,9 @@ func (screen *Screen) Alert(msg string) {
 func (screen *Screen) Highlight(row, col int) {
 	screen.tbMutex.Lock()
 	defer screen.tbMutex.Unlock()
-	mainc, combc, style, _ := screen.tcell.GetContent(col, row)
-	screen.tcell.SetContent(col, row, mainc, combc, style.Reverse(true))
+	adjCol := col + screen.gutterWidth
+	mainc, combc, style, _ := screen.tcell.GetContent(adjCol, row)
+	screen.tcell.SetContent(adjCol, row, mainc, combc, style.Reverse(true))
 }
 
 // HighlightRange reverses the screen color over a range of rows/columns.
@@ -360,8 +385,9 @@ func (screen *Screen) HighlightRange(startRow, endRow, startCol, endCol int) {
 	defer screen.tbMutex.Unlock()
 	for row := startRow; row <= endRow; row++ {
 		for col := startCol; col <= endCol; col++ {
-			mainc, combc, style, _ := screen.tcell.GetContent(col, row)
-			screen.tcell.SetContent(col, row, mainc, combc, style.Reverse(true))
+			adjCol := col + screen.gutterWidth
+			mainc, combc, style, _ := screen.tcell.GetContent(adjCol, row)
+			screen.tcell.SetContent(adjCol, row, mainc, combc, style.Reverse(true))
 		}
 	}
 }
@@ -373,8 +399,9 @@ func (screen *Screen) ColorRange(startRow, endRow, startCol, endCol int, fg, bg 
 	style := toStyle(fg, bg)
 	for row := startRow; row <= endRow; row++ {
 		for col := startCol; col <= endCol; col++ {
-			mainc, combc, _, _ := screen.tcell.GetContent(col, row)
-			screen.tcell.SetContent(col, row, mainc, combc, style)
+			adjCol := col + screen.gutterWidth
+			mainc, combc, _, _ := screen.tcell.GetContent(adjCol, row)
+			screen.tcell.SetContent(adjCol, row, mainc, combc, style)
 		}
 	}
 }

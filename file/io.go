@@ -35,6 +35,15 @@ func (file *File) Flush() {
 		file.stateCache.SetEndState(bufferRow, result.EndState)
 
 		file.screen.Colorize(row, result.Colors, file.colOffset)
+
+		// Draw vertical bar for code blocks in the gutter (for markdown files)
+		if file.SyntaxRules.IsMarkdown() {
+			if startState.IsCodeBlock() || result.EndState.IsCodeBlock() {
+				file.screen.DrawLeftBar(row, tcell.ColorBlue)
+			} else if startState.IsBlockEquation() || result.EndState.IsBlockEquation() {
+				file.screen.DrawLeftBar(row, tcell.ColorPurple)
+			}
+		}
 	}
 	for row := len(slice); row < rows-1; row++ {
 		file.screen.WriteString(row, 0, "~")

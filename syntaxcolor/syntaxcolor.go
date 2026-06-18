@@ -23,6 +23,21 @@ const (
 	StateCodeBlockBase // Code blocks use StateCodeBlockBase + language index
 )
 
+// IsCodeBlock returns true if the state represents being inside a code block.
+func (s LineState) IsCodeBlock() bool {
+	return s >= StateCodeBlockBase
+}
+
+// IsBlockEquation returns true if the state represents being inside a block equation.
+func (s LineState) IsBlockEquation() bool {
+	return s == StateBlockEquation
+}
+
+// IsMarkdown returns true if these rules are for a markdown file with embedded code blocks.
+func (rules *SyntaxRules) IsMarkdown() bool {
+	return rules.isMarkdown
+}
+
 // Color specifies a foreground and background color.
 type Color struct {
 	fg, bg tcell.Color
