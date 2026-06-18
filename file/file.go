@@ -128,15 +128,15 @@ func GetFileExt(filename string) string {
 // ingestConfig uses the specified config file to set internal parameters.
 func (file *File) ingestConfig(cfg config.Config) {
 	ext := GetFileExt(file.Name)
-	cfg = cfg.ForExt(ext)
-	file.autoTab = cfg.AutoTab
-	file.tabDetect = cfg.TabDetect
-	file.tabWidth = cfg.TabWidth
-	file.tabString = cfg.TabString
-	file.SyntaxRules = syntaxcolor.NewSyntaxRules(cfg)
+	extCfg := cfg.ForExt(ext)
+	file.autoTab = extCfg.AutoTab
+	file.tabDetect = extCfg.TabDetect
+	file.tabWidth = extCfg.TabWidth
+	file.tabString = extCfg.TabString
+	file.SyntaxRules = syntaxcolor.NewSyntaxRulesWithFullConfig(extCfg, cfg)
 	file.SyntaxRules.SetupForLanguage(ext)
 	file.stateCache = syntaxcolor.NewStateCache()
-	file.fmtCmd = cfg.FmtCmd
+	file.fmtCmd = extCfg.FmtCmd
 }
 
 // Reload re-reads a file from disk.

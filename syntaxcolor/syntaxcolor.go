@@ -10,6 +10,8 @@ import (
 )
 
 // LineState represents the syntax state at the start/end of a line.
+// For embedded languages (like code blocks in markdown), the state encodes
+// both the block type and the embedded language.
 type LineState int
 
 const (
@@ -17,6 +19,8 @@ const (
 	StateBlockComment
 	StateString
 	StateRawString
+	StateBlockEquation
+	StateCodeBlockBase // Code blocks use StateCodeBlockBase + language index
 )
 
 // Color specifies a foreground and background color.
@@ -44,15 +48,37 @@ type SyntaxRules struct {
 	clobber    []SyntaxRule
 	multiline  []MultilineRule
 	whitespace *regexp.Regexp
+
+	// For markdown embedded language support
+	isMarkdown      bool
+	codeBlockStart  *regexp.Regexp          // matches ```lang or ```{lang}
+	codeBlockEnd    *regexp.Regexp          // matches ```
+	equationDelim   *regexp.Regexp          // matches $$
+	fullConfig      config.Config           // full config for looking up embedded languages
+	embeddedRules   map[string]*SyntaxRules // cached syntax rules for embedded languages
+	languageIndex   map[string]int          // maps language name to state offset
+	indexToLanguage map[int]string          // reverse mapping
 }
 
 // NewSyntaxRules creates a new SyntaxRules object, and initializes
 // the syntax rule sets.
 func NewSyntaxRules(cfg config.Config) *SyntaxRules {
-	rules := SyntaxRules{}
+	rules := SyntaxRules{
+		embeddedRules:   make(map[string]*SyntaxRules),
+		languageIndex:   make(map[string]int),
+		indexToLanguage: make(map[int]string),
+	}
 	rules.ingestConfig(cfg)
 	rules.addWhitespaceRule()
 	return &rules
+}
+
+// NewSyntaxRulesWithFullConfig creates a SyntaxRules object that has access
+// to the full config for looking up embedded language rules.
+func NewSyntaxRulesWithFullConfig(cfg config.Config, fullConfig config.Config) *SyntaxRules {
+	rules := NewSyntaxRules(cfg)
+	rules.fullConfig = fullConfig
+	return rules
 }
 
 func (rules *SyntaxRules) ingestConfig(cfg config.Config) {
@@ -148,7 +174,7 @@ func (rules *SyntaxRules) getMultilineRule(state LineState) *MultilineRule {
 }
 
 // nextMatch finds the next match across all the rules.
-func (rules SyntaxRules) nextMatch(str string, idx int) (LineColor, error) {
+func (rules *SyntaxRules) nextMatch(str string, idx int) (LineColor, error) {
 	subStr := str[idx:]
 	i0 := len(subStr) + 1
 	lc := LineColor{}
@@ -171,7 +197,118 @@ func (rules SyntaxRules) nextMatch(str string, idx int) (LineColor, error) {
 
 // ColorizeWithState colorizes a line taking into account the start state.
 // Returns the colors and the end state for this line.
-func (rules SyntaxRules) ColorizeWithState(str string, startState LineState) ColorResult {
+func (rules *SyntaxRules) ColorizeWithState(str string, startState LineState) ColorResult {
+	// Handle markdown embedded code blocks specially
+	if rules.isMarkdown {
+		return rules.colorizeMarkdown(str, startState)
+	}
+
+	return rules.colorizeNormal(str, startState)
+}
+
+// colorizeMarkdown handles syntax highlighting for markdown with embedded code blocks.
+func (rules *SyntaxRules) colorizeMarkdown(str string, startState LineState) ColorResult {
+	result := ColorResult{
+		Colors:   []LineColor{},
+		EndState: startState,
+	}
+
+	// Check if we're inside a code block
+	if startState >= StateCodeBlockBase {
+		lang := rules.getLanguageFromState(startState)
+
+		// Check if this line ends the code block
+		if rules.codeBlockEnd.MatchString(str) {
+			// Color the closing ``` in a distinct color
+			result.Colors = append(result.Colors, LineColor{
+				Fg:    tcell.ColorBlue,
+				Bg:    tcell.ColorDefault,
+				Start: 0,
+				End:   len(str),
+			})
+			result.EndState = StateNormal
+			return result
+		}
+
+		// Apply the embedded language's syntax rules
+		embeddedRules := rules.getEmbeddedRules(lang)
+		if embeddedRules != nil {
+			embeddedResult := embeddedRules.colorizeNormal(str, StateNormal)
+			result.Colors = embeddedResult.Colors
+		}
+		result.EndState = startState
+		return result
+	}
+
+	// Check if we're inside a block equation
+	if startState == StateBlockEquation {
+		// Check if this line ends the equation
+		if rules.equationDelim.MatchString(str) {
+			result.Colors = append(result.Colors, LineColor{
+				Fg:    tcell.ColorPurple,
+				Bg:    tcell.ColorDefault,
+				Start: 0,
+				End:   len(str),
+			})
+			result.EndState = StateNormal
+			return result
+		}
+		// Color the entire line as equation
+		result.Colors = append(result.Colors, LineColor{
+			Fg:    tcell.ColorPurple,
+			Bg:    tcell.ColorDefault,
+			Start: 0,
+			End:   len(str),
+		})
+		result.EndState = StateBlockEquation
+		return result
+	}
+
+	// Normal markdown state - check for code block or equation start
+	if match := rules.codeBlockStart.FindStringSubmatch(str); match != nil {
+		lang := strings.ToLower(match[1])
+		// Color the opening line (```python) in a distinct color
+		result.Colors = append(result.Colors, LineColor{
+			Fg:    tcell.ColorBlue,
+			Bg:    tcell.ColorDefault,
+			Start: 0,
+			End:   len(str),
+		})
+		result.EndState = rules.getStateForLanguage(lang)
+		return result
+	}
+
+	// Check for block equation start
+	if rules.equationDelim.MatchString(str) {
+		// Check if equation ends on same line ($$...$$ on one line)
+		if len(str) > 2 && strings.HasSuffix(strings.TrimSpace(str), "$$") && strings.Count(str, "$$") >= 2 {
+			// Single-line equation
+			result.Colors = append(result.Colors, LineColor{
+				Fg:    tcell.ColorPurple,
+				Bg:    tcell.ColorDefault,
+				Start: 0,
+				End:   len(str),
+			})
+			result.EndState = StateNormal
+			return result
+		}
+		// Multi-line equation starts
+		result.Colors = append(result.Colors, LineColor{
+			Fg:    tcell.ColorPurple,
+			Bg:    tcell.ColorDefault,
+			Start: 0,
+			End:   len(str),
+		})
+		result.EndState = StateBlockEquation
+		return result
+	}
+
+	// Regular markdown line - use normal colorization
+	return rules.colorizeNormal(str, StateNormal)
+}
+
+// colorizeNormal is the original colorization logic for non-markdown files.
+func (rules *SyntaxRules) colorizeNormal(str string, startState LineState) ColorResult {
 	result := ColorResult{
 		Colors:   []LineColor{},
 		EndState: startState,
@@ -303,7 +440,7 @@ func (rules SyntaxRules) ColorizeWithState(str string, startState LineState) Col
 
 // Colorize takes in a string and outputs an array of LineColor objects.
 // This is the legacy method that doesn't track state (for backwards compatibility).
-func (rules SyntaxRules) Colorize(str string) []LineColor {
+func (rules *SyntaxRules) Colorize(str string) []LineColor {
 	return rules.ColorizeWithState(str, StateNormal).Colors
 }
 
@@ -387,4 +524,82 @@ func (rules *SyntaxRules) SetupForLanguage(ext string) {
 	if ext == "html" || ext == "htm" || ext == "xml" || ext == "svg" {
 		rules.AddBlockComment("<!--", "-->", tcell.ColorTeal, tcell.ColorDefault)
 	}
+
+	// Markdown and Quarto: embedded code blocks and equations
+	if ext == "md" || ext == "qmd" || ext == "markdown" || ext == "rmd" {
+		rules.setupMarkdownEmbedded()
+	}
+}
+
+// setupMarkdownEmbedded configures syntax rules for embedded code blocks in markdown.
+func (rules *SyntaxRules) setupMarkdownEmbedded() {
+	rules.isMarkdown = true
+	// Match ```python, ```{python}, ```{r setup, include=FALSE}, etc.
+	rules.codeBlockStart = regexp.MustCompile("^```\\{?([a-zA-Z][a-zA-Z0-9_+-]*)")
+	rules.codeBlockEnd = regexp.MustCompile("^```\\s*$")
+	rules.equationDelim = regexp.MustCompile(`^\$\$`)
+}
+
+// getEmbeddedRules returns the syntax rules for an embedded language,
+// looking them up from the config and caching the result.
+func (rules *SyntaxRules) getEmbeddedRules(lang string) *SyntaxRules {
+	lang = strings.ToLower(lang)
+
+	// Check cache first
+	if cached, ok := rules.embeddedRules[lang]; ok {
+		return cached
+	}
+
+	// Map common aliases to file extensions
+	extMap := map[string]string{
+		"python":     "py",
+		"javascript": "js",
+		"typescript": "ts",
+		"bash":       "sh",
+		"shell":      "sh",
+		"yml":        "yaml",
+		"r":          "r",
+	}
+	ext := lang
+	if mapped, ok := extMap[lang]; ok {
+		ext = mapped
+	}
+
+	// Look up the config for this extension
+	langCfg := rules.fullConfig.ForExt(ext)
+
+	// Create syntax rules from the config
+	embeddedRules := NewSyntaxRules(langCfg)
+	embeddedRules.SetupForLanguage(ext)
+
+	// Cache and return
+	rules.embeddedRules[lang] = embeddedRules
+	return embeddedRules
+}
+
+// registerLanguage assigns a state index to a language name.
+func (rules *SyntaxRules) registerLanguage(lang string) int {
+	lang = strings.ToLower(lang)
+	if idx, ok := rules.languageIndex[lang]; ok {
+		return idx
+	}
+	idx := len(rules.languageIndex)
+	rules.languageIndex[lang] = idx
+	rules.indexToLanguage[idx] = lang
+	return idx
+}
+
+// getLanguageFromState extracts the language name from a code block state.
+func (rules *SyntaxRules) getLanguageFromState(state LineState) string {
+	if state < StateCodeBlockBase {
+		return ""
+	}
+	idx := int(state - StateCodeBlockBase)
+	return rules.indexToLanguage[idx]
+}
+
+// getStateForLanguage returns the LineState for a given language.
+func (rules *SyntaxRules) getStateForLanguage(lang string) LineState {
+	idx := rules.registerLanguage(lang)
+	return StateCodeBlockBase + LineState(idx)
 }
