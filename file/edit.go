@@ -135,6 +135,232 @@ func (file *File) goFmt(contents string) (string, error) {
 	return string(bytes), err
 }
 
+// FmtCodeBlock formats the code block that the cursor is currently in.
+// This is designed for markdown/quarto files with embedded code blocks.
+func (file *File) FmtCodeBlock() error {
+	row := file.MultiCursor.GetRow(0)
+
+	// Find code block boundaries
+	startRow, endRow, lang := file.findCodeBlockBounds(row)
+	if startRow < 0 {
+		return fmt.Errorf("cursor is not inside a code block")
+	}
+
+	// Get the formatter command for this language
+	fmtCmd := file.getFmtCmdForLanguage(lang)
+	if fmtCmd == "" {
+		return fmt.Errorf("no formatter configured for %s", lang)
+	}
+
+	// Extract the code content (excluding the ``` lines)
+	codeStartRow := startRow + 1
+	codeEndRow := endRow - 1
+	if codeStartRow > codeEndRow {
+		return nil // Empty code block
+	}
+
+	// Get the code lines and detect common indentation
+	var codeLines []string
+	minIndent := -1
+	for r := codeStartRow; r <= codeEndRow; r++ {
+		line := file.buffer.GetRow(r).ToString()
+		codeLines = append(codeLines, line)
+
+		// Track minimum indentation (ignoring empty lines)
+		trimmed := strings.TrimLeft(line, " \t")
+		if len(trimmed) > 0 {
+			indent := len(line) - len(trimmed)
+			if minIndent < 0 || indent < minIndent {
+				minIndent = indent
+			}
+		}
+	}
+	if minIndent < 0 {
+		minIndent = 0
+	}
+
+	// Strip common indentation
+	indentPrefix := ""
+	if minIndent > 0 {
+		indentPrefix = codeLines[0][:minIndent]
+		for i, line := range codeLines {
+			if len(line) >= minIndent {
+				codeLines[i] = line[minIndent:]
+			}
+		}
+	}
+
+	// Join code and format it
+	codeContent := strings.Join(codeLines, file.newline)
+	formatted, err := file.runFmtWithCmd(codeContent, fmtCmd)
+	if err != nil {
+		return fmt.Errorf("formatter error: %v", err)
+	}
+
+	// Normalize trailing newlines - remove any trailing newline the formatter added
+	formatted = strings.TrimSuffix(formatted, "\n")
+	formatted = strings.TrimSuffix(formatted, "\r\n")
+
+	// Re-add indentation to each line
+	formattedLines := strings.Split(formatted, file.newline)
+	for i, line := range formattedLines {
+		if len(line) > 0 {
+			formattedLines[i] = indentPrefix + line
+		}
+	}
+
+	// Replace the code block content
+	newLines := make([]buffer.Line, len(formattedLines))
+	for i, line := range formattedLines {
+		newLines[i] = buffer.MakeLine(line)
+	}
+
+	file.buffer.ReplaceLines(newLines, codeStartRow, codeEndRow)
+	file.InvalidateSyntaxCache(codeStartRow)
+	file.Snapshot()
+
+	return nil
+}
+
+// FindCodeBlockBounds finds the code block containing the specified row.
+// If no row is provided, uses the current cursor position.
+// Returns (startRow, endRow, language) or (-1, -1, "") if not in a code block.
+func (file *File) FindCodeBlockBounds(rows ...int) (int, int, string) {
+	row := file.MultiCursor.GetRow(0)
+	if len(rows) > 0 {
+		row = rows[0]
+	}
+	return file.findCodeBlockBounds(row)
+}
+
+// findCodeBlockBounds finds the start and end rows of the code block containing the given row.
+// Returns (startRow, endRow, language) or (-1, -1, "") if not in a code block.
+func (file *File) findCodeBlockBounds(row int) (int, int, string) {
+	codeBlockStartRe := regexp.MustCompile("^(\\s*)```\\{?([a-zA-Z][a-zA-Z0-9_+-]*).*$")
+	codeBlockEndRe := regexp.MustCompile("^\\s*```\\s*$")
+
+	// Search backward for the start of a code block
+	startRow := -1
+	var lang string
+	for r := row; r >= 0; r-- {
+		line := file.buffer.GetRow(r).ToString()
+		if match := codeBlockStartRe.FindStringSubmatch(line); match != nil {
+			startRow = r
+			lang = strings.ToLower(match[2])
+			break
+		}
+		// If we hit an end marker while searching backward, we're not in a block
+		if codeBlockEndRe.MatchString(line) && r != row {
+			return -1, -1, ""
+		}
+	}
+
+	if startRow < 0 {
+		return -1, -1, ""
+	}
+
+	// Search forward for the end of the code block
+	endRow := -1
+	bufLen := file.buffer.Length()
+	for r := startRow + 1; r < bufLen; r++ {
+		line := file.buffer.GetRow(r).ToString()
+		if codeBlockEndRe.MatchString(line) {
+			endRow = r
+			break
+		}
+		// If we hit another start marker, something is wrong
+		if codeBlockStartRe.MatchString(line) {
+			return -1, -1, ""
+		}
+	}
+
+	if endRow < 0 {
+		return -1, -1, ""
+	}
+
+	// Make sure our original row is actually inside the block
+	if row < startRow || row > endRow {
+		return -1, -1, ""
+	}
+
+	return startRow, endRow, lang
+}
+
+// getFmtCmdForLanguage returns the formatter command for a given language.
+func (file *File) getFmtCmdForLanguage(lang string) string {
+	// Map common language names to file extensions
+	extMap := map[string]string{
+		"python":     "py",
+		"javascript": "js",
+		"typescript": "ts",
+		"bash":       "sh",
+		"shell":      "sh",
+		"yml":        "yaml",
+	}
+
+	ext := lang
+	if mapped, ok := extMap[lang]; ok {
+		ext = mapped
+	}
+
+	// Look up the config for this extension
+	if file.fullConfig.FileConfigs == nil {
+		return ""
+	}
+
+	// Check if there's a specific config for this extension
+	if cfg, ok := file.fullConfig.FileConfigs[ext]; ok {
+		if cfg.FmtCmd != "" {
+			return cfg.FmtCmd
+		}
+		// Check parent config
+		if cfg.Parent != "" {
+			if parentCfg, ok := file.fullConfig.FileConfigs[cfg.Parent]; ok {
+				return parentCfg.FmtCmd
+			}
+		}
+	}
+
+	// Special case for Go - use built-in formatter
+	if ext == "go" {
+		return "__gofmt__"
+	}
+
+	return ""
+}
+
+// runFmtWithCmd runs a specific formatter command on the input string.
+func (file *File) runFmtWithCmd(contents string, fmtCmd string) (string, error) {
+	// Special case for Go's built-in formatter
+	if fmtCmd == "__gofmt__" {
+		return file.goFmt(contents)
+	}
+
+	args := regexp.MustCompile(`\s+`).Split(fmtCmd, -1)
+
+	var cmd *exec.Cmd
+	if len(args) > 1 {
+		cmd = exec.Command(args[0], args[1:]...)
+	} else {
+		cmd = exec.Command(args[0])
+	}
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return contents, err
+	}
+	go func() {
+		defer stdin.Close()
+		io.WriteString(stdin, contents)
+	}()
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return contents, fmt.Errorf("%v: %s", err, string(out))
+	}
+	return string(out), nil
+}
+
 // getMaxCol returns the right-most column index of all the rows.
 func getMaxCol(rows map[int][]int) int {
 	maxCol := 0

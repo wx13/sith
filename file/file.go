@@ -53,8 +53,9 @@ type File struct {
 
 	newline string
 
-	autoFmt bool
-	fmtCmd  string
+	autoFmt    bool
+	fmtCmd     string
+	fullConfig config.Config
 
 	rowOffset int
 	colOffset int
@@ -137,6 +138,7 @@ func (file *File) ingestConfig(cfg config.Config) {
 	file.SyntaxRules.SetupForLanguage(ext)
 	file.stateCache = syntaxcolor.NewStateCache()
 	file.fmtCmd = extCfg.FmtCmd
+	file.fullConfig = cfg
 }
 
 // Reload re-reads a file from disk.

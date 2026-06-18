@@ -529,6 +529,14 @@ func (editor *Editor) SaveAs() {
 	editor.Save()
 }
 
+// FmtCodeBlock formats the code block at the cursor position.
+func (editor *Editor) FmtCodeBlock() {
+	err := editor.file.FmtCodeBlock()
+	if err != nil {
+		editor.screen.Notify(err.Error())
+	}
+}
+
 func intMod(a, n int) int {
 	if a < 0 {
 		return a - n*((a-n+1)/n)
