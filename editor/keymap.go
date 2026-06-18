@@ -107,7 +107,7 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km.Add("R", editor.ReloadAll, "Reload file from disk")
 	km.Add("f", func() { editor.file.Fmt() }, "Run code formatter")
 	km.Add("F", func() { editor.file.Fmt(true) }, "Run code formatter on selection")
-	km.Add("B", func() { editor.FmtCodeBlock() }, "Format code block at cursor (for markdown)")
+	km.Add("C", func() { editor.FmtCodeBlock() }, "Format code block at cursor (for markdown)")
 	km.Add("b", func() { editor.Bookmark() }, "Bookmark this file location.")
 	km.Add("B", func() { editor.BookmarkMenu() }, "Choose a bookmark from a menu.")
 	km.Add("h", func() { editor.file.ShowHistory() }, "Show buffer history (saved states)")
