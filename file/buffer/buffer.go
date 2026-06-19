@@ -713,6 +713,15 @@ const (
 	LineAdded
 )
 
+// DiffResult contains the full diff information including deletions.
+type DiffResult struct {
+	// Changes maps line numbers to their status (modified or added)
+	Changes map[int]LineStatus
+	// DeletionPoints contains line numbers *after which* deletions occurred.
+	// A value of -1 means deletions at the very beginning of the file.
+	DeletionPoints []int
+}
+
 // DiffLines computes the diff between this buffer and another buffer (typically the saved version).
 // Returns a map from line number (in this buffer) to its status.
 func (buffer *Buffer) DiffLines(saved *Buffer) map[int]LineStatus {
@@ -788,6 +797,121 @@ func (buffer *Buffer) DiffLines(saved *Buffer) map[int]LineStatus {
 			result[curIdx] = LineAdded
 		}
 		curIdx++
+	}
+
+	return result
+}
+
+// DiffLinesFull computes the diff including deletion points.
+func (buffer *Buffer) DiffLinesFull(saved *Buffer) DiffResult {
+	buffer.mutex.Lock()
+	defer buffer.mutex.Unlock()
+	saved.mutex.Lock()
+	defer saved.mutex.Unlock()
+
+	result := DiffResult{
+		Changes:        make(map[int]LineStatus),
+		DeletionPoints: []int{},
+	}
+
+	// Build string slices for comparison
+	current := make([]string, len(buffer.lines))
+	for i, line := range buffer.lines {
+		current[i] = line.ToString()
+	}
+
+	savedLines := make([]string, len(saved.lines))
+	for i, line := range saved.lines {
+		savedLines[i] = line.ToString()
+	}
+
+	// Compute LCS to find unchanged lines
+	lcs := computeLCS(current, savedLines)
+
+	// Map LCS entries to their positions in both buffers
+	currentLCSPos := make([]int, len(lcs))
+	savedLCSPos := make([]int, len(lcs))
+
+	lcsIdx := 0
+	for i := 0; i < len(current) && lcsIdx < len(lcs); i++ {
+		if current[i] == lcs[lcsIdx] {
+			currentLCSPos[lcsIdx] = i
+			lcsIdx++
+		}
+	}
+
+	lcsIdx = 0
+	for i := 0; i < len(savedLines) && lcsIdx < len(lcs); i++ {
+		if savedLines[i] == lcs[lcsIdx] {
+			savedLCSPos[lcsIdx] = i
+			lcsIdx++
+		}
+	}
+
+	// Build sets of which lines are matched to LCS
+	currentInLCS := make(map[int]bool)
+	savedInLCS := make(map[int]bool)
+	for i := 0; i < len(lcs); i++ {
+		currentInLCS[currentLCSPos[i]] = true
+		savedInLCS[savedLCSPos[i]] = true
+	}
+
+	// Process chunks between LCS anchors
+	prevCurAnchor := -1
+	prevSavedAnchor := -1
+
+	processChunk := func(curStart, curEnd, savedStart, savedEnd int) {
+		curCount := curEnd - curStart
+		savedCount := savedEnd - savedStart
+		minCount := curCount
+		if savedCount < minCount {
+			minCount = savedCount
+		}
+
+		// Mark changes in current
+		for i := 0; i < curCount; i++ {
+			if i < minCount {
+				result.Changes[curStart+i] = LineModified
+			} else {
+				result.Changes[curStart+i] = LineAdded
+			}
+		}
+
+		// If there are more deleted lines than added/modified, record deletion point
+		if savedCount > curCount {
+			// Deletions occurred after line (curStart - 1) in current buffer
+			// If curStart is 0, deletions are at the very beginning (-1)
+			deletionPoint := curStart - 1
+			result.DeletionPoints = append(result.DeletionPoints, deletionPoint)
+		}
+	}
+
+	// Walk through LCS anchors and process chunks
+	for i := 0; i < len(lcs); i++ {
+		curAnchor := currentLCSPos[i]
+		savedAnchor := savedLCSPos[i]
+		processChunk(prevCurAnchor+1, curAnchor, prevSavedAnchor+1, savedAnchor)
+		prevCurAnchor = curAnchor
+		prevSavedAnchor = savedAnchor
+	}
+
+	// Process final chunk
+	processChunk(prevCurAnchor+1, len(current), prevSavedAnchor+1, len(savedLines))
+
+	// Consolidate adjacent deletion points
+	// If we have deletion at line N and line N+1, merge them into just line N
+	if len(result.DeletionPoints) > 1 {
+		consolidated := []int{result.DeletionPoints[0]}
+		for i := 1; i < len(result.DeletionPoints); i++ {
+			prev := consolidated[len(consolidated)-1]
+			curr := result.DeletionPoints[i]
+			// If they're adjacent (curr == prev + 1), they're part of the same deletion region
+			// Keep only the first one (the one "above")
+			if curr != prev+1 {
+				consolidated = append(consolidated, curr)
+			}
+		}
+		result.DeletionPoints = consolidated
 	}
 
 	return result

@@ -85,6 +85,8 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	km.Add("ctrlSlash", editor.CmdMenu, "Display command menu")
 	km.Add("alt?", editor.CmdMenu, "Display command menu")
 	km.Add("altG", func() { editor.file.ToggleAutoFmt() }, "Toggle auto fmt on save")
+	km.Add("alt.", func() { editor.file.NextChange() }, "Go to next changed line")
+	km.Add("alt,", func() { editor.file.PrevChange() }, "Go to previous changed line")
 	return km
 }
 

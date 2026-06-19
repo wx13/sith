@@ -2,6 +2,7 @@ package file
 
 import (
 	"regexp"
+	"sort"
 )
 
 func (file *File) enforceColBounds(indexes ...int) {
@@ -320,5 +321,93 @@ func (file *File) prevNextWord(incr int) {
 			file.EndOfLine()
 		}
 
+	}
+}
+
+// NextChange moves the cursor to the next modified or added line.
+func (file *File) NextChange() {
+	file.gotoChange(1)
+}
+
+// PrevChange moves the cursor to the previous modified or added line.
+func (file *File) PrevChange() {
+	file.gotoChange(-1)
+}
+
+func (file *File) gotoChange(direction int) {
+	diffResult := file.buffer.DiffLinesFull(&file.savedBuffer)
+
+	// Build sorted list of all change points:
+	// - Changed/added lines (navigate to that line)
+	// - Deletion points (navigate to the line after the deletion, or line 0 if deletion at start)
+	changePoints := make([]int, 0)
+
+	for lineNum := range diffResult.Changes {
+		changePoints = append(changePoints, lineNum)
+	}
+
+	for _, delPoint := range diffResult.DeletionPoints {
+		// Deletion after line N means we navigate to line N+1 (or 0 if N is -1)
+		targetLine := delPoint + 1
+		if targetLine < 0 {
+			targetLine = 0
+		}
+		// Only add if not already in the list
+		found := false
+		for _, cp := range changePoints {
+			if cp == targetLine {
+				found = true
+				break
+			}
+		}
+		if !found {
+			changePoints = append(changePoints, targetLine)
+		}
+	}
+
+	sort.Ints(changePoints)
+
+	if len(changePoints) == 0 {
+		file.NotifyUser("No changes")
+		return
+	}
+
+	currentRow := file.MultiCursor.GetRow(0)
+
+	var targetRow int
+	found := false
+
+	if direction > 0 {
+		// Find next change after current row
+		for _, line := range changePoints {
+			if line > currentRow {
+				targetRow = line
+				found = true
+				break
+			}
+		}
+		// Wrap around to first change
+		if !found {
+			targetRow = changePoints[0]
+			found = true
+		}
+	} else {
+		// Find previous change before current row
+		for i := len(changePoints) - 1; i >= 0; i-- {
+			if changePoints[i] < currentRow {
+				targetRow = changePoints[i]
+				found = true
+				break
+			}
+		}
+		// Wrap around to last change
+		if !found {
+			targetRow = changePoints[len(changePoints)-1]
+			found = true
+		}
+	}
+
+	if found {
+		file.CursorGoTo(targetRow, 0)
 	}
 }

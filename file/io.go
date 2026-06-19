@@ -19,8 +19,21 @@ func (file *File) Flush() {
 	slice := file.Slice(rows-1, cols)
 	file.screen.Clear()
 
-	// Compute diff for modified/added line indicators
-	diffStatus := file.buffer.DiffLines(&file.savedBuffer)
+	// Compute diff - any line that's changed or adjacent to a deletion gets marked
+	diffResult := file.buffer.DiffLinesFull(&file.savedBuffer)
+
+	// Build set of lines that have changes (added, modified, or adjacent to deletion)
+	changedLines := make(map[int]bool)
+	for lineNum := range diffResult.Changes {
+		changedLines[lineNum] = true
+	}
+	for _, delPoint := range diffResult.DeletionPoints {
+		// Mark lines adjacent to deletions
+		if delPoint >= 0 {
+			changedLines[delPoint] = true // line before deletion
+		}
+		changedLines[delPoint+1] = true // line after deletion
+	}
 
 	// Ensure states are calculated for all lines before the visible area
 	file.ensureSyntaxStates(file.rowOffset)
@@ -39,14 +52,9 @@ func (file *File) Flush() {
 
 		file.screen.Colorize(row, result.Colors, file.colOffset)
 
-		// Draw diff indicators in gutter column 0
-		if status, ok := diffStatus[bufferRow]; ok {
-			switch status {
-			case buffer.LineAdded:
-				file.screen.DrawGutterSymbol(row, '+', tcell.ColorGreen)
-			case buffer.LineModified:
-				file.screen.DrawGutterSymbol(row, '•', tcell.ColorYellow)
-			}
+		// Draw change indicator in gutter column 0
+		if changedLines[bufferRow] {
+			file.screen.DrawGutterSymbol(row, '▸', tcell.ColorYellow)
 		}
 
 		// Draw vertical bar for code blocks in gutter column 1 (for markdown files)
