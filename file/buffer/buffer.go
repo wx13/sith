@@ -963,3 +963,128 @@ func computeLCS(a, b []string) []string {
 
 	return lcs
 }
+
+// GetRegionDiff returns a git-style diff for a region of the current buffer compared to saved.
+// startRow and endRow define the region in the current buffer (inclusive).
+// Returns lines prefixed with "-" (deleted), "+" (added), or " " (context).
+func (buffer *Buffer) GetRegionDiff(saved *Buffer, startRow, endRow int) []string {
+	buffer.mutex.Lock()
+	defer buffer.mutex.Unlock()
+	saved.mutex.Lock()
+	defer saved.mutex.Unlock()
+
+	// Get current lines in region
+	current := make([]string, 0)
+	for i := startRow; i <= endRow && i < len(buffer.lines); i++ {
+		current = append(current, buffer.lines[i].ToString())
+	}
+
+	savedLines := make([]string, len(saved.lines))
+	for i, line := range saved.lines {
+		savedLines[i] = line.ToString()
+	}
+
+	// Compute full LCS to find anchor points
+	allCurrent := make([]string, len(buffer.lines))
+	for i, line := range buffer.lines {
+		allCurrent[i] = line.ToString()
+	}
+	lcs := computeLCS(allCurrent, savedLines)
+
+	// Find LCS positions
+	currentLCSPos := make([]int, len(lcs))
+	savedLCSPos := make([]int, len(lcs))
+
+	lcsIdx := 0
+	for i := 0; i < len(allCurrent) && lcsIdx < len(lcs); i++ {
+		if allCurrent[i] == lcs[lcsIdx] {
+			currentLCSPos[lcsIdx] = i
+			lcsIdx++
+		}
+	}
+
+	lcsIdx = 0
+	for i := 0; i < len(savedLines) && lcsIdx < len(lcs); i++ {
+		if savedLines[i] == lcs[lcsIdx] {
+			savedLCSPos[lcsIdx] = i
+			lcsIdx++
+		}
+	}
+
+	// Find the saved region that corresponds to our current region
+	// Look for LCS anchors just before startRow and just after endRow
+	savedStart := 0
+	savedEnd := len(savedLines) - 1
+
+	for i := 0; i < len(lcs); i++ {
+		if currentLCSPos[i] < startRow {
+			savedStart = savedLCSPos[i] + 1
+		}
+		if currentLCSPos[i] > endRow {
+			savedEnd = savedLCSPos[i] - 1
+			break
+		}
+	}
+
+	if savedStart > savedEnd {
+		savedEnd = savedStart - 1 // empty range
+	}
+
+	// Get saved lines in corresponding region
+	savedRegion := make([]string, 0)
+	for i := savedStart; i <= savedEnd && i < len(savedLines); i++ {
+		savedRegion = append(savedRegion, savedLines[i])
+	}
+
+	// Compute diff between current region and saved region
+	regionLCS := computeLCS(current, savedRegion)
+
+	// Build diff output
+	result := make([]string, 0)
+
+	curIdx := 0
+	savedIdx := 0
+	lcsIdx = 0
+
+	for curIdx < len(current) || savedIdx < len(savedRegion) {
+		// Check if current line is in LCS
+		curInLCS := false
+		if curIdx < len(current) && lcsIdx < len(regionLCS) && current[curIdx] == regionLCS[lcsIdx] {
+			curInLCS = true
+		}
+
+		// Check if saved line is in LCS
+		savedInLCS := false
+		if savedIdx < len(savedRegion) && lcsIdx < len(regionLCS) && savedRegion[savedIdx] == regionLCS[lcsIdx] {
+			savedInLCS = true
+		}
+
+		if curInLCS && savedInLCS {
+			// Both match LCS - context line
+			result = append(result, " "+current[curIdx])
+			curIdx++
+			savedIdx++
+			lcsIdx++
+		} else if !savedInLCS && savedIdx < len(savedRegion) {
+			// Saved line not in LCS - deleted
+			result = append(result, "-"+savedRegion[savedIdx])
+			savedIdx++
+		} else if !curInLCS && curIdx < len(current) {
+			// Current line not in LCS - added
+			result = append(result, "+"+current[curIdx])
+			curIdx++
+		} else {
+			// Edge case - advance whichever is behind
+			if savedIdx < len(savedRegion) {
+				result = append(result, "-"+savedRegion[savedIdx])
+				savedIdx++
+			}
+			if curIdx < len(current) {
+				result = append(result, "+"+current[curIdx])
+				curIdx++
+			}
+		}
+	}
+
+	return result
+}

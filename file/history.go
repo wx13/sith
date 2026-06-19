@@ -286,3 +286,188 @@ func (file *File) clearBox(row0, col0, height, width int) {
 		}
 	}
 }
+
+// ShowLineDiff shows a diff popup for the changed region around the cursor.
+func (file *File) ShowLineDiff() {
+	// Get the set of changed lines
+	diffResult := file.buffer.DiffLinesFull(&file.savedBuffer)
+
+	changedLines := make(map[int]bool)
+	for lineNum := range diffResult.Changes {
+		changedLines[lineNum] = true
+	}
+	for _, delPoint := range diffResult.DeletionPoints {
+		if delPoint >= 0 {
+			changedLines[delPoint] = true
+		}
+		changedLines[delPoint+1] = true
+	}
+
+	currentRow := file.MultiCursor.GetRow(0)
+
+	// Check if cursor is on or near a changed line
+	if !changedLines[currentRow] {
+		file.NotifyUser("No changes at cursor")
+		return
+	}
+
+	// Find the contiguous changed region around the cursor
+	startRow := currentRow
+	for startRow > 0 && changedLines[startRow-1] {
+		startRow--
+	}
+	endRow := currentRow
+	for endRow < file.buffer.Length()-1 && changedLines[endRow+1] {
+		endRow++
+	}
+
+	// Get the diff for this region
+	diffLines := file.buffer.GetRegionDiff(&file.savedBuffer, startRow, endRow)
+
+	if len(diffLines) == 0 {
+		file.NotifyUser("No diff to show")
+		return
+	}
+
+	// Build colored lines
+	displayLines := make([]string, len(diffLines))
+	lineColors := make([]terminal.Attribute, len(diffLines))
+
+	for i, line := range diffLines {
+		if len(line) == 0 {
+			displayLines[i] = " "
+			lineColors[i] = terminal.ColorDefault
+		} else {
+			displayLines[i] = line
+			switch line[0] {
+			case '-':
+				lineColors[i] = terminal.ColorRed
+			case '+':
+				lineColors[i] = terminal.ColorGreen
+			default:
+				lineColors[i] = terminal.ColorDefault
+			}
+		}
+	}
+
+	// Display in a popup box
+	keyboard := terminal.NewKeyboard()
+	keyboard.SetScreen(file.screen.GetTcell())
+
+	cols, rows := file.screen.Size()
+	boxWidth := cols - 8
+	boxHeight := rows - 8
+	if boxHeight > len(displayLines)+4 {
+		boxHeight = len(displayLines) + 4
+	}
+	if boxHeight < 6 {
+		boxHeight = 6
+	}
+	col0 := 4
+	row0 := 3
+
+	scroll := 0
+	maxScroll := len(displayLines) - (boxHeight - 4)
+	if maxScroll < 0 {
+		maxScroll = 0
+	}
+
+	for {
+		// Draw box
+		file.drawLineDiffBox(row0, col0, boxHeight, boxWidth, startRow, endRow, displayLines, lineColors, scroll)
+		file.screen.Flush()
+
+		// Get input
+		cmd, _ := keyboard.GetKey()
+		switch cmd {
+		case "enter", "escape", "ctrlC", "char":
+			file.clearBox(row0, col0, boxHeight, boxWidth)
+			file.RequestFlush()
+			return
+		case "arrowDown", "ctrlJ":
+			if scroll < maxScroll {
+				scroll++
+			}
+		case "arrowUp", "ctrlK":
+			if scroll > 0 {
+				scroll--
+			}
+		case "pageDown", "ctrlN":
+			scroll += boxHeight - 4
+			if scroll > maxScroll {
+				scroll = maxScroll
+			}
+		case "pageUp", "ctrlB":
+			scroll -= boxHeight - 4
+			if scroll < 0 {
+				scroll = 0
+			}
+		}
+	}
+}
+
+// drawLineDiffBox draws the line diff popup box.
+func (file *File) drawLineDiffBox(row0, col0, height, width int, startLine, endLine int,
+	lines []string, colors []terminal.Attribute, scroll int) {
+
+	borderColor := terminal.ColorBlue
+
+	// Title
+	var title string
+	if startLine == endLine {
+		title = fmt.Sprintf(" Diff: line %d ", startLine+1)
+	} else {
+		title = fmt.Sprintf(" Diff: lines %d-%d ", startLine+1, endLine+1)
+	}
+	if len(title) > width-2 {
+		title = title[:width-2]
+	}
+	topBorder := title
+	for len(topBorder) < width {
+		topBorder += "-"
+	}
+	file.screen.WriteStringColor(row0, col0, topBorder, terminal.ColorWhite|terminal.AttrBold, borderColor)
+
+	// Content area
+	contentHeight := height - 4
+	visibleLines := lines[scroll:]
+	if len(visibleLines) > contentHeight {
+		visibleLines = visibleLines[:contentHeight]
+	}
+
+	for i := 0; i < contentHeight; i++ {
+		row := row0 + 1 + i
+		file.screen.WriteStringColor(row, col0, "| ", borderColor, terminal.ColorDefault)
+		if i < len(visibleLines) {
+			lineColor := colors[scroll+i]
+			display := visibleLines[i]
+			if len(display) > width-4 {
+				display = display[:width-7] + "..."
+			}
+			file.screen.WriteStringColor(row, col0+2, display, lineColor, terminal.ColorDefault)
+			// Clear rest of line
+			for j := len(display); j < width-4; j++ {
+				file.screen.WriteString(row, col0+2+j, " ")
+			}
+		} else {
+			for j := 0; j < width-4; j++ {
+				file.screen.WriteString(row, col0+2+j, " ")
+			}
+		}
+		file.screen.WriteStringColor(row, col0+width-2, " |", borderColor, terminal.ColorDefault)
+	}
+
+	// Scroll indicator
+	scrollInfo := ""
+	if len(lines) > contentHeight {
+		scrollInfo = fmt.Sprintf(" [%d-%d of %d] ", scroll+1, scroll+len(visibleLines), len(lines))
+	}
+
+	// Bottom border with instructions
+	instructions := " [Any key] Close "
+	bottomBorder := instructions + scrollInfo
+	for len(bottomBorder) < width {
+		bottomBorder += "-"
+	}
+	file.screen.WriteStringColor(row0+height-3, col0, bottomBorder, terminal.ColorWhite, borderColor)
+}

@@ -113,6 +113,7 @@ func (editor *Editor) MakeExtraKeyMap() KeyMap {
 	km.Add("b", func() { editor.Bookmark() }, "Bookmark this file location.")
 	km.Add("B", func() { editor.BookmarkMenu() }, "Choose a bookmark from a menu.")
 	km.Add("h", func() { editor.file.ShowHistory() }, "Show buffer history (saved states)")
+	km.Add("d", func() { editor.file.ShowLineDiff() }, "Show diff at cursor")
 	return km
 }
 
