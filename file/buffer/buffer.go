@@ -703,3 +703,139 @@ func (buffer *Buffer) CutWord(row, col, mode int) int {
 	buffer.SetRow(row, line)
 	return newCol
 }
+
+// LineStatus represents the diff status of a line.
+type LineStatus int
+
+const (
+	LineUnchanged LineStatus = iota
+	LineModified
+	LineAdded
+)
+
+// DiffLines computes the diff between this buffer and another buffer (typically the saved version).
+// Returns a map from line number (in this buffer) to its status.
+func (buffer *Buffer) DiffLines(saved *Buffer) map[int]LineStatus {
+	buffer.mutex.Lock()
+	defer buffer.mutex.Unlock()
+	saved.mutex.Lock()
+	defer saved.mutex.Unlock()
+
+	result := make(map[int]LineStatus)
+
+	// Build string slices for comparison
+	current := make([]string, len(buffer.lines))
+	for i, line := range buffer.lines {
+		current[i] = line.ToString()
+	}
+
+	savedLines := make([]string, len(saved.lines))
+	for i, line := range saved.lines {
+		savedLines[i] = line.ToString()
+	}
+
+	// Compute LCS to find unchanged lines
+	lcs := computeLCS(current, savedLines)
+
+	// Map LCS back to indices in both buffers
+	// For current buffer: which lines are unchanged
+	currentInLCS := make([]bool, len(current))
+	lcsIdx := 0
+	for i := 0; i < len(current) && lcsIdx < len(lcs); i++ {
+		if current[i] == lcs[lcsIdx] {
+			currentInLCS[i] = true
+			lcsIdx++
+		}
+	}
+
+	// For saved buffer: which lines are unchanged
+	savedInLCS := make([]bool, len(savedLines))
+	lcsIdx = 0
+	for i := 0; i < len(savedLines) && lcsIdx < len(lcs); i++ {
+		if savedLines[i] == lcs[lcsIdx] {
+			savedInLCS[i] = true
+			lcsIdx++
+		}
+	}
+
+	// Walk through both buffers in parallel, matching LCS positions
+	// Lines not in LCS in current are either added or modified
+	// - Modified: replaces a line from saved that's also not in LCS
+	// - Added: extra line with no corresponding deleted line
+	curIdx := 0
+	savedIdx := 0
+
+	for curIdx < len(current) {
+		if currentInLCS[curIdx] {
+			// This line is unchanged, advance both pointers past it
+			// Skip any non-LCS lines in saved (those were deleted)
+			for savedIdx < len(savedLines) && !savedInLCS[savedIdx] {
+				savedIdx++
+			}
+			savedIdx++ // skip the matching LCS line in saved
+			curIdx++
+			continue
+		}
+
+		// Current line is not in LCS - it's new content
+		// Check if there's a corresponding deleted line in saved
+		if savedIdx < len(savedLines) && !savedInLCS[savedIdx] {
+			// There's a deleted line here - this is a modification
+			result[curIdx] = LineModified
+			savedIdx++
+		} else {
+			// No deleted line to pair with - this is an addition
+			result[curIdx] = LineAdded
+		}
+		curIdx++
+	}
+
+	return result
+}
+
+// computeLCS returns the longest common subsequence of two string slices.
+func computeLCS(a, b []string) []string {
+	m, n := len(a), len(b)
+	if m == 0 || n == 0 {
+		return nil
+	}
+
+	// Build LCS length table
+	dp := make([][]int, m+1)
+	for i := range dp {
+		dp[i] = make([]int, n+1)
+	}
+
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			if a[i-1] == b[j-1] {
+				dp[i][j] = dp[i-1][j-1] + 1
+			} else {
+				if dp[i-1][j] > dp[i][j-1] {
+					dp[i][j] = dp[i-1][j]
+				} else {
+					dp[i][j] = dp[i][j-1]
+				}
+			}
+		}
+	}
+
+	// Backtrack to find LCS
+	lcsLen := dp[m][n]
+	lcs := make([]string, lcsLen)
+	i, j := m, n
+	for i > 0 && j > 0 {
+		if a[i-1] == b[j-1] {
+			lcs[lcsLen-1] = a[i-1]
+			lcsLen--
+			i--
+			j--
+		} else if dp[i-1][j] > dp[i][j-1] {
+			i--
+		} else {
+			j--
+		}
+	}
+
+	return lcs
+}

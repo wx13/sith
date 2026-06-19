@@ -90,7 +90,7 @@ func NewScreen() *Screen {
 		dieChan:     make(chan struct{}, 1),
 		tbMutex:     &sync.Mutex{},
 		charMode:    charModeFullUnicode,
-		gutterWidth: 1, // Reserve 1 column for indicators (code blocks, git status, etc.)
+		gutterWidth: 2, // Reserve 2 columns: diff indicators (col 0), code block bars (col 1)
 	}
 	screen.tbMutex.Lock()
 	var err error
@@ -288,13 +288,22 @@ func (screen *Screen) Colorize(row int, colors []syntaxcolor.LineColor, offset i
 	}
 }
 
-// DrawLeftBar draws a vertical bar character at the left edge of a row.
+// DrawLeftBar draws a vertical bar character in the second gutter column.
 // Used to visually indicate code blocks in markdown files.
 func (screen *Screen) DrawLeftBar(row int, color tcell.Color) {
 	screen.tbMutex.Lock()
 	defer screen.tbMutex.Unlock()
 	style := tcell.StyleDefault.Foreground(color)
-	screen.tcell.SetContent(0, row, '▌', nil, style)
+	screen.tcell.SetContent(1, row, '▌', nil, style)
+}
+
+// DrawGutterSymbol draws a symbol in the first gutter column.
+// Used for diff indicators (new lines, changed lines).
+func (screen *Screen) DrawGutterSymbol(row int, symbol rune, color tcell.Color) {
+	screen.tbMutex.Lock()
+	defer screen.tbMutex.Unlock()
+	style := tcell.StyleDefault.Foreground(color)
+	screen.tcell.SetContent(0, row, symbol, nil, style)
 }
 
 // PrintableRune uses the charMode to convert the rune into

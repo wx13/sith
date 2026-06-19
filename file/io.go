@@ -19,6 +19,9 @@ func (file *File) Flush() {
 	slice := file.Slice(rows-1, cols)
 	file.screen.Clear()
 
+	// Compute diff for modified/added line indicators
+	diffStatus := file.buffer.DiffLines(&file.savedBuffer)
+
 	// Ensure states are calculated for all lines before the visible area
 	file.ensureSyntaxStates(file.rowOffset)
 
@@ -36,7 +39,17 @@ func (file *File) Flush() {
 
 		file.screen.Colorize(row, result.Colors, file.colOffset)
 
-		// Draw vertical bar for code blocks in the gutter (for markdown files)
+		// Draw diff indicators in gutter column 0
+		if status, ok := diffStatus[bufferRow]; ok {
+			switch status {
+			case buffer.LineAdded:
+				file.screen.DrawGutterSymbol(row, '+', tcell.ColorGreen)
+			case buffer.LineModified:
+				file.screen.DrawGutterSymbol(row, '•', tcell.ColorYellow)
+			}
+		}
+
+		// Draw vertical bar for code blocks in gutter column 1 (for markdown files)
 		if file.SyntaxRules.IsMarkdown() {
 			if startState.IsCodeBlock() || result.EndState.IsCodeBlock() {
 				file.screen.DrawLeftBar(row, tcell.ColorBlue)

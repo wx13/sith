@@ -434,3 +434,37 @@ func TestCutWord(t *testing.T) {
 	}
 
 }
+
+func TestDiffLines(t *testing.T) {
+	// Test: no changes
+	saved := buffer.MakeBuffer([]string{"line 1", "line 2", "line 3"})
+	current := buffer.MakeBuffer([]string{"line 1", "line 2", "line 3"})
+	diff := current.DiffLines(&saved)
+	if len(diff) != 0 {
+		t.Error("Expected no changes, got:", diff)
+	}
+
+	// Test: modified line
+	saved = buffer.MakeBuffer([]string{"line 1", "line 2", "line 3"})
+	current = buffer.MakeBuffer([]string{"line 1", "MODIFIED", "line 3"})
+	diff = current.DiffLines(&saved)
+	if diff[1] != buffer.LineModified {
+		t.Error("Expected line 1 to be modified, got:", diff)
+	}
+
+	// Test: added line at end
+	saved = buffer.MakeBuffer([]string{"line 1", "line 2"})
+	current = buffer.MakeBuffer([]string{"line 1", "line 2", "line 3"})
+	diff = current.DiffLines(&saved)
+	if diff[2] != buffer.LineAdded {
+		t.Error("Expected line 2 to be added, got:", diff)
+	}
+
+	// Test: inserted line in middle
+	saved = buffer.MakeBuffer([]string{"line 1", "line 3"})
+	current = buffer.MakeBuffer([]string{"line 1", "NEW LINE", "line 3"})
+	diff = current.DiffLines(&saved)
+	if _, ok := diff[1]; !ok {
+		t.Error("Expected line 1 to be marked as new/modified, got:", diff)
+	}
+}
