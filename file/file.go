@@ -144,7 +144,7 @@ func (file *File) ingestConfig(cfg config.Config) {
 // Reload re-reads a file from disk.
 func (file *File) Reload(wgs ...*sync.WaitGroup) {
 	if file.IsModified() {
-		prompt := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+		prompt := ui.MakePrompt(file.screen, file.newKeyboard())
 		ok, _ := prompt.AskYesNo("Changes will be lost. Reload anyway?")
 		if !ok {
 			return
@@ -158,7 +158,7 @@ func (file *File) Reload(wgs ...*sync.WaitGroup) {
 // close.
 func (file *File) Close() bool {
 	if file.IsModified() {
-		prompt := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+		prompt := ui.MakePrompt(file.screen, file.newKeyboard())
 		doClose, _ := prompt.AskYesNo("File has been modified. Close anyway?")
 		if !doClose {
 			return false
@@ -195,9 +195,16 @@ func (file *File) ToggleAutoFmt() {
 	file.autoFmt = file.autoFmt != true
 }
 
+// newKeyboard creates a keyboard with the screen properly set.
+func (file *File) newKeyboard() *terminal.Keyboard {
+	kb := terminal.NewKeyboard()
+	kb.SetScreen(file.screen.GetTcell())
+	return kb
+}
+
 // SetTabWidth sets the tab display width.
 func (file *File) SetTabWidth() {
-	p := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+	p := ui.MakePrompt(file.screen, file.newKeyboard())
 	str, err := p.Ask("tab width:", nil)
 	if err != nil {
 		return
@@ -209,7 +216,7 @@ func (file *File) SetTabWidth() {
 }
 
 func (file *File) SetLineLen() {
-	p := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+	p := ui.MakePrompt(file.screen, file.newKeyboard())
 	str, err := p.Ask("Line length:", nil)
 	if err != nil {
 		return
@@ -222,7 +229,7 @@ func (file *File) SetLineLen() {
 
 // SetTabStr manually sets the tab string, and disables auto-tab-detection.
 func (file *File) SetTabStr() {
-	p := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+	p := ui.MakePrompt(file.screen, file.newKeyboard())
 	str, err := p.Ask("tab string:", nil)
 	if err == nil {
 		file.tabString = str
@@ -379,7 +386,7 @@ func (file *File) AskReplace(searchTerm, replaceTerm string, row, col int, repla
 		for c := startCol + startColOffset; c < endCol+startColOffset; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)
 		}
-		prompt := ui.MakePrompt(file.screen, terminal.NewKeyboard())
+		prompt := ui.MakePrompt(file.screen, file.newKeyboard())
 		doReplace, err = prompt.AskYesNo("Replace this instance?")
 		for c := startCol; c < endCol; c++ {
 			file.screen.Highlight(row-file.rowOffset, c)

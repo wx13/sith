@@ -351,8 +351,7 @@ func (file *File) ShowLineDiff() {
 	}
 
 	// Display in a popup box
-	keyboard := terminal.NewKeyboard()
-	keyboard.SetScreen(file.screen.GetTcell())
+	keyboard := file.newKeyboard()
 
 	cols, rows := file.screen.Size()
 	boxWidth := cols - 8
