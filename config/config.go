@@ -20,6 +20,9 @@ type Config struct {
 	TabDetect     bool
 	TabDetect_set bool
 
+	LineLen     int
+	LineLen_set bool
+
 	FmtCmd     string
 	FmtCmd_set bool
 
@@ -82,6 +85,8 @@ func (config *Config) markAsSet(meta toml.MetaData, prefix string) {
 			config.FmtCmd_set = true
 		case prefix + "tabdetect":
 			config.TabDetect_set = true
+		case prefix + "linelen":
+			config.LineLen_set = true
 		}
 	}
 }
@@ -97,6 +102,8 @@ func (config Config) Dup() Config {
 		AutoTab_set:   config.AutoTab_set,
 		TabDetect:     config.TabDetect,
 		TabDetect_set: config.TabDetect_set,
+		LineLen:       config.LineLen,
+		LineLen_set:   config.LineLen_set,
 		FmtCmd:        config.FmtCmd,
 		FmtCmd_set:    config.FmtCmd_set,
 		Parent:        config.Parent,
@@ -151,6 +158,10 @@ func (config Config) Merge(other Config) Config {
 	if other.TabDetect_set {
 		config.TabDetect = other.TabDetect
 		config.TabDetect_set = true
+	}
+	if other.LineLen_set {
+		config.LineLen = other.LineLen
+		config.LineLen_set = true
 	}
 	if other.TabString_set {
 		config.TabString = other.TabString

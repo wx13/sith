@@ -134,6 +134,9 @@ func (file *File) ingestConfig(cfg config.Config) {
 	file.tabDetect = extCfg.TabDetect
 	file.tabWidth = extCfg.TabWidth
 	file.tabString = extCfg.TabString
+	if extCfg.LineLen_set && extCfg.LineLen > 0 {
+		file.lineLen = extCfg.LineLen
+	}
 	file.SyntaxRules = syntaxcolor.NewSyntaxRulesWithFullConfig(extCfg, cfg)
 	file.SyntaxRules.SetupForLanguage(ext)
 	file.stateCache = syntaxcolor.NewStateCache()
