@@ -37,7 +37,10 @@ type Editor struct {
 	searchHist  []string
 	replaceHist []string
 	gotoHist    []string
+	cmdHist     []string
 	history     *state.History
+
+	commandMap map[string]func()
 	session     *state.Session
 
 	copyBuffer *CopyBuffer
@@ -368,6 +371,7 @@ func (editor *Editor) Listen() {
 	editor.keyboard.SetScreen(editor.screen.GetTcell())
 	editor.keymap = editor.MakeKeyMap()
 	editor.xKeymap = editor.MakeExtraKeyMap()
+	editor.commandMap = editor.buildCommandMap()
 	for {
 		cmd, r := editor.keyboard.GetKey()
 		editor.handleCmd(cmd, r)
