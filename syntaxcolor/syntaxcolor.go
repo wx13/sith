@@ -257,8 +257,8 @@ func (rules *SyntaxRules) colorizeMarkdown(str string, startState LineState) Col
 
 	// Check if we're inside a block equation
 	if startState == StateBlockEquation {
-		// Check if this line ends the equation
-		if rules.equationDelim.MatchString(str) {
+		// The equation ends at a $$ at the start or the end of a line
+		if rules.equationDelim.MatchString(str) || strings.HasSuffix(strings.TrimSpace(str), "$$") {
 			result.Colors = append(result.Colors, LineColor{
 				Fg:    tcell.ColorPurple,
 				Bg:    tcell.ColorDefault,

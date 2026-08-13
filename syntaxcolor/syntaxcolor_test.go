@@ -123,6 +123,12 @@ func TestMarkdownEquationBlock(t *testing.T) {
 	if result.EndState != syntaxcolor.StateNormal {
 		t.Errorf("Expected end state to be Normal after equation end, got %d", result.EndState)
 	}
+
+	// Test: equation block ending with $$ at the end of a line
+	result = sr.ColorizeWithState(`\quad\text{per second}.$$`, syntaxcolor.StateBlockEquation)
+	if result.EndState != syntaxcolor.StateNormal {
+		t.Errorf("Expected end state to be Normal after trailing $$, got %d", result.EndState)
+	}
 }
 
 func TestQuartoCodeBlock(t *testing.T) {
