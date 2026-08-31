@@ -88,6 +88,7 @@ func (editor *Editor) buildCommandMap() map[string]func() {
 		"fmt":            func() { editor.file.Fmt() },
 		"fmt-selection":  func() { editor.file.Fmt(true) },
 		"fmt-code-block": func() { editor.FmtCodeBlock() },
+		"fmt-table":      func() { editor.FmtTable() },
 
 		// Bookmarks & history
 		"bookmark":      func() { editor.Bookmark() },

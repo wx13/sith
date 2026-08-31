@@ -541,6 +541,14 @@ func (editor *Editor) FmtCodeBlock() {
 	}
 }
 
+// FmtTable reformats the grid table at the cursor position.
+func (editor *Editor) FmtTable() {
+	err := editor.file.FmtTable()
+	if err != nil {
+		editor.screen.Notify(err.Error())
+	}
+}
+
 func intMod(a, n int) int {
 	if a < 0 {
 		return a - n*((a-n+1)/n)
