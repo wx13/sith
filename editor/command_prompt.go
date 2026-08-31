@@ -102,6 +102,7 @@ func (editor *Editor) buildCommandMap() map[string]func() {
 
 		// Meta
 		"commands": editor.CmdMenu,
+		"repeat":   func() { editor.RepeatCmd() },
 	}
 }
 
@@ -116,6 +117,11 @@ func (editor *Editor) CommandPrompt() {
 	if !ok {
 		editor.screen.Notify("Unknown command: " + cmd)
 		return
+	}
+	// Remember the command for RepeatCmd, unless it is itself a
+	// repeat/menu meta-command.
+	if cmd != "repeat" && cmd != "commands" {
+		editor.lastCmd = Action{action, cmd}
 	}
 	action()
 }

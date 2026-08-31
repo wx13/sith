@@ -41,6 +41,8 @@ type Editor struct {
 	history     *state.History
 
 	commandMap map[string]func()
+	lastCmd    Action
+	repeating  bool
 	session     *state.Session
 
 	copyBuffer *CopyBuffer
@@ -397,10 +399,32 @@ func (editor *Editor) handleCmd(cmd string, r rune) {
 func (editor *Editor) ExtraMode() {
 	p := ui.MakePrompt(editor.screen, editor.keyboard)
 	r := p.GetRune("key:")
-	ans := editor.xKeymap.Run(string(r))
-	if len(ans) > 0 {
+	key := string(r)
+	action, ok := editor.xKeymap[key]
+	if !ok {
 		editor.screen.Notify("Unknown command")
+		return
 	}
+	// Remember the action for RepeatCmd. The ":" prompt is skipped here;
+	// it records the command it resolves instead.
+	if key != ":" {
+		editor.lastCmd = action
+	}
+	action.Func()
+}
+
+// RepeatCmd re-runs the last extra-mode or command-prompt command.
+func (editor *Editor) RepeatCmd() {
+	if editor.repeating {
+		return
+	}
+	if editor.lastCmd.Func == nil {
+		editor.screen.Notify("No previous command to repeat")
+		return
+	}
+	editor.repeating = true
+	defer func() { editor.repeating = false }()
+	editor.lastCmd.Func()
 }
 
 // NextFile cycles to the next open file.
@@ -504,6 +528,9 @@ func (editor *Editor) CmdMenu() {
 		editor.keymap.Run(key)
 	} else {
 		key := xkeys[idx-len(keys)]
+		if action, ok := editor.xKeymap[key]; ok && key != ":" {
+			editor.lastCmd = action
+		}
 		editor.xKeymap.Run(key)
 	}
 

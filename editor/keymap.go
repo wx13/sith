@@ -87,6 +87,7 @@ func (editor *Editor) MakeKeyMap() KeyMap {
 	km.Add("altG", func() { editor.file.ToggleAutoFmt() }, "Toggle auto fmt on save")
 	km.Add("alt.", func() { editor.file.NextChange() }, "Go to next changed line")
 	km.Add("alt,", func() { editor.file.PrevChange() }, "Go to previous changed line")
+	km.Add("altP", func() { editor.RepeatCmd() }, "Repeat last extra-mode or prompt command")
 	return km
 }
 
